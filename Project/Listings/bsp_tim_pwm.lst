@@ -36,8 +36,16 @@ N
 N#ifndef _BSP_H_
 N#define _BSP_H
 N
+N//#define STM32_V4
+N//#define STM32_X2
+N
+N/* 检查是否定义了开发板型号 */
+N//#if !defined (STM32_V4) && !defined (STM32_X2)
+N//	#error "Please define the board model : STM32_X2 or STM32_V4"
+N//#endif
+N
 N/* 定义 BSP 版本号 */
-N#define __STM32F1_BSP_VERSION		"1.1"
+N#define __STM32F2_BSP_VERSION		"1.1"
 N
 N/* CPU空闲时执行的函数 */
 N//#define CPU_IDLE()		bsp_Idle()
@@ -687,6 +695,13 @@ N * FreeRTOS API DOCUMENTATION AVAILABLE ON THE FreeRTOS.org WEB SITE.
 N *
 N * See http://www.freertos.org/a00110.html.
 N *----------------------------------------------------------*/
+N 
+N /* Ensure stdint is only used by the compiler, and not the assembler. */
+N#if defined(__ICCARM__) || defined(__CC_ARM) || defined(__GNUC__)
+X#if 0L || 1L || 0L
+N #include <stdint.h>
+N extern volatile uint32_t ulHighFrequencyTimerTicks;
+N#endif
 N
 N#define configUSE_PREEMPTION		1
 N#define configUSE_IDLE_HOOK			0
@@ -697,9 +712,18 @@ N#define configMAX_PRIORITIES		( 5 )
 N#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 128 )
 N#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 17 * 1024 ) )
 N#define configMAX_TASK_NAME_LEN		( 16 )
-N#define configUSE_TRACE_FACILITY	0
+N#define configUSE_TRACE_FACILITY	1
 N#define configUSE_16_BIT_TICKS		0
 N#define configIDLE_SHOULD_YIELD		1
+N#define configUSE_MUTEXES		    1
+N
+N
+N/* Run time and task stats gathering related definitions. */
+N#define configGENERATE_RUN_TIME_STATS                1
+N#define configUSE_STATS_FORMATTING_FUNCTIONS         1
+N#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()     (ulHighFrequencyTimerTicks = 0ul)
+N#define portGET_RUN_TIME_COUNTER_VALUE()             ulHighFrequencyTimerTicks
+N//#define portALT_GET_RUN_TIME_COUNTER_VALUE           1
 N
 N/* Co-routine definitions. */
 N#define configUSE_CO_ROUTINES 		0
@@ -716,19 +740,44 @@ N#define INCLUDE_vTaskSuspend			1
 N#define INCLUDE_vTaskDelayUntil			1
 N#define INCLUDE_vTaskDelay				1
 N
+N/* Cortex-M specific definitions. */
+N#ifdef __NVIC_PRIO_BITS
+S	/* __BVIC_PRIO_BITS will be specified when CMSIS is being used. */
+S	#define configPRIO_BITS       		__NVIC_PRIO_BITS
+N#else
+N	#define configPRIO_BITS       		4        /* 15 priority levels */
+N#endif
+N
+N/* The lowest interrupt priority that can be used in a call to a "set priority"
+Nfunction. */
+N#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY			0x0f /* default 255 */
+N
+N/* The highest interrupt priority that can be used by any interrupt service
+Nroutine that makes calls to interrupt safe FreeRTOS API functions.  DO NOT CALL
+NINTERRUPT SAFE FREERTOS API FUNCTIONS FROM ANY INTERRUPT THAT HAS A HIGHER
+NPRIORITY THAN THIS! (higher priorities are lower numeric values. */
+N#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY	0x01 /* default 191 */
+N
 N/* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255
 N(lowest) to 0 (1?) (highest). */
-N#define configKERNEL_INTERRUPT_PRIORITY 		255
+N#define configKERNEL_INTERRUPT_PRIORITY  (configLIBRARY_LOWEST_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
+N
 N/* !!!! configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to zero !!!!
 NSee http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
-N#define configMAX_SYSCALL_INTERRUPT_PRIORITY 	191 /* equivalent to 0xb0, or priority 11. */
+N#define configMAX_SYSCALL_INTERRUPT_PRIORITY 	( configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) ) /* equivalent to 0xb0, or priority 11. */
 N
-N
+N/* Normal assert() semantics without relying on the provision of an assert.h
+Nheader file. */
+N#define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }	
 N/* This is the value being used as per the ST library which permits 16
 Npriority values, 0 to 15.  This must correspond to the
 NconfigKERNEL_INTERRUPT_PRIORITY setting.  Here 15 corresponds to the lowest
 NNVIC value of 255. */
 N#define configLIBRARY_KERNEL_INTERRUPT_PRIORITY	15
+N
+N#define vPortSVCHandler SVC_Handler
+N#define xPortPendSVHandler PendSV_Handler
+N#define xPortSysTickHandler SysTick_Handler
 N
 N#endif /* FREERTOS_CONFIG_H */
 N
@@ -1520,8 +1569,8 @@ N#define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvPa
 N/*-----------------------------------------------------------*/
 N
 N#ifdef configASSERT
-S	void vPortValidateInterruptPriority( void );
-S	#define portASSERT_IF_INTERRUPT_PRIORITY_INVALID() 	vPortValidateInterruptPriority()
+N	void vPortValidateInterruptPriority( void );
+N	#define portASSERT_IF_INTERRUPT_PRIORITY_INVALID() 	vPortValidateInterruptPriority()
 N#endif
 N
 N/* portNOP() is not required by this port. */
@@ -1551,7 +1600,7 @@ Nstatic portFORCE_INLINE void vPortRaiseBASEPRI( void )
 Xstatic __forceinline void vPortRaiseBASEPRI( void )
 N{
 Nuint32_t ulNewBASEPRI = configMAX_SYSCALL_INTERRUPT_PRIORITY;
-Xuint32_t ulNewBASEPRI = 191;
+Xuint32_t ulNewBASEPRI = ( 0x01 << (8 - 4) );
 N
 N	__asm
 N	{
@@ -1581,7 +1630,7 @@ Nstatic portFORCE_INLINE uint32_t ulPortRaiseBASEPRI( void )
 Xstatic __forceinline uint32_t ulPortRaiseBASEPRI( void )
 N{
 Nuint32_t ulReturn, ulNewBASEPRI = configMAX_SYSCALL_INTERRUPT_PRIORITY;
-Xuint32_t ulReturn, ulNewBASEPRI = 191;
+Xuint32_t ulReturn, ulNewBASEPRI = ( 0x01 << (8 - 4) );
 N
 N	__asm
 N	{
@@ -2106,7 +2155,7 @@ N	#define configUSE_RECURSIVE_MUTEXES 0
 N#endif
 N
 N#ifndef configUSE_MUTEXES
-N	#define configUSE_MUTEXES 0
+S	#define configUSE_MUTEXES 0
 N#endif
 N
 N#ifndef configUSE_TIMERS
@@ -2139,10 +2188,10 @@ S	#error configMAX_TASK_NAME_LEN must be set to a minimum of 1 in FreeRTOSConfig
 N#endif
 N
 N#ifndef configASSERT
-N	#define configASSERT( x )
-N	#define configASSERT_DEFINED 0
+S	#define configASSERT( x )
+S	#define configASSERT_DEFINED 0
 N#else
-S	#define configASSERT_DEFINED 1
+N	#define configASSERT_DEFINED 1
 N#endif
 N
 N/* The timers module relies on xTaskGetSchedulerState(). */
@@ -2527,26 +2576,26 @@ N	#define traceTASK_NOTIFY_GIVE_FROM_ISR()
 N#endif
 N
 N#ifndef configGENERATE_RUN_TIME_STATS
-N	#define configGENERATE_RUN_TIME_STATS 0
+S	#define configGENERATE_RUN_TIME_STATS 0
 N#endif
 N
 N#if ( configGENERATE_RUN_TIME_STATS == 1 )
-X#if ( 0 == 1 )
-S
-S	#ifndef portCONFIGURE_TIMER_FOR_RUN_TIME_STATS
+X#if ( 1 == 1 )
+N
+N	#ifndef portCONFIGURE_TIMER_FOR_RUN_TIME_STATS
 S		#error If configGENERATE_RUN_TIME_STATS is defined then portCONFIGURE_TIMER_FOR_RUN_TIME_STATS must also be defined.  portCONFIGURE_TIMER_FOR_RUN_TIME_STATS should call a port layer function to setup a peripheral timer/counter that can then be used as the run time counter time base.
-S	#endif /* portCONFIGURE_TIMER_FOR_RUN_TIME_STATS */
-S
-S	#ifndef portGET_RUN_TIME_COUNTER_VALUE
+N	#endif /* portCONFIGURE_TIMER_FOR_RUN_TIME_STATS */
+N
+N	#ifndef portGET_RUN_TIME_COUNTER_VALUE
 S		#ifndef portALT_GET_RUN_TIME_COUNTER_VALUE
 S			#error If configGENERATE_RUN_TIME_STATS is defined then either portGET_RUN_TIME_COUNTER_VALUE or portALT_GET_RUN_TIME_COUNTER_VALUE must also be defined.  See the examples provided and the FreeRTOS web site for more information.
 S		#endif /* portALT_GET_RUN_TIME_COUNTER_VALUE */
-S	#endif /* portGET_RUN_TIME_COUNTER_VALUE */
-S
+N	#endif /* portGET_RUN_TIME_COUNTER_VALUE */
+N
 N#endif /* configGENERATE_RUN_TIME_STATS */
 N
 N#ifndef portCONFIGURE_TIMER_FOR_RUN_TIME_STATS
-N	#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
+S	#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
 N#endif
 N
 N#ifndef configUSE_MALLOC_FAILED_HOOK
@@ -2603,11 +2652,11 @@ N	#define configINCLUDE_APPLICATION_DEFINED_PRIVILEGED_FUNCTIONS 0
 N#endif
 N
 N#ifndef configUSE_STATS_FORMATTING_FUNCTIONS
-N	#define configUSE_STATS_FORMATTING_FUNCTIONS 0
+S	#define configUSE_STATS_FORMATTING_FUNCTIONS 0
 N#endif
 N
 N#ifndef portASSERT_IF_INTERRUPT_PRIORITY_INVALID
-N	#define portASSERT_IF_INTERRUPT_PRIORITY_INVALID()
+S	#define portASSERT_IF_INTERRUPT_PRIORITY_INVALID()
 N#endif
 N
 N#ifndef configUSE_TRACE_FACILITY
@@ -2666,7 +2715,7 @@ S	#error configSUPPORT_STATIC_ALLOCATION and configSUPPORT_DYNAMIC_ALLOCATION ca
 N#endif
 N
 N#if( ( configUSE_RECURSIVE_MUTEXES == 1 ) && ( configUSE_MUTEXES != 1 ) )
-X#if( ( 0 == 1 ) && ( 0 != 1 ) )
+X#if( ( 0 == 1 ) && ( 1 != 1 ) )
 S	#error configUSE_MUTEXES must be set to 1 to use recursive mutexes
 N#endif
 N
@@ -2804,12 +2853,12 @@ X	#if ( 0 == 1 )
 S		UBaseType_t		uxDummy9;
 N	#endif
 N	#if ( configUSE_TRACE_FACILITY == 1 )
-X	#if ( 0 == 1 )
-S		UBaseType_t		uxDummy10[ 2 ];
+X	#if ( 1 == 1 )
+N		UBaseType_t		uxDummy10[ 2 ];
 N	#endif
 N	#if ( configUSE_MUTEXES == 1 )
-X	#if ( 0 == 1 )
-S		UBaseType_t		uxDummy12[ 2 ];
+X	#if ( 1 == 1 )
+N		UBaseType_t		uxDummy12[ 2 ];
 N	#endif
 N	#if ( configUSE_APPLICATION_TASK_TAG == 1 )
 X	#if ( 0 == 1 )
@@ -2820,8 +2869,8 @@ X	#if( 0 > 0 )
 S		void			*pvDummy15[ configNUM_THREAD_LOCAL_STORAGE_POINTERS ];
 N	#endif
 N	#if ( configGENERATE_RUN_TIME_STATS == 1 )
-X	#if ( 0 == 1 )
-S		uint32_t		ulDummy16;
+X	#if ( 1 == 1 )
+N		uint32_t		ulDummy16;
 N	#endif
 N	#if ( configUSE_NEWLIB_REENTRANT == 1 )
 X	#if ( 0 == 1 )
@@ -2878,9 +2927,9 @@ S		void *pvDummy7;
 N	#endif
 N
 N	#if ( configUSE_TRACE_FACILITY == 1 )
-X	#if ( 0 == 1 )
-S		UBaseType_t uxDummy8;
-S		uint8_t ucDummy9;
+X	#if ( 1 == 1 )
+N		UBaseType_t uxDummy8;
+N		uint8_t ucDummy9;
 N	#endif
 N
 N} StaticQueue_t;
@@ -2906,8 +2955,8 @@ N	TickType_t xDummy1;
 N	StaticList_t xDummy2;
 N
 N	#if( configUSE_TRACE_FACILITY == 1 )
-X	#if( 0 == 1 )
-S		UBaseType_t uxDummy3;
+X	#if( 1 == 1 )
+N		UBaseType_t uxDummy3;
 N	#endif
 N
 N	#if( ( configSUPPORT_STATIC_ALLOCATION == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) )
@@ -2939,8 +2988,8 @@ N	TickType_t			xDummy3;
 N	UBaseType_t			uxDummy4;
 N	void 				*pvDummy5[ 2 ];
 N	#if( configUSE_TRACE_FACILITY == 1 )
-X	#if( 0 == 1 )
-S		UBaseType_t		uxDummy6;
+X	#if( 1 == 1 )
+N		UBaseType_t		uxDummy6;
 N	#endif
 N
 N	#if( ( configSUPPORT_STATIC_ALLOCATION == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) )
@@ -2956,7 +3005,7 @@ N#endif
 N
 N#endif /* INC_FREERTOS_H */
 N
-L 27 "..\User\bsp\bsp.h" 2
+L 35 "..\User\bsp\bsp.h" 2
 N	#include "task.h"
 L 1 "..\FreeRTOS\include\task.h" 1
 N/*
@@ -5762,7 +5811,7 @@ N#endif /* INC_TASK_H */
 N
 N
 N
-L 28 "..\User\bsp\bsp.h" 2
+L 36 "..\User\bsp\bsp.h" 2
 N	#define DISABLE_INT()    taskENTER_CRITICAL()
 N	#define ENABLE_INT()     taskEXIT_CRITICAL()
 N#else
@@ -5775,7 +5824,7 @@ N/* 这个宏仅用于调试阶段排错 */
 N#define BSP_Printf		printf
 N//#define BSP_Printf(...)
 N
-N#include "stm32f2xx.h"
+N#include <stm32f2xx.h>
 L 1 "..\User\stm32f2xx.h" 1
 N/**
 N  ******************************************************************************
@@ -33820,7 +33869,8 @@ N  * @}
 N  */
 N
 N/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-L 41 "..\User\bsp\bsp.h" 2
+L 49 "..\User\bsp\bsp.h" 2
+N#include <stm32f2xx_conf.h>
 N#include <stdio.h>
 L 1 "C:\Keil_v521a\ARM\ARMCC\Bin\..\include\stdio.h" 1
 N/* stdio.h: ANSI 'C' (X3J11 Oct 88) library header, section 4.9 */
@@ -34933,7 +34983,7 @@ N#endif /* ndef __stdio_h */
 N
 N/* end of stdio.h */
 N
-L 42 "..\User\bsp\bsp.h" 2
+L 51 "..\User\bsp\bsp.h" 2
 N#include <string.h>
 L 1 "C:\Keil_v521a\ARM\ARMCC\Bin\..\include\string.h" 1
 N/* string.h: ANSI 'C' (X3J11 Oct 88) library header, section 4.11 */
@@ -35484,7 +35534,7 @@ N#endif
 N
 N/* end of string.h */
 N
-L 43 "..\User\bsp\bsp.h" 2
+L 52 "..\User\bsp\bsp.h" 2
 N#include <stdlib.h>
 L 1 "C:\Keil_v521a\ARM\ARMCC\Bin\..\include\stdlib.h" 1
 N/* stdlib.h: ANSI draft (X3J11 May 88) library header, section 4.10 */
@@ -36457,7 +36507,7 @@ N
 N#endif /* __stdlib_h */
 N
 N/* end of stdlib.h */
-L 44 "..\User\bsp\bsp.h" 2
+L 53 "..\User\bsp\bsp.h" 2
 N
 N#ifndef TRUE
 N	#define TRUE  1
@@ -36478,17 +36528,625 @@ N
 N#define DEBUG_GPS_TO_COM1	/* 打印GPS数据到串口1 */
 N
 N/* 通过取消注释或者添加注释的方式控制是否包含底层驱动模块 */
-N//#include "bsp_uart_fifo.h"
+N#include "bsp_dwt.h"
+L 1 "..\User\bsp\bsp_dwt.h" 1
+N/*
+N*********************************************************************************************************
+N*
+N*	模块名称 : 数据观察点与跟踪(DWT)模块
+N*	文件名称 : bsp_dwt.h
+N*	版    本 : V1.0
+N*	说    明 : 头文件
+N*	修改记录 :
+N*		版本号    日期        作者     说明
+N*		V1.0    2015-08-18   Eric2013 正式发布
+N*
+N*	Copyright (C), 2015-2020, 安富莱电子 www.armfly.com
+N*
+N*********************************************************************************************************
+N*/
+N
+N#ifndef __BSP_DWT_H
+N#define __BSP_DWT_H
+N
+Nvoid bsp_InitDWT(void);
+Nvoid bsp_DelayUS(uint32_t _ulDelayTime);
+Nvoid bsp_DelayMS(uint32_t _ulDelayTime);
+N
+N#endif
+N
+N/***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/
+L 74 "..\User\bsp\bsp.h" 2
+N#include "bsp_uart_fifo.h"
+L 1 "..\User\bsp\bsp_uart_fifo.h" 1
+N/*
+N*********************************************************************************************************
+N*
+N*	模块名称 : 串口中断+FIFO驱动模块
+N*	文件名称 : bsp_uart_fifo.h
+N*	版    本 : V1.0
+N*	说    明 : 头文件
+N*
+N*	Copyright (C), 2013-2014, 安富莱电子 www.armfly.com
+N*
+N*********************************************************************************************************
+N*/
+N
+N#ifndef _BSP_USART_FIFO_H_
+N#define _BSP_USART_FIFO_H_
+N
+N/*
+N	如果需要更改串口对应的管脚，请自行修改 bsp_uart_fifo.c文件中的 static void InitHardUart(void)函数
+N*/
+N
+N/* 定义使能的串口, 0 表示不使能（不增加代码大小）， 1表示使能 */
+N/*
+N	安富莱STM32-V4 串口分配：
+N	【串口1】 RS232 芯片第1路。
+N		PA9/USART1_TX	  --- 打印调试口
+N		PA10/USART1_RX
+N
+N	【串口2】GPRS 模块 
+N		PA2/USART2_TX
+N		PA3/USART2_RX 
+N
+N	【串口3】 RS485 通信 - TTL 跳线 和 排针
+N		PB10/USART3_TX
+N		PB11/USART3_RX
+N		PB2/BOOT1/RS485_TX_EN
+N
+N	【串口4】 --- 不做串口用。
+N	【串口5】 --- 不做串口用。
+N*/
+N#define	UART1_FIFO_EN	1
+N#define	UART2_FIFO_EN	0
+N#define	UART3_FIFO_EN	0
+N#define	UART4_FIFO_EN	0
+N#define	UART5_FIFO_EN	0
+N
+N/* RS485芯片发送使能GPIO, PB2 */
+N#define RCC_RS485_TXEN 	 RCC_AHB1Periph_GPIOB
+N#define PORT_RS485_TXEN   GPIOB
+N#define PIN_RS485_TXEN	 GPIO_Pin_2
+N
+N#define RS485_RX_EN()	PORT_RS485_TXEN->BSRRL = PIN_RS485_TXEN
+N#define RS485_TX_EN()	PORT_RS485_TXEN->BSRRH = PIN_RS485_TXEN
+N
+N
+N/* 定义端口号 */
+Ntypedef enum
+N{
+N	COM1 = 0,	/* USART1  PA9, PA10 */
+N	COM2 = 1,	/* USART2, PA2, PA3 */
+N	COM3 = 2,	/* USART3, PB10, PB11 */
+N	COM4 = 3,	/* UART4, PC10, PC11 */
+N	COM5 = 4,	/* UART5, PC12, PD2 */
+N}COM_PORT_E;
+N
+N/* 定义串口波特率和FIFO缓冲区大小，分为发送缓冲区和接收缓冲区, 支持全双工 */
+N#if UART1_FIFO_EN == 1
+X#if 1 == 1
+N	#define UART1_BAUD			115200
+N	#define UART1_TX_BUF_SIZE	1*1024
+N	#define UART1_RX_BUF_SIZE	1*1024
+N#endif
+N
+N#if UART2_FIFO_EN == 1
+X#if 0 == 1
+S	#define UART2_BAUD			115200
+S	#define UART2_TX_BUF_SIZE	1*1024
+S	#define UART2_RX_BUF_SIZE	1*1024
+N#endif
+N
+N#if UART3_FIFO_EN == 1
+X#if 0 == 1
+S	#define UART3_BAUD			9600
+S	#define UART3_TX_BUF_SIZE	1*1024
+S	#define UART3_RX_BUF_SIZE	1*1024
+N#endif
+N
+N#if UART4_FIFO_EN == 1
+X#if 0 == 1
+S	#define UART4_BAUD			115200
+S	#define UART4_TX_BUF_SIZE	1*1024
+S	#define UART4_RX_BUF_SIZE	1*1024
+N#endif
+N
+N#if UART5_FIFO_EN == 1
+X#if 0 == 1
+S	#define UART5_BAUD			115200
+S	#define UART5_TX_BUF_SIZE	1*1024
+S	#define UART5_RX_BUF_SIZE	1*1024
+N#endif
+N
+N/* 串口设备结构体 */
+Ntypedef struct
+N{
+N	USART_TypeDef *uart;		/* STM32内部串口设备指针 */
+N	uint8_t *pTxBuf;			/* 发送缓冲区 */
+N	uint8_t *pRxBuf;			/* 接收缓冲区 */
+N	uint16_t usTxBufSize;		/* 发送缓冲区大小 */
+N	uint16_t usRxBufSize;		/* 接收缓冲区大小 */
+N	__IO uint16_t usTxWrite;			/* 发送缓冲区写指针 */
+X	volatile uint16_t usTxWrite;			 
+N	__IO uint16_t usTxRead;			/* 发送缓冲区读指针 */
+X	volatile uint16_t usTxRead;			 
+N	__IO uint16_t usTxCount;			/* 等待发送的数据个数 */
+X	volatile uint16_t usTxCount;			 
+N
+N	__IO uint16_t usRxWrite;			/* 接收缓冲区写指针 */
+X	volatile uint16_t usRxWrite;			 
+N	__IO uint16_t usRxRead;			/* 接收缓冲区读指针 */
+X	volatile uint16_t usRxRead;			 
+N	__IO uint16_t usRxCount;			/* 还未读取的新数据个数 */
+X	volatile uint16_t usRxCount;			 
+N
+N	void (*SendBefor)(void); 	/* 开始发送之前的回调函数指针（主要用于RS485切换到发送模式） */
+N	void (*SendOver)(void); 	/* 发送完毕的回调函数指针（主要用于RS485将发送模式切换为接收模式） */
+N	void (*ReciveNew)(uint8_t _byte);	/* 串口收到数据的回调函数指针 */
+N}UART_T;
+N
+Nvoid bsp_InitUart(void);
+Nvoid comSendBuf(COM_PORT_E _ucPort, uint8_t *_ucaBuf, uint16_t _usLen);
+Nvoid comSendChar(COM_PORT_E _ucPort, uint8_t _ucByte);
+Nuint8_t comGetChar(COM_PORT_E _ucPort, uint8_t *_pByte);
+N
+Nvoid comClearTxFifo(COM_PORT_E _ucPort);
+Nvoid comClearRxFifo(COM_PORT_E _ucPort);
+N
+Nvoid RS485_SendBuf(uint8_t *_ucaBuf, uint16_t _usLen);
+Nvoid RS485_SendStr(char *_pBuf);
+N
+Nvoid bsp_Set485Baud(uint32_t _baud);
+N
+Nvoid bsp_SetUart1Baud(uint32_t _baud);
+Nvoid bsp_SetUart2Baud(uint32_t _baud);
+N
+N#endif
+N
+N/***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/
+L 75 "..\User\bsp\bsp.h" 2
+N#include "bsp_tft_lcd.h"
+L 1 "..\User\bsp\bsp_tft_lcd.h" 1
+N/*
+N*********************************************************************************************************
+N*
+N*	模块名称 : TFT液晶显示器驱动模块
+N*	文件名称 : LCD_tft_lcd.h
+N*	版    本 : V2.0
+N*	说    明 : 头文件
+N*
+N*	Copyright (C), 2010-2011, 安富莱电子 www.armfly.com
+N*
+N*********************************************************************************************************
+N*/
+N
+N
+N#ifndef _BSP_TFT_LCD_H
+N#define _BSP_TFT_LCD_H
+N
+N//#define BUTTON_BEEP()	BEEP_KeyTone();	/* 按键提示音 */
+N#define BUTTON_BEEP()	/* 无按键提示音 */
+N
+N
+N/* 定义LCD显示区域的分辨率 */
+N#define LCD_30_HEIGHT	240		/* 3.0寸宽屏 高度，单位：像素 */
+N#define LCD_30_WIDTH	320		/* 3.0寸宽屏 宽度，单位：像素 */
+N
+N#define LCD_43_HEIGHT	272		/* 4.3寸宽屏 高度，单位：像素 */
+N#define LCD_43_WIDTH	480		/* 4.3寸宽屏 宽度，单位：像素 */
+N
+N#define LCD_70_HEIGHT	480		/* 7.0寸宽屏 高度，单位：像素 */
+N#define LCD_70_WIDTH	800		/* 7.0寸宽屏 宽度，单位：像素 */
+N
+N//#define LCD_70_HEIGHT	272		/* debug 7.0寸宽屏 高度，单位：像素 */
+N//#define LCD_70_WIDTH	480		/* debug 7.0寸宽屏 宽度，单位：像素 */
+N
+N/* 支持的驱动芯片ID */
+Nenum
+N{
+N	IC_5420		= 0x5420,
+N	IC_4001		= 0x4001,
+N	IC_61509 	= 0xB509,
+N	IC_8875 	= 0x0075,	
+N	IC_9488 	= 0x9488,
+N	IC_7789 = 0x7789
+N};
+N
+N#define CHIP_STR_5420	"SPFD5420A"
+N#define CHIP_STR_4001	"OTM4001A"
+N#define CHIP_STR_61509	"R61509V"
+N#define CHIP_STR_8875	"RA8875"
+N#define CHIP_STR_9488	"ILI9488"
+N
+N/*
+N	LCD 颜色代码，CL_是Color的简写
+N	16Bit由高位至低位， RRRR RGGG GGGB BBBB
+N
+N	下面的RGB 宏将24位的RGB值转换为16位格式。
+N	启动windows的画笔程序，点击编辑颜色，选择自定义颜色，可以获得的RGB值。
+N
+N	推荐使用迷你取色器软件获得你看到的界面颜色。
+N*/
+N#define RGB(R,G,B)	(((R >> 3) << 11) | ((G >> 2) << 5) | (B >> 3))	/* 将8位R,G,B转化为 16位RGB565格式 */
+N#define RGB565_R(x)  ((x >> 8) & 0xF8)
+N#define RGB565_G(x)  ((x >> 3) & 0xFC)
+N#define RGB565_B(x)  ((x << 3) & 0xF8)
+Nenum
+N{
+N	CL_WHITE        = RGB(255,255,255),	/* 白色 */
+X	CL_WHITE        = (((255 >> 3) << 11) | ((255 >> 2) << 5) | (255 >> 3)),	 
+N	CL_BLACK        = RGB(  0,  0,  0),	/* 黑色 */
+X	CL_BLACK        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (0 >> 3)),	 
+N	CL_RED          = RGB(255,	0,  0),	/* 红色 */
+X	CL_RED          = (((255 >> 3) << 11) | ((0 >> 2) << 5) | (0 >> 3)),	 
+N	CL_GREEN        = RGB(  0,255,  0),	/* 绿色 */
+X	CL_GREEN        = (((0 >> 3) << 11) | ((255 >> 2) << 5) | (0 >> 3)),	 
+N	CL_BLUE         = RGB(  0,	0,255),	/* 蓝色 */
+X	CL_BLUE         = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (255 >> 3)),	 
+N	CL_YELLOW       = RGB(255,255,  0),	/* 黄色 */
+X	CL_YELLOW       = (((255 >> 3) << 11) | ((255 >> 2) << 5) | (0 >> 3)),	 
+N
+N	CL_GREY			= RGB( 98, 98, 98), 	/* 深灰色 */
+X	CL_GREY			= (((98 >> 3) << 11) | ((98 >> 2) << 5) | (98 >> 3)), 	 
+N	CL_GREY1		= RGB( 150, 150, 150), 	/* 浅灰色 */
+X	CL_GREY1		= (((150 >> 3) << 11) | ((150 >> 2) << 5) | (150 >> 3)), 	 
+N	CL_GREY2		= RGB( 180, 180, 180), 	/* 浅灰色 */
+X	CL_GREY2		= (((180 >> 3) << 11) | ((180 >> 2) << 5) | (180 >> 3)), 	 
+N	CL_GREY3		= RGB( 200, 200, 200), 	/* 最浅灰色 */
+X	CL_GREY3		= (((200 >> 3) << 11) | ((200 >> 2) << 5) | (200 >> 3)), 	 
+N	CL_GREY4		= RGB( 230, 230, 230), 	/* 最浅灰色 */
+X	CL_GREY4		= (((230 >> 3) << 11) | ((230 >> 2) << 5) | (230 >> 3)), 	 
+N
+N	CL_BUTTON_GREY	= RGB( 220, 220, 220), /* WINDOWS 按钮表面灰色 */
+X	CL_BUTTON_GREY	= (((220 >> 3) << 11) | ((220 >> 2) << 5) | (220 >> 3)),  
+N
+N	CL_MAGENTA      = 0xF81F,	/* 红紫色，洋红色 */
+N	CL_CYAN         = 0x7FFF,	/* 蓝绿色，青色 */
+N
+N	CL_BLUE1        = RGB(  0,  0, 240),		/* 深蓝色 */
+X	CL_BLUE1        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (240 >> 3)),		 
+N	CL_BLUE2        = RGB(  0,  0, 128),		/* 深蓝色 */
+X	CL_BLUE2        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (128 >> 3)),		 
+N	CL_BLUE3        = RGB(  68, 68, 255),		/* 浅蓝色1 */
+X	CL_BLUE3        = (((68 >> 3) << 11) | ((68 >> 2) << 5) | (255 >> 3)),		 
+N	CL_BLUE4        = RGB(  0, 64, 128),		/* 浅蓝色1 */
+X	CL_BLUE4        = (((0 >> 3) << 11) | ((64 >> 2) << 5) | (128 >> 3)),		 
+N
+N	/* UI 界面 Windows控件常用色 */
+N	CL_BTN_FACE		= RGB(236, 233, 216),	/* 按钮表面颜色(灰) */
+X	CL_BTN_FACE		= (((236 >> 3) << 11) | ((233 >> 2) << 5) | (216 >> 3)),	 
+N	
+N	CL_BTN_FONT		= CL_BLACK,				/* 按钮字体颜色（黑） */
+N	
+N	CL_BOX_BORDER1	= RGB(172, 168,153),	/* 分组框主线颜色 */
+X	CL_BOX_BORDER1	= (((172 >> 3) << 11) | ((168 >> 2) << 5) | (153 >> 3)),	 
+N	CL_BOX_BORDER2	= RGB(255, 255,255),	/* 分组框阴影线颜色 */
+X	CL_BOX_BORDER2	= (((255 >> 3) << 11) | ((255 >> 2) << 5) | (255 >> 3)),	 
+N
+N
+N	CL_MASK			= 0x9999	/* 颜色掩码，用于文字背景透明 */
+N};
+N
+N/* 文字对齐方式 */
+Nenum
+N{
+N	ALIGN_LEFT = 0,
+N	ALIGN_CENTER = 1,
+N	ALIGN_RIGHT = 2
+N};
+N
+N/* 编辑框风格 */
+Nenum
+N{
+N	EDIT_BORDER_COLOR		= CL_BLUE2,		/* 编辑框四个边的颜色 */
+N	EDIT_BACK_COLOR			= CL_WHITE,			/* 编辑框背景 */
+N};
+N
+N/* 按钮风格 */
+Nenum
+N{
+N	BUTTON_BORDER_COLOR		= CL_BLUE2,			/* 按钮四个边的颜色 */
+N	BUTTON_BORDER1_COLOR	= CL_WHITE,			/* 按钮四个边内部2列的颜色 */
+N	BUTTON_BORDER2_COLOR	= CL_GREY1,			/* 按钮四个边内部2列的颜色 */
+N	BUTTON_BACK_COLOR		= CL_GREY3,			/* 按钮背景 */
+N	BUTTON_ACTIVE_COLOR		= CL_CYAN,			/* 激活的按钮背景 */
+N};
+N
+N/* 窗口风格 */
+Nenum
+N{
+N	WIN_BORDER_COLOR	= CL_BLUE4,		/* 窗口边框 */
+N	WIN_TITLE_COLOR		= CL_BLUE3,		/* 窗口标题蓝背景颜色 */
+N	WIN_CAPTION_COLOR	= CL_WHITE,		/* 窗口标题栏文字颜色 */
+N	WIN_BODY_COLOR		= CL_GREY2,		/* 窗体颜色 */
+N};
+N
+N/* 检查框风格 */
+Nenum
+N{
+N	CHECK_BOX_BORDER_COLOR	= CL_BLUE2,		/* 检查框四个边的颜色 */
+N	CHECK_BOX_BACK_COLOR	= CL_GREY3,		/* 检查框背景 */
+N	CHECK_BOX_CHECKED_COLOR	= CL_RED,		/* 检查框打勾的颜色 */
+N
+N	CHECK_BOX_H			= 24,				/* 检查框高度 */
+N	CHECK_BOX_W			= 24,				/* 检查框高度 */
+N};
+N
+N/* 字体代码 */
+Ntypedef enum
+N{
+N	FC_ST_12 = 0,		/* 宋体12x12点阵 （宽x高） */
+N	FC_ST_16,			/* 宋体15x16点阵 （宽x高） */
+N	FC_ST_24,			/* 宋体24x24点阵 （宽x高） -- 暂时未支持 */
+N	FC_ST_32,			/* 宋体32x32点阵 （宽x高） -- 暂时未支持 */	
+N	
+N	FC_RA8875_16,		/* RA8875 内置字体 16点阵 */
+N	FC_RA8875_24,		/* RA8875 内置字体 24点阵 */
+N	FC_RA8875_32		/* RA8875 内置字体 32点阵 */	
+N}FONT_CODE_E;
+N
+N/* 字体属性结构, 用于LCD_DispStr() */
+Ntypedef struct
+N{
+N	FONT_CODE_E FontCode;	/* 字体代码 FONT_CODE_E  */
+N	uint16_t FrontColor;/* 字体颜色 */
+N	uint16_t BackColor;	/* 文字背景颜色，透明 */
+N	uint16_t Space;		/* 文字间距，单位 = 像素 */
+N}FONT_T;
+N
+N/* 控件ID */
+Ntypedef enum
+N{
+N	ID_ICON		= 1,
+N	ID_WIN		= 2,
+N	ID_LABEL	= 3,
+N	ID_BUTTON	= 4,
+N	ID_CHECK 	= 5,
+N	ID_EDIT 	= 6,
+N	ID_GROUP 	= 7,
+N}CONTROL_ID_T;
+N
+N/* 图标结构 */
+Ntypedef struct
+N{
+N	uint8_t id;
+N	uint16_t Left;		/* 左上角X坐标 */
+N	uint16_t Top;		/* 左上角Y坐标 */
+N	uint16_t Height;	/* 图标高度 */
+N	uint16_t Width;		/* 图标宽度 */
+N	uint16_t *pBmp;		/* 指向图标图片数据 */
+N	char  Text[16];	/* 图标文本, 最多显示5个汉字16点阵 */
+N}ICON_T;
+N
+N/* 窗体结构 */
+Ntypedef struct
+N{
+N	uint8_t id;
+N	uint16_t Left;
+N	uint16_t Top;
+N	uint16_t Height;
+N	uint16_t Width;
+N	uint16_t Color;
+N	FONT_T *Font;
+N	char *pCaption;
+N}WIN_T;
+N
+N/* 文本标签结构 */
+Ntypedef struct
+N{
+N	uint8_t id;
+N	uint16_t Left;			/* 左上角X坐标 */
+N	uint16_t Top;			/* 左上角Y坐标 */
+N	uint16_t Height;		/* 高度 */
+N	uint16_t Width;			/* 宽度 */
+N	uint16_t MaxLen;		/* 字符串长度 */
+N	FONT_T *Font;			/* 字体 */
+N	char  *pCaption;
+N}LABEL_T;
+N
+N/* 按钮结构 */
+Ntypedef struct
+N{
+N	uint8_t id;
+N	uint16_t Left;
+N	uint16_t Top;
+N	uint16_t Height;
+N	uint16_t Width;
+N	/* 按钮的颜色，由底层自动管理 */
+N	FONT_T *Font;			/* 字体 */
+N	char *pCaption;
+N	uint8_t Focus;			/* 焦点 */
+N}BUTTON_T;
+N
+N/* 编辑框结构 */
+Ntypedef struct
+N{
+N	uint8_t id;
+N	uint16_t Left;
+N	uint16_t Top;
+N	uint16_t Height;
+N	uint16_t Width;
+N	uint16_t Color;
+N	FONT_T *Font;			/* 字体 */
+N	char   *pCaption;
+N	char Text[32];			/* 用于存放编辑内容 */
+N}EDIT_T;
+N
+N/* 检查框 CHECK BOX 结构 */
+Ntypedef struct
+N{
+N	uint8_t id;
+N	uint16_t Left;			/* 左上角X坐标 */
+N	uint16_t Top;			/* 左上角Y坐标 */
+N	uint16_t Height;		/* 高度 */
+N	uint16_t Width;			/* 宽度 */
+N	uint16_t Color;			/* 颜色 */
+N	FONT_T *Font;			/* 字体 */
+N	char  *pCaption;
+N	uint8_t Checked;		/* 1表示打勾 */
+N}CHECK_T;
+N
+N/* 分组框GROUP BOX 结构 */
+Ntypedef struct
+N{
+N	uint8_t id;
+N	uint16_t Left;			/* 左上角X坐标 */
+N	uint16_t Top;			/* 左上角Y坐标 */
+N	uint16_t Height;		/* 高度 */
+N	uint16_t Width;			/* 宽度 */
+N	FONT_T *Font;			/* 字体 */
+N	char  *pCaption;
+N}GROUP_T;
+N
+N/* 背景光控制 */
+N#define BRIGHT_MAX		255
+N#define BRIGHT_MIN		0
+N#define BRIGHT_DEFAULT	200
+N#define BRIGHT_STEP		5
+N
+N/* 可供外部模块调用的函数 */
+Nvoid LCD_InitHard(void);
+Nvoid LCD_GetChipDescribe(char *_str);
+Nuint16_t LCD_GetHeight(void);
+Nuint16_t LCD_GetWidth(void);
+Nvoid LCD_DispOn(void);
+Nvoid LCD_DispOff(void);
+Nvoid LCD_ClrScr(uint16_t _usColor);
+Nvoid LCD_DispStr(uint16_t _usX, uint16_t _usY, char *_ptr, FONT_T *_tFont);
+Nvoid LCD_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor);
+Nuint16_t LCD_GetPixel(uint16_t _usX, uint16_t _usY);
+Nvoid LCD_DrawLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usY2 , uint16_t _usColor);
+Nvoid LCD_DrawPoints(uint16_t *x, uint16_t *y, uint16_t _usSize, uint16_t _usColor);
+Nvoid LCD_DrawRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+Nvoid LCD_DrawCircle(uint16_t _usX, uint16_t _usY, uint16_t _usRadius, uint16_t _usColor);
+Nvoid LCD_DrawBMP(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t *_ptr);
+Nvoid LCD_SetBackLight(uint8_t _bright);
+Nuint8_t LCD_GetBackLight(void);
+N
+Nvoid LCD_Fill_Rect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+N
+Nvoid LCD_DrawWin(WIN_T *_pWin);
+Nvoid LCD_DrawIcon(const ICON_T *_tIcon, FONT_T *_tFont, uint8_t _ucFocusMode);
+Nvoid LCD_DrawEdit(EDIT_T *_pEdit);
+Nvoid LCD_DrawButton(BUTTON_T *_pBtn);
+Nvoid LCD_DrawLabel(LABEL_T *_pLabel);
+Nvoid LCD_DrawCheckBox(CHECK_T *_pCheckBox);
+Nvoid LCD_DrawGroupBox(GROUP_T *_pBox);
+N
+Nvoid LCD_DispControl(void *_pControl);
+N
+Nvoid LCD_DrawIcon32(const ICON_T *_tIcon, FONT_T *_tFont, uint8_t _ucFocusMode);
+Nvoid LCD_DrawBmp32(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint8_t *_pBmp);
+N
+Nuint16_t LCD_GetFontWidth(FONT_T *_tFont);
+Nuint16_t LCD_GetFontHeight(FONT_T *_tFont);
+Nuint16_t LCD_GetStrWidth(char *_ptr, FONT_T *_tFont);
+Nvoid LCD_DispStrEx(uint16_t _usX, uint16_t _usY, char *_ptr, FONT_T *_tFont, uint16_t _Width,
+N	uint8_t _Align);
+N
+Nvoid LCD_SetDirection(uint8_t _dir);
+Nuint8_t LCD_ButtonTouchDown(BUTTON_T *_btn, uint16_t _usX, uint16_t _usY);
+Nuint8_t LCD_ButtonTouchRelease(BUTTON_T *_btn, uint16_t _usX, uint16_t _usY);
+Nvoid LCD_InitButton(BUTTON_T *_btn, uint16_t _x, uint16_t _y, uint16_t _h, uint16_t _w, char *_pCaption, FONT_T *_pFont);
+N
+N/* 下面3个变量，主要用于使程序同时支持不同的屏 */
+Nextern uint16_t g_ChipID;			/* 驱动芯片ID */
+Nextern uint16_t g_LcdHeight;		/* 显示屏分辨率-高度 */
+Nextern uint16_t g_LcdWidth;			/* 显示屏分辨率-宽度 */
+Nextern uint8_t g_LcdDirection;		/* 显示方向.0，1，2，3 */
+N
+N#endif
+N
+N
+L 76 "..\User\bsp\bsp.h" 2
+N#include "bsp_lcd_st7789v.h"
+L 1 "..\User\bsp\bsp_lcd_st7789v.h" 1
+N/*
+N*********************************************************************************************************
+N*
+N*	模块名称 : TFT液晶显示器驱动模块
+N*	文件名称 : LCD_ST7789V.h
+N*	版    本 : V1.0
+N*	说    明 : 头文件
+N*
+N*	Copyright (C), 2014-2015, 安富莱电子 www.armfly.com
+N*
+N*********************************************************************************************************
+N*/
+N
+N
+N#ifndef _BSP_LCD_ST7789V_H
+N#define _BSP_LCD_ST7789V_H
+N
+N#define IC_ST7789V_ID 0x858552
+N
+N/* 可供外部模块调用的函数 */
+Nuint32_t ST7789V_ReadID(void);
+Nvoid ST7789V_InitHard(void);
+Nvoid ST7789V_DispOn(void);
+Nvoid ST7789V_DispOff(void);
+Nvoid ST7789V_ClrScr(uint16_t _usColor);
+Nvoid ST7789V_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor);
+Nuint16_t ST7789V_GetPixel(uint16_t _usX, uint16_t _usY);
+Nvoid ST7789V_DrawLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usY2 , uint16_t _usColor);
+Nvoid ST7789V_DrawHLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usColor);
+Nvoid ST7789V_DrawHColorLine(uint16_t _usX1 , uint16_t _usY1, uint16_t _usWidth, const uint16_t *_pColor);
+Nvoid ST7789V_DrawHTransLine(uint16_t _usX1 , uint16_t _usY1, uint16_t _usWidth, const uint16_t *_pColor);
+Nvoid ST7789V_DrawRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+Nvoid ST7789V_FillRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+Nvoid ST7789V_DrawCircle(uint16_t _usX, uint16_t _usY, uint16_t _usRadius, uint16_t _usColor);
+Nvoid ST7789V_DrawBMP(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t *_ptr);
+N
+Nvoid ST7789V_SetBackLight(uint8_t _bright);
+Nvoid ST7789V_SetDirection(uint8_t _ucDir);
+N
+Nvoid ST7789V_DrawVLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usY2 , uint16_t _usColor);
+N
+N#endif
+N
+N/***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/
+L 77 "..\User\bsp\bsp.h" 2
+N#include "bsp_tim_pwm.h"
+L 1 "..\User\bsp\bsp_tim_pwm.h" 1
+N/*
+N*********************************************************************************************************
+N*
+N*	模块名称 : 利用STM32F4内部TIM输出PWM信号，顺便实现
+N*	文件名称 : bsp_tim_pwm.h
+N*	版    本 : V1.0
+N*	说    明 : 头文件
+N*
+N*	Copyright (C), 2012-2013, 安富莱电子 www.armfly.com
+N*
+N*********************************************************************************************************
+N*/
+N
+N#ifndef __BSP_TIM_PWM_H
+N#define __BSP_TIM_PWM_H
+N
+Nvoid bsp_SetTIMOutPWM(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIMx, uint8_t _ucChannel,
+N	 uint32_t _ulFreq, uint32_t _ulDutyCycle);
+N
+Nvoid bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIMx, uint8_t _ucChannel,
+N	 uint32_t _ulFreq, uint32_t _ulDutyCycle);
+N	 
+Nvoid bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPriority, uint8_t _SubPriority);
+N
+N#endif
+N
+N/***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/
+L 78 "..\User\bsp\bsp.h" 2
 N//#include "bsp_led.h"
 N//#include "bsp_timer.h"
 N//#include "bsp_key.h"
-N//#include "bsp_dwt.h"
+N
 N
 N//#include "bsp_msg.h"
 N
 N//#include "bsp_beep.h"
 N
-N//#include "bsp_tim_pwm.h"
+N
 N
 N//#include "bsp_cpu_flash.h"
 N//#include "bsp_sdio_sd.h"
@@ -36510,7 +37168,7 @@ N//#include "LCD_RA8875.h"
 N//#include "LCD_SPFD5420.h"
 N//#include "LCD_ILI9488.h"
 N//#include "bsp_ra8875_port.h"
-N//#include "bsp_tft_lcd.h"
+N
 N
 N//#include "bsp_touch.h"
 N
@@ -36615,44 +37273,44 @@ N
 N	if (GPIOx == GPIOA)
 X	if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x0000)))
 N	{
-E "..\User\bsp\bsp_tim_pwm.c" 84 9 identifier "RCC_APB2Periph_GPIOA" is undefined
-N		rcc = RCC_APB2Periph_GPIOA;
+N		rcc = RCC_AHB1Periph_GPIOA;
+X		rcc = ((uint32_t)0x00000001);
 N	}
 N	else if (GPIOx == GPIOB)
 X	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x0400)))
 N	{
-E "..\User\bsp\bsp_tim_pwm.c" 88 9 identifier "RCC_APB2Periph_GPIOB" is undefined
-N		rcc = RCC_APB2Periph_GPIOB;
+N		rcc = RCC_AHB1Periph_GPIOB;
+X		rcc = ((uint32_t)0x00000002);
 N	}
 N	else if (GPIOx == GPIOC)
 X	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x0800)))
 N	{
-E "..\User\bsp\bsp_tim_pwm.c" 92 9 identifier "RCC_APB2Periph_GPIOC" is undefined
-N		rcc = RCC_APB2Periph_GPIOC;
+N		rcc = RCC_AHB1Periph_GPIOC;
+X		rcc = ((uint32_t)0x00000004);
 N	}
 N	else if (GPIOx == GPIOD)
 X	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x0C00)))
 N	{
-E "..\User\bsp\bsp_tim_pwm.c" 96 9 identifier "RCC_APB2Periph_GPIOD" is undefined
-N		rcc = RCC_APB2Periph_GPIOD;
+N		rcc = RCC_AHB1Periph_GPIOD;
+X		rcc = ((uint32_t)0x00000008);
 N	}
 N	else if (GPIOx == GPIOE)
 X	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x1000)))
 N	{
-E "..\User\bsp\bsp_tim_pwm.c" 100 9 identifier "RCC_APB2Periph_GPIOE" is undefined
-N		rcc = RCC_APB2Periph_GPIOE;
+N		rcc = RCC_AHB1Periph_GPIOE;
+X		rcc = ((uint32_t)0x00000010);
 N	}
 N	else if (GPIOx == GPIOF)
 X	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x1400)))
 N	{
-E "..\User\bsp\bsp_tim_pwm.c" 104 9 identifier "RCC_APB2Periph_GPIOF" is undefined
-N		rcc = RCC_APB2Periph_GPIOF;
+N		rcc = RCC_AHB1Periph_GPIOF;
+X		rcc = ((uint32_t)0x00000020);
 N	}
 N	else if (GPIOx == GPIOG)
 X	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x1800)))
 N	{
-E "..\User\bsp\bsp_tim_pwm.c" 108 9 identifier "RCC_APB2Periph_GPIOG" is undefined
-N		rcc = RCC_APB2Periph_GPIOG;
+N		rcc = RCC_AHB1Periph_GPIOG;
+X		rcc = ((uint32_t)0x00000040);
 N	}
 N
 N	return rcc;
@@ -36794,8 +37452,8 @@ N	}
 N
 N	/* 配置GPIO */
 N	GPIO_InitStructure.GPIO_Pin = GPIO_PinX;
-E "..\User\bsp\bsp_tim_pwm.c" 221 33 identifier "GPIO_Mode_AF_PP" is undefined
-N	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;		/* 复用功能 */
+N	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;		/* 复用功能 */
+N        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 N	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 N	GPIO_Init(GPIOx, &GPIO_InitStructure); 
 N}
@@ -36818,8 +37476,8 @@ N	RCC_APB2PeriphClockCmd(bsp_GetRCCofGPIO(GPIOx), ENABLE);
 N
 N	/* 配置GPIO */
 N	GPIO_InitStructure.GPIO_Pin = GPIO_PinX;		/* 带入的形参 */
-E "..\User\bsp\bsp_tim_pwm.c" 244 33 identifier "GPIO_Mode_Out_PP" is undefined
-N	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;	/* 输出 */
+N	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;	/* 输出 */
+N        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 N	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 N	GPIO_Init(GPIOx, &GPIO_InitStructure);
 N}
@@ -37157,8 +37815,7 @@ N			uint8_t irq = 0;	/* 中断号, 定义在 stm32f4xx.h */
 N
 N			if (TIMx == TIM1)
 X			if (TIMx == ((TIM_TypeDef *) ((((uint32_t)0x40000000) + 0x00010000) + 0x0000)))
-E "..\User\bsp\bsp_tim_pwm.c" 552 11 identifier "TIM1_UP_IRQn" is undefined
-N				irq = TIM1_UP_IRQn;
+N				irq = TIM1_UP_TIM10_IRQn;
 N			else if (TIMx == TIM2)
 X			else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x0000)))
 N				irq = TIM2_IRQn;
@@ -37173,15 +37830,13 @@ X			else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x0C00)))
 N				irq = TIM5_IRQn;
 N			else if (TIMx == TIM6)
 X			else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x1000)))
-E "..\User\bsp\bsp_tim_pwm.c" 562 11 identifier "TIM6_IRQn" is undefined
-N				irq = TIM6_IRQn;
+N				irq = TIM6_DAC_IRQn;
 N			else if (TIMx == TIM7)
 X			else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x1400)))
 N				irq = TIM7_IRQn;
 N			else if (TIMx == TIM8)
 X			else if (TIMx == ((TIM_TypeDef *) ((((uint32_t)0x40000000) + 0x00010000) + 0x0400)))
-E "..\User\bsp\bsp_tim_pwm.c" 566 11 identifier "TIM8_UP_IRQn" is undefined
-N				irq = TIM8_UP_IRQn;
+N				irq = TIM8_UP_TIM13_IRQn;
 N
 N			NVIC_InitStructure.NVIC_IRQChannel = irq;
 N			NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = _PreemptionPriority;
@@ -37261,8 +37916,7 @@ N		uint8_t irq = 0;	/* 中断号, 定义在 stm32f4xx.h */
 N
 N		if (TIMx == TIM1)
 X		if (TIMx == ((TIM_TypeDef *) ((((uint32_t)0x40000000) + 0x00010000) + 0x0000)))
-E "..\User\bsp\bsp_tim_pwm.c" 642 10 identifier "TIM1_UP_IRQn" is undefined
-N			irq = TIM1_UP_IRQn;
+N			irq = TIM1_UP_TIM10_IRQn;
 N		else if (TIMx == TIM2)
 X		else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x0000)))
 N			irq = TIM2_IRQn;
@@ -37277,15 +37931,13 @@ X		else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x0C00)))
 N			irq = TIM5_IRQn;
 N		else if (TIMx == TIM6)
 X		else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x1000)))
-E "..\User\bsp\bsp_tim_pwm.c" 652 10 identifier "TIM6_IRQn" is undefined
-N			irq = TIM6_IRQn;
+N			irq = TIM6_DAC_IRQn;
 N		else if (TIMx == TIM7)
 X		else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x1400)))
 N			irq = TIM7_IRQn;
 N		else if (TIMx == TIM8)
 X		else if (TIMx == ((TIM_TypeDef *) ((((uint32_t)0x40000000) + 0x00010000) + 0x0400)))
-E "..\User\bsp\bsp_tim_pwm.c" 656 10 identifier "TIM8_UP_IRQn" is undefined
-N			irq = TIM8_UP_IRQn;
+N			irq = TIM8_UP_TIM13_IRQn;
 N
 N		NVIC_InitStructure.NVIC_IRQChannel = irq;
 N		NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = _PreemptionPriority;

@@ -1,6 +1,12 @@
 --cpu Cortex-M3
 ".\objects\main.o"
 ".\objects\sysinfotest.o"
+".\objects\bsp.o"
+".\objects\bsp_dwt.o"
+".\objects\bsp_uart_fifo.o"
+".\objects\bsp_tft_lcd.o"
+".\objects\bsp_lcd_st7789v.o"
+".\objects\bsp_tim_pwm.o"
 ".\objects\startup_stm32f2xx.o"
 ".\objects\misc.o"
 ".\objects\stm32f2xx_adc.o"

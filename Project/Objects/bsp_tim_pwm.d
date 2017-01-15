@@ -48,3 +48,8 @@
 .\objects\bsp_tim_pwm.o: C:\Keil_v521a\ARM\ARMCC\Bin\..\include\stdio.h
 .\objects\bsp_tim_pwm.o: C:\Keil_v521a\ARM\ARMCC\Bin\..\include\string.h
 .\objects\bsp_tim_pwm.o: C:\Keil_v521a\ARM\ARMCC\Bin\..\include\stdlib.h
+.\objects\bsp_tim_pwm.o: ..\User\bsp\bsp_dwt.h
+.\objects\bsp_tim_pwm.o: ..\User\bsp\bsp_uart_fifo.h
+.\objects\bsp_tim_pwm.o: ..\User\bsp\bsp_tft_lcd.h
+.\objects\bsp_tim_pwm.o: ..\User\bsp\bsp_lcd_st7789v.h
+.\objects\bsp_tim_pwm.o: ..\User\bsp\bsp_tim_pwm.h

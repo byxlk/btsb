@@ -35,6 +35,14 @@
 
 
 
+
+
+
+ 
+
+
+
+
  
 
 
@@ -558,20 +566,13 @@ typedef unsigned     long long uintmax_t;
 
 
  
-
-#line 97 "..\\User\\FreeRTOSConfig.h"
-
  
+  
+#line 88 "..\\User\\FreeRTOSConfig.h"
+ extern volatile uint32_t ulHighFrequencyTimerTicks;
 
 
-
-
- 
-
-#line 112 "..\\User\\FreeRTOSConfig.h"
-
-
- 
+#line 104 "..\\User\\FreeRTOSConfig.h"
 
 
  
@@ -582,6 +583,46 @@ typedef unsigned     long long uintmax_t;
 
 
  
+
+
+
+
+ 
+
+#line 127 "..\\User\\FreeRTOSConfig.h"
+
+ 
+#line 135 "..\\User\\FreeRTOSConfig.h"
+
+
+ 
+
+
+
+
+
+ 
+
+
+
+ 
+
+
+
+ 
+
+
+
+ 
+
+
+
+
+ 
+
+
+
+
 
 
 
@@ -1286,7 +1327,7 @@ extern void vPortExitCritical( void );
  
 
 
-
+	void vPortValidateInterruptPriority( void );
 
 
 
@@ -1314,7 +1355,7 @@ static __forceinline void vPortSetBASEPRI( uint32_t ulBASEPRI )
 
 static __forceinline void vPortRaiseBASEPRI( void )
 {
-uint32_t ulNewBASEPRI = 191;
+uint32_t ulNewBASEPRI = ( 0x01 << (8 - 4) );
 
 	__asm
 	{
@@ -1341,7 +1382,7 @@ static __forceinline void vPortClearBASEPRIFromISR( void )
 
 static __forceinline uint32_t ulPortRaiseBASEPRI( void )
 {
-uint32_t ulReturn, ulNewBASEPRI = 191;
+uint32_t ulReturn, ulNewBASEPRI = ( 0x01 << (8 - 4) );
 
 	__asm
 	{
@@ -2129,7 +2170,19 @@ void vPortEndScheduler( void ) ;
 
 
 
-#line 678 "..\\FreeRTOS\\include\\FreeRTOS.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2345,7 +2398,18 @@ typedef struct xSTATIC_TCB
 	UBaseType_t			uxDummy5;
 	void				*pxDummy6;
 	uint8_t				ucDummy7[ ( 16 ) ];
-#line 945 "..\\FreeRTOS\\include\\FreeRTOS.h"
+#line 927 "..\\FreeRTOS\\include\\FreeRTOS.h"
+		UBaseType_t		uxDummy10[ 2 ];
+
+
+		UBaseType_t		uxDummy12[ 2 ];
+#line 939 "..\\FreeRTOS\\include\\FreeRTOS.h"
+		uint32_t		ulDummy16;
+
+
+
+
+
 		uint32_t 		ulDummy18;
 		uint8_t 		ucDummy19;
 
@@ -2392,8 +2456,8 @@ typedef struct xSTATIC_QUEUE
 
 
 
-
-
+		UBaseType_t uxDummy8;
+		uint8_t ucDummy9;
 
 
 } StaticQueue_t;
@@ -2419,7 +2483,7 @@ typedef struct xSTATIC_EVENT_GROUP
 	StaticList_t xDummy2;
 
 
-
+		UBaseType_t uxDummy3;
 
 
 
@@ -2450,7 +2514,7 @@ typedef struct xSTATIC_TIMER
 	UBaseType_t			uxDummy4;
 	void 				*pvDummy5[ 2 ];
 
-
+		UBaseType_t		uxDummy6;
 
 
 
@@ -2465,7 +2529,7 @@ typedef struct xSTATIC_TIMER
 
 
 
-#line 27 "..\\User\\bsp\\bsp.h"
+#line 35 "..\\User\\bsp\\bsp.h"
 #line 1 "..\\FreeRTOS\\include\\task.h"
 
 
@@ -5112,8 +5176,8 @@ void *pvTaskIncrementMutexHeldCount( void ) ;
 
 
 
-#line 28 "..\\User\\bsp\\bsp.h"
-#line 35 "..\\User\\bsp\\bsp.h"
+#line 36 "..\\User\\bsp\\bsp.h"
+#line 43 "..\\User\\bsp\\bsp.h"
 
  
 
@@ -19789,7 +19853,8 @@ void SysTick_CLKSourceConfig(uint32_t SysTick_CLKSource);
  
 
  
-#line 41 "..\\User\\bsp\\bsp.h"
+#line 49 "..\\User\\bsp\\bsp.h"
+#line 50 "..\\User\\bsp\\bsp.h"
 #line 1 "C:\\Keil_v521a\\ARM\\ARMCC\\Bin\\..\\include\\stdio.h"
  
  
@@ -20689,7 +20754,7 @@ extern __declspec(__nothrow) void __use_no_semihosting(void);
 
  
 
-#line 42 "..\\User\\bsp\\bsp.h"
+#line 51 "..\\User\\bsp\\bsp.h"
 #line 1 "C:\\Keil_v521a\\ARM\\ARMCC\\Bin\\..\\include\\string.h"
  
  
@@ -21112,7 +21177,7 @@ extern __declspec(__nothrow) void _membitmovewb(void *  , const void *  , int  ,
 
  
 
-#line 43 "..\\User\\bsp\\bsp.h"
+#line 52 "..\\User\\bsp\\bsp.h"
 #line 1 "C:\\Keil_v521a\\ARM\\ARMCC\\Bin\\..\\include\\stdlib.h"
  
  
@@ -21850,7 +21915,7 @@ extern __declspec(__nothrow) int __C_library_version_number(void);
 
 
  
-#line 44 "..\\User\\bsp\\bsp.h"
+#line 53 "..\\User\\bsp\\bsp.h"
 
 
 
@@ -21871,7 +21936,580 @@ extern __declspec(__nothrow) int __C_library_version_number(void);
 
 
  
+#line 1 "..\\User\\bsp\\bsp_dwt.h"
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+void bsp_InitDWT(void);
+void bsp_DelayUS(uint32_t _ulDelayTime);
+void bsp_DelayMS(uint32_t _ulDelayTime);
+
+
+
+ 
+#line 74 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_uart_fifo.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+ 
+typedef enum
+{
+	COM1 = 0,	 
+	COM2 = 1,	 
+	COM3 = 2,	 
+	COM4 = 3,	 
+	COM5 = 4,	 
+}COM_PORT_E;
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+typedef struct
+{
+	USART_TypeDef *uart;		 
+	uint8_t *pTxBuf;			 
+	uint8_t *pRxBuf;			 
+	uint16_t usTxBufSize;		 
+	uint16_t usRxBufSize;		 
+	volatile uint16_t usTxWrite;			 
+	volatile uint16_t usTxRead;			 
+	volatile uint16_t usTxCount;			 
+
+	volatile uint16_t usRxWrite;			 
+	volatile uint16_t usRxRead;			 
+	volatile uint16_t usRxCount;			 
+
+	void (*SendBefor)(void); 	 
+	void (*SendOver)(void); 	 
+	void (*ReciveNew)(uint8_t _byte);	 
+}UART_T;
+
+void bsp_InitUart(void);
+void comSendBuf(COM_PORT_E _ucPort, uint8_t *_ucaBuf, uint16_t _usLen);
+void comSendChar(COM_PORT_E _ucPort, uint8_t _ucByte);
+uint8_t comGetChar(COM_PORT_E _ucPort, uint8_t *_pByte);
+
+void comClearTxFifo(COM_PORT_E _ucPort);
+void comClearRxFifo(COM_PORT_E _ucPort);
+
+void RS485_SendBuf(uint8_t *_ucaBuf, uint16_t _usLen);
+void RS485_SendStr(char *_pBuf);
+
+void bsp_Set485Baud(uint32_t _baud);
+
+void bsp_SetUart1Baud(uint32_t _baud);
+void bsp_SetUart2Baud(uint32_t _baud);
+
+
+
+ 
+#line 75 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_tft_lcd.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+enum
+{
+	IC_5420		= 0x5420,
+	IC_4001		= 0x4001,
+	IC_61509 	= 0xB509,
+	IC_8875 	= 0x0075,	
+	IC_9488 	= 0x9488,
+	IC_7789 = 0x7789
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+enum
+{
+	CL_WHITE        = (((255 >> 3) << 11) | ((255 >> 2) << 5) | (255 >> 3)),	 
+	CL_BLACK        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (0 >> 3)),	 
+	CL_RED          = (((255 >> 3) << 11) | ((0 >> 2) << 5) | (0 >> 3)),	 
+	CL_GREEN        = (((0 >> 3) << 11) | ((255 >> 2) << 5) | (0 >> 3)),	 
+	CL_BLUE         = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (255 >> 3)),	 
+	CL_YELLOW       = (((255 >> 3) << 11) | ((255 >> 2) << 5) | (0 >> 3)),	 
+
+	CL_GREY			= (((98 >> 3) << 11) | ((98 >> 2) << 5) | (98 >> 3)), 	 
+	CL_GREY1		= (((150 >> 3) << 11) | ((150 >> 2) << 5) | (150 >> 3)), 	 
+	CL_GREY2		= (((180 >> 3) << 11) | ((180 >> 2) << 5) | (180 >> 3)), 	 
+	CL_GREY3		= (((200 >> 3) << 11) | ((200 >> 2) << 5) | (200 >> 3)), 	 
+	CL_GREY4		= (((230 >> 3) << 11) | ((230 >> 2) << 5) | (230 >> 3)), 	 
+
+	CL_BUTTON_GREY	= (((220 >> 3) << 11) | ((220 >> 2) << 5) | (220 >> 3)),  
+
+	CL_MAGENTA      = 0xF81F,	 
+	CL_CYAN         = 0x7FFF,	 
+
+	CL_BLUE1        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (240 >> 3)),		 
+	CL_BLUE2        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (128 >> 3)),		 
+	CL_BLUE3        = (((68 >> 3) << 11) | ((68 >> 2) << 5) | (255 >> 3)),		 
+	CL_BLUE4        = (((0 >> 3) << 11) | ((64 >> 2) << 5) | (128 >> 3)),		 
+
+	 
+	CL_BTN_FACE		= (((236 >> 3) << 11) | ((233 >> 2) << 5) | (216 >> 3)),	 
+	
+	CL_BTN_FONT		= CL_BLACK,				 
+	
+	CL_BOX_BORDER1	= (((172 >> 3) << 11) | ((168 >> 2) << 5) | (153 >> 3)),	 
+	CL_BOX_BORDER2	= (((255 >> 3) << 11) | ((255 >> 2) << 5) | (255 >> 3)),	 
+
+
+	CL_MASK			= 0x9999	 
+};
+
+ 
+enum
+{
+	ALIGN_LEFT = 0,
+	ALIGN_CENTER = 1,
+	ALIGN_RIGHT = 2
+};
+
+ 
+enum
+{
+	EDIT_BORDER_COLOR		= CL_BLUE2,		 
+	EDIT_BACK_COLOR			= CL_WHITE,			 
+};
+
+ 
+enum
+{
+	BUTTON_BORDER_COLOR		= CL_BLUE2,			 
+	BUTTON_BORDER1_COLOR	= CL_WHITE,			 
+	BUTTON_BORDER2_COLOR	= CL_GREY1,			 
+	BUTTON_BACK_COLOR		= CL_GREY3,			 
+	BUTTON_ACTIVE_COLOR		= CL_CYAN,			 
+};
+
+ 
+enum
+{
+	WIN_BORDER_COLOR	= CL_BLUE4,		 
+	WIN_TITLE_COLOR		= CL_BLUE3,		 
+	WIN_CAPTION_COLOR	= CL_WHITE,		 
+	WIN_BODY_COLOR		= CL_GREY2,		 
+};
+
+ 
+enum
+{
+	CHECK_BOX_BORDER_COLOR	= CL_BLUE2,		 
+	CHECK_BOX_BACK_COLOR	= CL_GREY3,		 
+	CHECK_BOX_CHECKED_COLOR	= CL_RED,		 
+
+	CHECK_BOX_H			= 24,				 
+	CHECK_BOX_W			= 24,				 
+};
+
+ 
+typedef enum
+{
+	FC_ST_12 = 0,		 
+	FC_ST_16,			 
+	FC_ST_24,			 
+	FC_ST_32,			 	
+	
+	FC_RA8875_16,		 
+	FC_RA8875_24,		 
+	FC_RA8875_32		 	
+}FONT_CODE_E;
+
+ 
+typedef struct
+{
+	FONT_CODE_E FontCode;	 
+	uint16_t FrontColor; 
+	uint16_t BackColor;	 
+	uint16_t Space;		 
+}FONT_T;
+
+ 
+typedef enum
+{
+	ID_ICON		= 1,
+	ID_WIN		= 2,
+	ID_LABEL	= 3,
+	ID_BUTTON	= 4,
+	ID_CHECK 	= 5,
+	ID_EDIT 	= 6,
+	ID_GROUP 	= 7,
+}CONTROL_ID_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;		 
+	uint16_t Top;		 
+	uint16_t Height;	 
+	uint16_t Width;		 
+	uint16_t *pBmp;		 
+	char  Text[16];	 
+}ICON_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;
+	uint16_t Top;
+	uint16_t Height;
+	uint16_t Width;
+	uint16_t Color;
+	FONT_T *Font;
+	char *pCaption;
+}WIN_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;			 
+	uint16_t Top;			 
+	uint16_t Height;		 
+	uint16_t Width;			 
+	uint16_t MaxLen;		 
+	FONT_T *Font;			 
+	char  *pCaption;
+}LABEL_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;
+	uint16_t Top;
+	uint16_t Height;
+	uint16_t Width;
+	 
+	FONT_T *Font;			 
+	char *pCaption;
+	uint8_t Focus;			 
+}BUTTON_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;
+	uint16_t Top;
+	uint16_t Height;
+	uint16_t Width;
+	uint16_t Color;
+	FONT_T *Font;			 
+	char   *pCaption;
+	char Text[32];			 
+}EDIT_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;			 
+	uint16_t Top;			 
+	uint16_t Height;		 
+	uint16_t Width;			 
+	uint16_t Color;			 
+	FONT_T *Font;			 
+	char  *pCaption;
+	uint8_t Checked;		 
+}CHECK_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;			 
+	uint16_t Top;			 
+	uint16_t Height;		 
+	uint16_t Width;			 
+	FONT_T *Font;			 
+	char  *pCaption;
+}GROUP_T;
+
+ 
+
+
+
+
+
+ 
+void LCD_InitHard(void);
+void LCD_GetChipDescribe(char *_str);
+uint16_t LCD_GetHeight(void);
+uint16_t LCD_GetWidth(void);
+void LCD_DispOn(void);
+void LCD_DispOff(void);
+void LCD_ClrScr(uint16_t _usColor);
+void LCD_DispStr(uint16_t _usX, uint16_t _usY, char *_ptr, FONT_T *_tFont);
+void LCD_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor);
+uint16_t LCD_GetPixel(uint16_t _usX, uint16_t _usY);
+void LCD_DrawLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usY2 , uint16_t _usColor);
+void LCD_DrawPoints(uint16_t *x, uint16_t *y, uint16_t _usSize, uint16_t _usColor);
+void LCD_DrawRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+void LCD_DrawCircle(uint16_t _usX, uint16_t _usY, uint16_t _usRadius, uint16_t _usColor);
+void LCD_DrawBMP(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t *_ptr);
+void LCD_SetBackLight(uint8_t _bright);
+uint8_t LCD_GetBackLight(void);
+
+void LCD_Fill_Rect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+
+void LCD_DrawWin(WIN_T *_pWin);
+void LCD_DrawIcon(const ICON_T *_tIcon, FONT_T *_tFont, uint8_t _ucFocusMode);
+void LCD_DrawEdit(EDIT_T *_pEdit);
+void LCD_DrawButton(BUTTON_T *_pBtn);
+void LCD_DrawLabel(LABEL_T *_pLabel);
+void LCD_DrawCheckBox(CHECK_T *_pCheckBox);
+void LCD_DrawGroupBox(GROUP_T *_pBox);
+
+void LCD_DispControl(void *_pControl);
+
+void LCD_DrawIcon32(const ICON_T *_tIcon, FONT_T *_tFont, uint8_t _ucFocusMode);
+void LCD_DrawBmp32(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint8_t *_pBmp);
+
+uint16_t LCD_GetFontWidth(FONT_T *_tFont);
+uint16_t LCD_GetFontHeight(FONT_T *_tFont);
+uint16_t LCD_GetStrWidth(char *_ptr, FONT_T *_tFont);
+void LCD_DispStrEx(uint16_t _usX, uint16_t _usY, char *_ptr, FONT_T *_tFont, uint16_t _Width,
+	uint8_t _Align);
+
+void LCD_SetDirection(uint8_t _dir);
+uint8_t LCD_ButtonTouchDown(BUTTON_T *_btn, uint16_t _usX, uint16_t _usY);
+uint8_t LCD_ButtonTouchRelease(BUTTON_T *_btn, uint16_t _usX, uint16_t _usY);
+void LCD_InitButton(BUTTON_T *_btn, uint16_t _x, uint16_t _y, uint16_t _h, uint16_t _w, char *_pCaption, FONT_T *_pFont);
+
+ 
+extern uint16_t g_ChipID;			 
+extern uint16_t g_LcdHeight;		 
+extern uint16_t g_LcdWidth;			 
+extern uint8_t g_LcdDirection;		 
+
+
+
+
+#line 76 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_lcd_st7789v.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+ 
+uint32_t ST7789V_ReadID(void);
+void ST7789V_InitHard(void);
+void ST7789V_DispOn(void);
+void ST7789V_DispOff(void);
+void ST7789V_ClrScr(uint16_t _usColor);
+void ST7789V_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor);
+uint16_t ST7789V_GetPixel(uint16_t _usX, uint16_t _usY);
+void ST7789V_DrawLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usY2 , uint16_t _usColor);
+void ST7789V_DrawHLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usColor);
+void ST7789V_DrawHColorLine(uint16_t _usX1 , uint16_t _usY1, uint16_t _usWidth, const uint16_t *_pColor);
+void ST7789V_DrawHTransLine(uint16_t _usX1 , uint16_t _usY1, uint16_t _usWidth, const uint16_t *_pColor);
+void ST7789V_DrawRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+void ST7789V_FillRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+void ST7789V_DrawCircle(uint16_t _usX, uint16_t _usY, uint16_t _usRadius, uint16_t _usColor);
+void ST7789V_DrawBMP(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t *_ptr);
+
+void ST7789V_SetBackLight(uint8_t _bright);
+void ST7789V_SetDirection(uint8_t _ucDir);
+
+void ST7789V_DrawVLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usY2 , uint16_t _usColor);
+
+
+
+ 
+#line 77 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_tim_pwm.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+void bsp_SetTIMOutPWM(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIMx, uint8_t _ucChannel,
+	 uint32_t _ulFreq, uint32_t _ulDutyCycle);
+
+void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIMx, uint8_t _ucChannel,
+	 uint32_t _ulFreq, uint32_t _ulDutyCycle);
+	 
+void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPriority, uint8_t _SubPriority);
+
+
+
+ 
+#line 78 "..\\User\\bsp\\bsp.h"
 
 
 
@@ -22007,31 +22645,31 @@ uint32_t bsp_GetRCCofGPIO(GPIO_TypeDef* GPIOx)
 
 	if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x0000)))
 	{
-		rcc = RCC_APB2Periph_GPIOA;
+		rcc = ((uint32_t)0x00000001);
 	}
 	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x0400)))
 	{
-		rcc = RCC_APB2Periph_GPIOB;
+		rcc = ((uint32_t)0x00000002);
 	}
 	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x0800)))
 	{
-		rcc = RCC_APB2Periph_GPIOC;
+		rcc = ((uint32_t)0x00000004);
 	}
 	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x0C00)))
 	{
-		rcc = RCC_APB2Periph_GPIOD;
+		rcc = ((uint32_t)0x00000008);
 	}
 	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x1000)))
 	{
-		rcc = RCC_APB2Periph_GPIOE;
+		rcc = ((uint32_t)0x00000010);
 	}
 	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x1400)))
 	{
-		rcc = RCC_APB2Periph_GPIOF;
+		rcc = ((uint32_t)0x00000020);
 	}
 	else if (GPIOx == ((GPIO_TypeDef *) ((((uint32_t)0x40000000) + 0x00020000) + 0x1800)))
 	{
-		rcc = RCC_APB2Periph_GPIOG;
+		rcc = ((uint32_t)0x00000040);
 	}
 
 	return rcc;
@@ -22144,7 +22782,8 @@ void bsp_ConfigTimGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_PinX, TIM_TypeDef* TIM
 
 	 
 	GPIO_InitStructure.GPIO_Pin = GPIO_PinX;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;		 
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;		 
+        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOx, &GPIO_InitStructure); 
 }
@@ -22167,7 +22806,8 @@ void bsp_ConfigGpioOut(GPIO_TypeDef* GPIOx, uint16_t GPIO_PinX)
 
 	 
 	GPIO_InitStructure.GPIO_Pin = GPIO_PinX;		 
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;	 
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;	 
+        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOx, &GPIO_InitStructure);
 }
@@ -22475,7 +23115,7 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPr
 			uint8_t irq = 0;	 
 
 			if (TIMx == ((TIM_TypeDef *) ((((uint32_t)0x40000000) + 0x00010000) + 0x0000)))
-				irq = TIM1_UP_IRQn;
+				irq = TIM1_UP_TIM10_IRQn;
 			else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x0000)))
 				irq = TIM2_IRQn;
 			else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x0400)))
@@ -22485,11 +23125,11 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPr
 			else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x0C00)))
 				irq = TIM5_IRQn;
 			else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x1000)))
-				irq = TIM6_IRQn;
+				irq = TIM6_DAC_IRQn;
 			else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x1400)))
 				irq = TIM7_IRQn;
 			else if (TIMx == ((TIM_TypeDef *) ((((uint32_t)0x40000000) + 0x00010000) + 0x0400)))
-				irq = TIM8_UP_IRQn;
+				irq = TIM8_UP_TIM13_IRQn;
 
 			NVIC_InitStructure.NVIC_IRQChannel = irq;
 			NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = _PreemptionPriority;
@@ -22565,7 +23205,7 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPr
 		uint8_t irq = 0;	 
 
 		if (TIMx == ((TIM_TypeDef *) ((((uint32_t)0x40000000) + 0x00010000) + 0x0000)))
-			irq = TIM1_UP_IRQn;
+			irq = TIM1_UP_TIM10_IRQn;
 		else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x0000)))
 			irq = TIM2_IRQn;
 		else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x0400)))
@@ -22575,11 +23215,11 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPr
 		else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x0C00)))
 			irq = TIM5_IRQn;
 		else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x1000)))
-			irq = TIM6_IRQn;
+			irq = TIM6_DAC_IRQn;
 		else if (TIMx == ((TIM_TypeDef *) (((uint32_t)0x40000000) + 0x1400)))
 			irq = TIM7_IRQn;
 		else if (TIMx == ((TIM_TypeDef *) ((((uint32_t)0x40000000) + 0x00010000) + 0x0400)))
-			irq = TIM8_UP_IRQn;
+			irq = TIM8_UP_TIM13_IRQn;
 
 		NVIC_InitStructure.NVIC_IRQChannel = irq;
 		NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = _PreemptionPriority;

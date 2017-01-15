@@ -17,7 +17,7 @@
 *********************************************************************************************************
 */
 
-#include "includes.h"
+#include "bsp.h"
 
 /*
 	可以输出到GPIO的TIM通道:
@@ -81,31 +81,31 @@ uint32_t bsp_GetRCCofGPIO(GPIO_TypeDef* GPIOx)
 
 	if (GPIOx == GPIOA)
 	{
-		rcc = RCC_APB2Periph_GPIOA;
+		rcc = RCC_AHB1Periph_GPIOA;
 	}
 	else if (GPIOx == GPIOB)
 	{
-		rcc = RCC_APB2Periph_GPIOB;
+		rcc = RCC_AHB1Periph_GPIOB;
 	}
 	else if (GPIOx == GPIOC)
 	{
-		rcc = RCC_APB2Periph_GPIOC;
+		rcc = RCC_AHB1Periph_GPIOC;
 	}
 	else if (GPIOx == GPIOD)
 	{
-		rcc = RCC_APB2Periph_GPIOD;
+		rcc = RCC_AHB1Periph_GPIOD;
 	}
 	else if (GPIOx == GPIOE)
 	{
-		rcc = RCC_APB2Periph_GPIOE;
+		rcc = RCC_AHB1Periph_GPIOE;
 	}
 	else if (GPIOx == GPIOF)
 	{
-		rcc = RCC_APB2Periph_GPIOF;
+		rcc = RCC_AHB1Periph_GPIOF;
 	}
 	else if (GPIOx == GPIOG)
 	{
-		rcc = RCC_APB2Periph_GPIOG;
+		rcc = RCC_AHB1Periph_GPIOG;
 	}
 
 	return rcc;
@@ -218,7 +218,8 @@ void bsp_ConfigTimGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_PinX, TIM_TypeDef* TIM
 
 	/* 配置GPIO */
 	GPIO_InitStructure.GPIO_Pin = GPIO_PinX;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;		/* 复用功能 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;		/* 复用功能 */
+        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOx, &GPIO_InitStructure); 
 }
@@ -241,7 +242,8 @@ void bsp_ConfigGpioOut(GPIO_TypeDef* GPIOx, uint16_t GPIO_PinX)
 
 	/* 配置GPIO */
 	GPIO_InitStructure.GPIO_Pin = GPIO_PinX;		/* 带入的形参 */
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;	/* 输出 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;	/* 输出 */
+        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOx, &GPIO_InitStructure);
 }
@@ -522,8 +524,7 @@ void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIM
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void bsp_SetTIMforInt(TIM_TypeDef* TIMx, 
-    uint32_t _ulFreq, uint8_t _PreemptionPriority, uint8_t _SubPriority)
+void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPriority, uint8_t _SubPriority)
 {
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 	uint16_t usPeriod;
@@ -550,7 +551,7 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx,
 			uint8_t irq = 0;	/* 中断号, 定义在 stm32f4xx.h */
 
 			if (TIMx == TIM1)
-				irq = TIM1_UP_IRQn;
+				irq = TIM1_UP_TIM10_IRQn;
 			else if (TIMx == TIM2)
 				irq = TIM2_IRQn;
 			else if (TIMx == TIM3)
@@ -560,11 +561,11 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx,
 			else if (TIMx == TIM5)
 				irq = TIM5_IRQn;
 			else if (TIMx == TIM6)
-				irq = TIM6_IRQn;
+				irq = TIM6_DAC_IRQn;
 			else if (TIMx == TIM7)
 				irq = TIM7_IRQn;
 			else if (TIMx == TIM8)
-				irq = TIM8_UP_IRQn;
+				irq = TIM8_UP_TIM13_IRQn;
 
 			NVIC_InitStructure.NVIC_IRQChannel = irq;
 			NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = _PreemptionPriority;
@@ -640,7 +641,7 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx,
 		uint8_t irq = 0;	/* 中断号, 定义在 stm32f4xx.h */
 
 		if (TIMx == TIM1)
-			irq = TIM1_UP_IRQn;
+			irq = TIM1_UP_TIM10_IRQn;
 		else if (TIMx == TIM2)
 			irq = TIM2_IRQn;
 		else if (TIMx == TIM3)
@@ -650,11 +651,11 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx,
 		else if (TIMx == TIM5)
 			irq = TIM5_IRQn;
 		else if (TIMx == TIM6)
-			irq = TIM6_IRQn;
+			irq = TIM6_DAC_IRQn;
 		else if (TIMx == TIM7)
 			irq = TIM7_IRQn;
 		else if (TIMx == TIM8)
-			irq = TIM8_UP_IRQn;
+			irq = TIM8_UP_TIM13_IRQn;
 
 		NVIC_InitStructure.NVIC_IRQChannel = irq;
 		NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = _PreemptionPriority;
