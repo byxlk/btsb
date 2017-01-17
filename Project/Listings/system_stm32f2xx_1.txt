@@ -5,196 +5,314 @@
                           AREA ||i.SetSysClock||, CODE, READONLY, ALIGN=2
 
                   SetSysClock PROC
-;;;336      */
-;;;337    static void SetSysClock(void)
-000000  b50c              PUSH     {r2,r3,lr}
-;;;338    {
-;;;339    /******************************************************************************/
-;;;340    /*            PLL (clocked by HSE) used as System clock source                */
-;;;341    /******************************************************************************/
-;;;342      __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
+;;;337      */
+;;;338    static void SetSysClock(void)
+000000  b50e              PUSH     {r1-r3,lr}
+;;;339    {
+;;;340    /******************************************************************************/
+;;;341    /*            PLL (clocked by HSE) used as System clock source                */
+;;;342    /******************************************************************************/
+;;;343      __IO uint32_t StartUpCounter = 0, HSEStatus = 0, HSIStatus = 0;
 000002  2000              MOVS     r0,#0
-000004  9001              STR      r0,[sp,#4]
-000006  9000              STR      r0,[sp,#0]
-;;;343      
-;;;344      /* Enable HSE */
-;;;345      RCC->CR |= ((uint32_t)RCC_CR_HSEON);
-000008  482d              LDR      r0,|L1.192|
-00000a  6800              LDR      r0,[r0,#0]
-00000c  f4403080          ORR      r0,r0,#0x10000
-000010  492b              LDR      r1,|L1.192|
-000012  6008              STR      r0,[r1,#0]
-;;;346     
-;;;347      /* Wait till HSE is ready and if Time out is reached exit */
-;;;348      do
-000014  bf00              NOP      
-                  |L1.22|
-;;;349      {
-;;;350        HSEStatus = RCC->CR & RCC_CR_HSERDY;
-000016  482a              LDR      r0,|L1.192|
-000018  6800              LDR      r0,[r0,#0]
-00001a  f4003000          AND      r0,r0,#0x20000
-00001e  9000              STR      r0,[sp,#0]
-;;;351        StartUpCounter++;
-000020  9801              LDR      r0,[sp,#4]
-000022  1c40              ADDS     r0,r0,#1
-000024  9001              STR      r0,[sp,#4]
-;;;352      } while((HSEStatus == 0) && (StartUpCounter != HSE_STARTUP_TIMEOUT));
-000026  9800              LDR      r0,[sp,#0]
-000028  b918              CBNZ     r0,|L1.50|
-00002a  9801              LDR      r0,[sp,#4]
-00002c  f5b06fa0          CMP      r0,#0x500
-000030  d1f1              BNE      |L1.22|
-                  |L1.50|
-;;;353    
-;;;354      if ((RCC->CR & RCC_CR_HSERDY) != RESET)
-000032  4823              LDR      r0,|L1.192|
-000034  6800              LDR      r0,[r0,#0]
-000036  f4003000          AND      r0,r0,#0x20000
-00003a  b110              CBZ      r0,|L1.66|
-;;;355      {
-;;;356        HSEStatus = (uint32_t)0x01;
-00003c  2001              MOVS     r0,#1
-00003e  9000              STR      r0,[sp,#0]
-000040  e001              B        |L1.70|
-                  |L1.66|
-;;;357      }
-;;;358      else
-;;;359      {
-;;;360        HSEStatus = (uint32_t)0x00;
-000042  2000              MOVS     r0,#0
-000044  9000              STR      r0,[sp,#0]
-                  |L1.70|
-;;;361      }
-;;;362    
-;;;363      if (HSEStatus == (uint32_t)0x01)
-000046  9800              LDR      r0,[sp,#0]
-000048  2801              CMP      r0,#1
-00004a  d138              BNE      |L1.190|
-;;;364      {
-;;;365        /* HCLK = SYSCLK / 1*/
-;;;366        RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
-00004c  481c              LDR      r0,|L1.192|
-00004e  3008              ADDS     r0,r0,#8
-000050  6800              LDR      r0,[r0,#0]
-000052  491b              LDR      r1,|L1.192|
-000054  3108              ADDS     r1,r1,#8
-000056  6008              STR      r0,[r1,#0]
-;;;367          
-;;;368        /* PCLK2 = HCLK / 2*/
-;;;369        RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
-000058  4608              MOV      r0,r1
-00005a  6800              LDR      r0,[r0,#0]
-00005c  f4404000          ORR      r0,r0,#0x8000
-000060  6008              STR      r0,[r1,#0]
-;;;370        
-;;;371        /* PCLK1 = HCLK / 4*/
-;;;372        RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
-000062  4608              MOV      r0,r1
-000064  6800              LDR      r0,[r0,#0]
-000066  f44050a0          ORR      r0,r0,#0x1400
-00006a  6008              STR      r0,[r1,#0]
-;;;373    
-;;;374        /* Configure the main PLL */
-;;;375        RCC->PLLCFGR = PLL_M | (PLL_N << 6) | (((PLL_P >> 1) -1) << 16) |
-00006c  4815              LDR      r0,|L1.196|
-00006e  1f09              SUBS     r1,r1,#4
-000070  6008              STR      r0,[r1,#0]
-;;;376                       (RCC_PLLCFGR_PLLSRC_HSE) | (PLL_Q << 24);
-;;;377    
-;;;378        /* Enable the main PLL */
-;;;379        RCC->CR |= RCC_CR_PLLON;
-000072  1f08              SUBS     r0,r1,#4
-000074  6800              LDR      r0,[r0,#0]
-000076  f0407080          ORR      r0,r0,#0x1000000
-00007a  1f09              SUBS     r1,r1,#4
-00007c  6008              STR      r0,[r1,#0]
-;;;380    
-;;;381        /* Wait till the main PLL is ready */
-;;;382        while((RCC->CR & RCC_CR_PLLRDY) == 0)
-00007e  bf00              NOP      
-                  |L1.128|
-000080  480f              LDR      r0,|L1.192|
-000082  6800              LDR      r0,[r0,#0]
-000084  f0007000          AND      r0,r0,#0x2000000
-000088  2800              CMP      r0,#0
-00008a  d0f9              BEQ      |L1.128|
-;;;383        {
-;;;384        }
-;;;385       
-;;;386        /* Configure Flash prefetch, Instruction cache, Data cache and wait state */
-;;;387        FLASH->ACR = FLASH_ACR_PRFTEN | FLASH_ACR_ICEN | FLASH_ACR_DCEN | FLASH_ACR_LATENCY_3WS;
-00008c  f2407003          MOV      r0,#0x703
-000090  490d              LDR      r1,|L1.200|
-000092  6008              STR      r0,[r1,#0]
-;;;388    
-;;;389        /* Select the main PLL as system clock source */
-;;;390        RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
-000094  480a              LDR      r0,|L1.192|
-000096  3008              ADDS     r0,r0,#8
-000098  6800              LDR      r0,[r0,#0]
-00009a  f0200003          BIC      r0,r0,#3
-00009e  4908              LDR      r1,|L1.192|
-0000a0  3108              ADDS     r1,r1,#8
-0000a2  6008              STR      r0,[r1,#0]
-;;;391        RCC->CFGR |= RCC_CFGR_SW_PLL;
-0000a4  4608              MOV      r0,r1
-0000a6  6800              LDR      r0,[r0,#0]
-0000a8  f0400002          ORR      r0,r0,#2
-0000ac  6008              STR      r0,[r1,#0]
-;;;392    
-;;;393        /* Wait till the main PLL is used as system clock source */
-;;;394        while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS ) != RCC_CFGR_SWS_PLL);
-0000ae  bf00              NOP      
-                  |L1.176|
-0000b0  4803              LDR      r0,|L1.192|
-0000b2  3008              ADDS     r0,r0,#8
-0000b4  6800              LDR      r0,[r0,#0]
-0000b6  f000000c          AND      r0,r0,#0xc
-0000ba  2808              CMP      r0,#8
-0000bc  d1f8              BNE      |L1.176|
-                  |L1.190|
-;;;395        {
-;;;396        }
-;;;397      }
-;;;398      else
-;;;399      { /* If HSE fails to start-up, the application will have wrong clock
-;;;400             configuration. User can add here some code to deal with this error */
-;;;401      }
-;;;402    
-;;;403    }
-0000be  bd0c              POP      {r2,r3,pc}
-;;;404    
+000004  9002              STR      r0,[sp,#8]
+000006  9001              STR      r0,[sp,#4]
+000008  9000              STR      r0,[sp,#0]
+;;;344      
+;;;345      /* Enable HSE */
+;;;346      RCC->CR |= ((uint32_t)RCC_CR_HSEON);
+00000a  4858              LDR      r0,|L1.364|
+00000c  6800              LDR      r0,[r0,#0]
+00000e  f4403080          ORR      r0,r0,#0x10000
+000012  4956              LDR      r1,|L1.364|
+000014  6008              STR      r0,[r1,#0]
+;;;347     
+;;;348      /* Wait till HSE is ready and if Time out is reached exit */
+;;;349      do
+000016  bf00              NOP      
+                  |L1.24|
+;;;350      {
+;;;351        HSEStatus = RCC->CR & RCC_CR_HSERDY;
+000018  4854              LDR      r0,|L1.364|
+00001a  6800              LDR      r0,[r0,#0]
+00001c  f4003000          AND      r0,r0,#0x20000
+000020  9001              STR      r0,[sp,#4]
+;;;352        StartUpCounter++;
+000022  9802              LDR      r0,[sp,#8]
+000024  1c40              ADDS     r0,r0,#1
+000026  9002              STR      r0,[sp,#8]
+;;;353      } while((HSEStatus == 0) && (StartUpCounter != HSE_STARTUP_TIMEOUT));
+000028  9801              LDR      r0,[sp,#4]
+00002a  b918              CBNZ     r0,|L1.52|
+00002c  9802              LDR      r0,[sp,#8]
+00002e  f5b06fa0          CMP      r0,#0x500
+000032  d1f1              BNE      |L1.24|
+                  |L1.52|
+;;;354    
+;;;355      if ((RCC->CR & RCC_CR_HSERDY) != RESET)
+000034  484d              LDR      r0,|L1.364|
+000036  6800              LDR      r0,[r0,#0]
+000038  f4003000          AND      r0,r0,#0x20000
+00003c  b110              CBZ      r0,|L1.68|
+;;;356      {
+;;;357        HSEStatus = (uint32_t)0x01;
+00003e  2001              MOVS     r0,#1
+000040  9001              STR      r0,[sp,#4]
+000042  e001              B        |L1.72|
+                  |L1.68|
+;;;358      }
+;;;359      else
+;;;360      {
+;;;361        HSEStatus = (uint32_t)0x00;
+000044  2000              MOVS     r0,#0
+000046  9001              STR      r0,[sp,#4]
+                  |L1.72|
+;;;362      }
+;;;363    
+;;;364      if (HSEStatus == (uint32_t)0x01)
+000048  9801              LDR      r0,[sp,#4]
+00004a  2801              CMP      r0,#1
+00004c  d139              BNE      |L1.194|
+;;;365      {
+;;;366        /* HCLK = SYSCLK / 1*/
+;;;367        RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
+00004e  4847              LDR      r0,|L1.364|
+000050  3008              ADDS     r0,r0,#8
+000052  6800              LDR      r0,[r0,#0]
+000054  4945              LDR      r1,|L1.364|
+000056  3108              ADDS     r1,r1,#8
+000058  6008              STR      r0,[r1,#0]
+;;;368          
+;;;369        /* PCLK2 = HCLK / 2*/
+;;;370        RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
+00005a  4608              MOV      r0,r1
+00005c  6800              LDR      r0,[r0,#0]
+00005e  f4404000          ORR      r0,r0,#0x8000
+000062  6008              STR      r0,[r1,#0]
+;;;371        
+;;;372        /* PCLK1 = HCLK / 4*/
+;;;373        RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
+000064  4608              MOV      r0,r1
+000066  6800              LDR      r0,[r0,#0]
+000068  f44050a0          ORR      r0,r0,#0x1400
+00006c  6008              STR      r0,[r1,#0]
+;;;374    
+;;;375        /* Configure the main PLL */
+;;;376        RCC->PLLCFGR = PLL_M | (PLL_N << 6) | (((PLL_P >> 1) -1) << 16) |
+00006e  4840              LDR      r0,|L1.368|
+000070  1f09              SUBS     r1,r1,#4
+000072  6008              STR      r0,[r1,#0]
+;;;377                       (RCC_PLLCFGR_PLLSRC_HSE) | (PLL_Q << 24);
+;;;378    
+;;;379        /* Enable the main PLL */
+;;;380        RCC->CR |= RCC_CR_PLLON;
+000074  1f08              SUBS     r0,r1,#4
+000076  6800              LDR      r0,[r0,#0]
+000078  f0407080          ORR      r0,r0,#0x1000000
+00007c  1f09              SUBS     r1,r1,#4
+00007e  6008              STR      r0,[r1,#0]
+;;;381    
+;;;382        /* Wait till the main PLL is ready */
+;;;383        while((RCC->CR & RCC_CR_PLLRDY) == 0)
+000080  bf00              NOP      
+                  |L1.130|
+000082  483a              LDR      r0,|L1.364|
+000084  6800              LDR      r0,[r0,#0]
+000086  f0007000          AND      r0,r0,#0x2000000
+00008a  2800              CMP      r0,#0
+00008c  d0f9              BEQ      |L1.130|
+;;;384        {
+;;;385        }
+;;;386       
+;;;387        /* Configure Flash prefetch, Instruction cache, Data cache and wait state */
+;;;388        FLASH->ACR = FLASH_ACR_PRFTEN | FLASH_ACR_ICEN | FLASH_ACR_DCEN | FLASH_ACR_LATENCY_3WS;
+00008e  f2407003          MOV      r0,#0x703
+000092  4938              LDR      r1,|L1.372|
+000094  6008              STR      r0,[r1,#0]
+;;;389    
+;;;390        /* Select the main PLL as system clock source */
+;;;391        RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
+000096  4835              LDR      r0,|L1.364|
+000098  3008              ADDS     r0,r0,#8
+00009a  6800              LDR      r0,[r0,#0]
+00009c  f0200003          BIC      r0,r0,#3
+0000a0  4932              LDR      r1,|L1.364|
+0000a2  3108              ADDS     r1,r1,#8
+0000a4  6008              STR      r0,[r1,#0]
+;;;392        RCC->CFGR |= RCC_CFGR_SW_PLL;
+0000a6  4608              MOV      r0,r1
+0000a8  6800              LDR      r0,[r0,#0]
+0000aa  f0400002          ORR      r0,r0,#2
+0000ae  6008              STR      r0,[r1,#0]
+;;;393    
+;;;394        /* Wait till the main PLL is used as system clock source */
+;;;395        while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS ) != RCC_CFGR_SWS_PLL)
+0000b0  bf00              NOP      
+                  |L1.178|
+0000b2  482e              LDR      r0,|L1.364|
+0000b4  3008              ADDS     r0,r0,#8
+0000b6  6800              LDR      r0,[r0,#0]
+0000b8  f000000c          AND      r0,r0,#0xc
+0000bc  2808              CMP      r0,#8
+0000be  d1f8              BNE      |L1.178|
+0000c0  e052              B        |L1.360|
+                  |L1.194|
+;;;396        {
+;;;397        }
+;;;398      }
+;;;399      else
+;;;400      { /* If HSE fails to start-up, the application will have wrong clock
+;;;401             configuration. User can add here some code to deal with this error */
+;;;402        /* Reset HSEON */
+;;;403        RCC->CR &= ~((uint32_t)RCC_CR_HSEON);
+0000c2  482a              LDR      r0,|L1.364|
+0000c4  6800              LDR      r0,[r0,#0]
+0000c6  f4203080          BIC      r0,r0,#0x10000
+0000ca  4928              LDR      r1,|L1.364|
+0000cc  6008              STR      r0,[r1,#0]
+;;;404     
+;;;405        /* Wait till HSI is ready and if Time out is reached exit */
+;;;406        do
+0000ce  bf00              NOP      
+                  |L1.208|
+;;;407        {
+;;;408            HSIStatus = RCC->CR & RCC_CR_HSIRDY;
+0000d0  4826              LDR      r0,|L1.364|
+0000d2  6800              LDR      r0,[r0,#0]
+0000d4  f0000002          AND      r0,r0,#2
+0000d8  9000              STR      r0,[sp,#0]
+;;;409            StartUpCounter++;
+0000da  9802              LDR      r0,[sp,#8]
+0000dc  1c40              ADDS     r0,r0,#1
+0000de  9002              STR      r0,[sp,#8]
+;;;410        } while((HSIStatus == 0) && (StartUpCounter != HSE_STARTUP_TIMEOUT));
+0000e0  9800              LDR      r0,[sp,#0]
+0000e2  b918              CBNZ     r0,|L1.236|
+0000e4  9802              LDR      r0,[sp,#8]
+0000e6  f5b06fa0          CMP      r0,#0x500
+0000ea  d1f1              BNE      |L1.208|
+                  |L1.236|
+;;;411          
+;;;412        /* HCLK = SYSCLK / 1*/
+;;;413        RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
+0000ec  481f              LDR      r0,|L1.364|
+0000ee  3008              ADDS     r0,r0,#8
+0000f0  6800              LDR      r0,[r0,#0]
+0000f2  491e              LDR      r1,|L1.364|
+0000f4  3108              ADDS     r1,r1,#8
+0000f6  6008              STR      r0,[r1,#0]
+;;;414          
+;;;415        /* PCLK2 = HCLK / 2*/
+;;;416        RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
+0000f8  4608              MOV      r0,r1
+0000fa  6800              LDR      r0,[r0,#0]
+0000fc  f4404000          ORR      r0,r0,#0x8000
+000100  6008              STR      r0,[r1,#0]
+;;;417        
+;;;418        /* PCLK1 = HCLK / 4*/
+;;;419        RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
+000102  4608              MOV      r0,r1
+000104  6800              LDR      r0,[r0,#0]
+000106  f44050a0          ORR      r0,r0,#0x1400
+00010a  6008              STR      r0,[r1,#0]
+;;;420    
+;;;421        /* Configure the main PLL */
+;;;422        RCC->PLLCFGR = HSI_PLL_M | (PLL_N << 6) | (((PLL_P >> 1) -1) << 16) | (PLL_Q << 24);
+00010c  481a              LDR      r0,|L1.376|
+00010e  1f09              SUBS     r1,r1,#4
+000110  6008              STR      r0,[r1,#0]
+;;;423        RCC->PLLCFGR &= ~((uint32_t)0x1 << 22);
+000112  4608              MOV      r0,r1
+000114  6800              LDR      r0,[r0,#0]
+000116  f4200080          BIC      r0,r0,#0x400000
+00011a  6008              STR      r0,[r1,#0]
+;;;424    
+;;;425        /* Enable the main PLL */
+;;;426        RCC->CR |= RCC_CR_PLLON;
+00011c  1f08              SUBS     r0,r1,#4
+00011e  6800              LDR      r0,[r0,#0]
+000120  f0407080          ORR      r0,r0,#0x1000000
+000124  1f09              SUBS     r1,r1,#4
+000126  6008              STR      r0,[r1,#0]
+;;;427    
+;;;428        /* Wait till the main PLL is ready */
+;;;429        while((RCC->CR & RCC_CR_PLLRDY) == 0);
+000128  bf00              NOP      
+                  |L1.298|
+00012a  4810              LDR      r0,|L1.364|
+00012c  6800              LDR      r0,[r0,#0]
+00012e  f0007000          AND      r0,r0,#0x2000000
+000132  2800              CMP      r0,#0
+000134  d0f9              BEQ      |L1.298|
+;;;430    
+;;;431        /* Configure Flash prefetch, Instruction cache, Data cache and wait state */
+;;;432        FLASH->ACR = FLASH_ACR_PRFTEN | FLASH_ACR_ICEN | FLASH_ACR_DCEN | FLASH_ACR_LATENCY_3WS;
+000136  f2407003          MOV      r0,#0x703
+00013a  490e              LDR      r1,|L1.372|
+00013c  6008              STR      r0,[r1,#0]
+;;;433    
+;;;434        /* Select the main PLL as system clock source */
+;;;435        RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
+00013e  480b              LDR      r0,|L1.364|
+000140  3008              ADDS     r0,r0,#8
+000142  6800              LDR      r0,[r0,#0]
+000144  f0200003          BIC      r0,r0,#3
+000148  4908              LDR      r1,|L1.364|
+00014a  3108              ADDS     r1,r1,#8
+00014c  6008              STR      r0,[r1,#0]
+;;;436        RCC->CFGR |= RCC_CFGR_SW_PLL;
+00014e  4608              MOV      r0,r1
+000150  6800              LDR      r0,[r0,#0]
+000152  f0400002          ORR      r0,r0,#2
+000156  6008              STR      r0,[r1,#0]
+;;;437    
+;;;438        /* Wait till the main PLL is used as system clock source */
+;;;439        while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS ) != RCC_CFGR_SWS_PLL);
+000158  bf00              NOP      
+                  |L1.346|
+00015a  4804              LDR      r0,|L1.364|
+00015c  3008              ADDS     r0,r0,#8
+00015e  6800              LDR      r0,[r0,#0]
+000160  f000000c          AND      r0,r0,#0xc
+000164  2808              CMP      r0,#8
+000166  d1f8              BNE      |L1.346|
+                  |L1.360|
+;;;440      }
+;;;441    }
+000168  bd0e              POP      {r1-r3,pc}
+;;;442    
                           ENDP
 
-                  |L1.192|
+00016a  0000              DCW      0x0000
+                  |L1.364|
                           DCD      0x40023800
-                  |L1.196|
+                  |L1.368|
                           DCD      0x05403c19
-                  |L1.200|
+                  |L1.372|
                           DCD      0x40023c00
+                  |L1.376|
+                          DCD      0x05003c10
 
                           AREA ||i.SystemCoreClockUpdate||, CODE, READONLY, ALIGN=2
 
                   SystemCoreClockUpdate PROC
-;;;280      */
-;;;281    void SystemCoreClockUpdate(void)
+;;;281      */
+;;;282    void SystemCoreClockUpdate(void)
 000000  b570              PUSH     {r4-r6,lr}
-;;;282    {
-;;;283      uint32_t tmp = 0, pllvco = 0, pllp = 2, pllsource = 0, pllm = 2;
+;;;283    {
+;;;284      uint32_t tmp = 0, pllvco = 0, pllp = 2, pllsource = 0, pllm = 2;
 000002  2000              MOVS     r0,#0
 000004  2200              MOVS     r2,#0
 000006  2302              MOVS     r3,#2
 000008  2400              MOVS     r4,#0
 00000a  2102              MOVS     r1,#2
-;;;284      
-;;;285      /* Get SYSCLK source -------------------------------------------------------*/
-;;;286      tmp = RCC->CFGR & RCC_CFGR_SWS;
+;;;285      
+;;;286      /* Get SYSCLK source -------------------------------------------------------*/
+;;;287      tmp = RCC->CFGR & RCC_CFGR_SWS;
 00000c  4d27              LDR      r5,|L2.172|
 00000e  682d              LDR      r5,[r5,#0]
 000010  f005000c          AND      r0,r5,#0xc
-;;;287    
-;;;288      switch (tmp)
+;;;288    
+;;;289      switch (tmp)
 000014  b120              CBZ      r0,|L2.32|
 000016  2804              CMP      r0,#4
 000018  d006              BEQ      |L2.40|
@@ -202,44 +320,44 @@
 00001c  d134              BNE      |L2.136|
 00001e  e007              B        |L2.48|
                   |L2.32|
-;;;289      {
-;;;290        case 0x00:  /* HSI used as system clock source */
-;;;291          SystemCoreClock = HSI_VALUE;
+;;;290      {
+;;;291        case 0x00:  /* HSI used as system clock source */
+;;;292          SystemCoreClock = HSI_VALUE;
 000020  4d23              LDR      r5,|L2.176|
 000022  4e24              LDR      r6,|L2.180|
 000024  6035              STR      r5,[r6,#0]  ; SystemCoreClock
-;;;292          break;
+;;;293          break;
 000026  e033              B        |L2.144|
                   |L2.40|
-;;;293        case 0x04:  /* HSE used as system clock source */
-;;;294          SystemCoreClock = HSE_VALUE;
+;;;294        case 0x04:  /* HSE used as system clock source */
+;;;295          SystemCoreClock = HSE_VALUE;
 000028  4d23              LDR      r5,|L2.184|
 00002a  4e22              LDR      r6,|L2.180|
 00002c  6035              STR      r5,[r6,#0]  ; SystemCoreClock
-;;;295          break;
+;;;296          break;
 00002e  e02f              B        |L2.144|
                   |L2.48|
-;;;296        case 0x08:  /* PLL used as system clock source */
-;;;297    
-;;;298          /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N
-;;;299             SYSCLK = PLL_VCO / PLL_P
-;;;300             */    
-;;;301          pllsource = (RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC) >> 22;
+;;;297        case 0x08:  /* PLL used as system clock source */
+;;;298    
+;;;299          /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N
+;;;300             SYSCLK = PLL_VCO / PLL_P
+;;;301             */    
+;;;302          pllsource = (RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC) >> 22;
 000030  4d1e              LDR      r5,|L2.172|
 000032  1f2d              SUBS     r5,r5,#4
 000034  682d              LDR      r5,[r5,#0]
 000036  f3c55480          UBFX     r4,r5,#22,#1
-;;;302          pllm = RCC->PLLCFGR & RCC_PLLCFGR_PLLM;
+;;;303          pllm = RCC->PLLCFGR & RCC_PLLCFGR_PLLM;
 00003a  4d1c              LDR      r5,|L2.172|
 00003c  1f2d              SUBS     r5,r5,#4
 00003e  682d              LDR      r5,[r5,#0]
 000040  f005013f          AND      r1,r5,#0x3f
-;;;303          
-;;;304          if (pllsource != 0)
+;;;304          
+;;;305          if (pllsource != 0)
 000044  b154              CBZ      r4,|L2.92|
-;;;305          {
-;;;306            /* HSE used as PLL clock source */
-;;;307            pllvco = (HSE_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
+;;;306          {
+;;;307            /* HSE used as PLL clock source */
+;;;308            pllvco = (HSE_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);
 000046  4d1c              LDR      r5,|L2.184|
 000048  fbb5f5f1          UDIV     r5,r5,r1
 00004c  4e17              LDR      r6,|L2.172|
@@ -249,11 +367,11 @@
 000056  fb05f206          MUL      r2,r5,r6
 00005a  e009              B        |L2.112|
                   |L2.92|
-;;;308          }
-;;;309          else
-;;;310          {
-;;;311            /* HSI used as PLL clock source */
-;;;312            pllvco = (HSI_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);      
+;;;309          }
+;;;310          else
+;;;311          {
+;;;312            /* HSI used as PLL clock source */
+;;;313            pllvco = (HSI_VALUE / pllm) * ((RCC->PLLCFGR & RCC_PLLCFGR_PLLN) >> 6);      
 00005c  4d14              LDR      r5,|L2.176|
 00005e  fbb5f5f1          UDIV     r5,r5,r1
 000062  4e12              LDR      r6,|L2.172|
@@ -262,50 +380,50 @@
 000068  f3c61688          UBFX     r6,r6,#6,#9
 00006c  fb05f206          MUL      r2,r5,r6
                   |L2.112|
-;;;313          }
-;;;314    
-;;;315          pllp = (((RCC->PLLCFGR & RCC_PLLCFGR_PLLP) >>16) + 1 ) *2;
+;;;314          }
+;;;315    
+;;;316          pllp = (((RCC->PLLCFGR & RCC_PLLCFGR_PLLP) >>16) + 1 ) *2;
 000070  4d0e              LDR      r5,|L2.172|
 000072  1f2d              SUBS     r5,r5,#4
 000074  682d              LDR      r5,[r5,#0]
 000076  f3c54501          UBFX     r5,r5,#16,#2
 00007a  1c6d              ADDS     r5,r5,#1
 00007c  006b              LSLS     r3,r5,#1
-;;;316          SystemCoreClock = pllvco/pllp;
+;;;317          SystemCoreClock = pllvco/pllp;
 00007e  fbb2f5f3          UDIV     r5,r2,r3
 000082  4e0c              LDR      r6,|L2.180|
 000084  6035              STR      r5,[r6,#0]  ; SystemCoreClock
-;;;317          break;
+;;;318          break;
 000086  e003              B        |L2.144|
                   |L2.136|
-;;;318        default:
-;;;319          SystemCoreClock = HSI_VALUE;
+;;;319        default:
+;;;320          SystemCoreClock = HSI_VALUE;
 000088  4d09              LDR      r5,|L2.176|
 00008a  4e0a              LDR      r6,|L2.180|
 00008c  6035              STR      r5,[r6,#0]  ; SystemCoreClock
-;;;320          break;
+;;;321          break;
 00008e  bf00              NOP      
                   |L2.144|
-000090  bf00              NOP                            ;292
-;;;321      }
-;;;322      /* Compute HCLK frequency --------------------------------------------------*/
-;;;323      /* Get HCLK prescaler */
-;;;324      tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
+000090  bf00              NOP                            ;293
+;;;322      }
+;;;323      /* Compute HCLK frequency --------------------------------------------------*/
+;;;324      /* Get HCLK prescaler */
+;;;325      tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
 000092  4d06              LDR      r5,|L2.172|
 000094  682d              LDR      r5,[r5,#0]
 000096  f3c51503          UBFX     r5,r5,#4,#4
 00009a  4e08              LDR      r6,|L2.188|
 00009c  5d70              LDRB     r0,[r6,r5]
-;;;325      /* HCLK frequency */
-;;;326      SystemCoreClock >>= tmp;
+;;;326      /* HCLK frequency */
+;;;327      SystemCoreClock >>= tmp;
 00009e  4d05              LDR      r5,|L2.180|
 0000a0  682d              LDR      r5,[r5,#0]  ; SystemCoreClock
 0000a2  40c5              LSRS     r5,r5,r0
 0000a4  4e03              LDR      r6,|L2.180|
 0000a6  6035              STR      r5,[r6,#0]  ; SystemCoreClock
-;;;327    }
+;;;328    }
 0000a8  bd70              POP      {r4-r6,pc}
-;;;328    
+;;;329    
                           ENDP
 
 0000aa  0000              DCW      0x0000
@@ -323,77 +441,77 @@
                           AREA ||i.SystemInit||, CODE, READONLY, ALIGN=2
 
                   SystemInit PROC
-;;;207      */
-;;;208    void SystemInit(void)
+;;;208      */
+;;;209    void SystemInit(void)
 000000  b510              PUSH     {r4,lr}
-;;;209    {
-;;;210      /* Reset the RCC clock configuration to the default reset state ------------*/
-;;;211      /* Set HSION bit */
-;;;212      RCC->CR |= (uint32_t)0x00000001;
+;;;210    {
+;;;211      /* Reset the RCC clock configuration to the default reset state ------------*/
+;;;212      /* Set HSION bit */
+;;;213      RCC->CR |= (uint32_t)0x00000001;
 000002  4812              LDR      r0,|L3.76|
 000004  6800              LDR      r0,[r0,#0]
 000006  f0400001          ORR      r0,r0,#1
 00000a  4910              LDR      r1,|L3.76|
 00000c  6008              STR      r0,[r1,#0]
-;;;213    
-;;;214      /* Reset CFGR register */
-;;;215      RCC->CFGR = 0x00000000;
+;;;214    
+;;;215      /* Reset CFGR register */
+;;;216      RCC->CFGR = 0x00000000;
 00000e  2000              MOVS     r0,#0
 000010  490e              LDR      r1,|L3.76|
 000012  3108              ADDS     r1,r1,#8
 000014  6008              STR      r0,[r1,#0]
-;;;216    
-;;;217      /* Reset HSEON, CSSON and PLLON bits */
-;;;218      RCC->CR &= (uint32_t)0xFEF6FFFF;
+;;;217    
+;;;218      /* Reset HSEON, CSSON and PLLON bits */
+;;;219      RCC->CR &= (uint32_t)0xFEF6FFFF;
 000016  480d              LDR      r0,|L3.76|
 000018  6800              LDR      r0,[r0,#0]
 00001a  490d              LDR      r1,|L3.80|
 00001c  4008              ANDS     r0,r0,r1
 00001e  490b              LDR      r1,|L3.76|
 000020  6008              STR      r0,[r1,#0]
-;;;219    
-;;;220      /* Reset PLLCFGR register */
-;;;221      RCC->PLLCFGR = 0x24003010;
+;;;220    
+;;;221      /* Reset PLLCFGR register */
+;;;222      RCC->PLLCFGR = 0x24003010;
 000022  480c              LDR      r0,|L3.84|
 000024  1d09              ADDS     r1,r1,#4
 000026  6008              STR      r0,[r1,#0]
-;;;222    
-;;;223      /* Reset HSEBYP bit */
-;;;224      RCC->CR &= (uint32_t)0xFFFBFFFF;
+;;;223    
+;;;224      /* Reset HSEBYP bit */
+;;;225      RCC->CR &= (uint32_t)0xFFFBFFFF;
 000028  1f08              SUBS     r0,r1,#4
 00002a  6800              LDR      r0,[r0,#0]
 00002c  f4202080          BIC      r0,r0,#0x40000
 000030  1f09              SUBS     r1,r1,#4
 000032  6008              STR      r0,[r1,#0]
-;;;225    
-;;;226      /* Disable all interrupts */
-;;;227      RCC->CIR = 0x00000000;
+;;;226    
+;;;227      /* Disable all interrupts */
+;;;228      RCC->CIR = 0x00000000;
 000034  2000              MOVS     r0,#0
 000036  4905              LDR      r1,|L3.76|
 000038  310c              ADDS     r1,r1,#0xc
 00003a  6008              STR      r0,[r1,#0]
-;;;228    
-;;;229    #ifdef DATA_IN_ExtSRAM
-;;;230      SystemInit_ExtMemCtl(); 
-;;;231    #endif /* DATA_IN_ExtSRAM */
-;;;232             
-;;;233      /* Configure the System clock source, PLL Multiplier and Divider factors, 
-;;;234         AHB/APBx prescalers and Flash settings ----------------------------------*/
-;;;235      SetSysClock();
+;;;229    
+;;;230    #ifdef DATA_IN_ExtSRAM
+;;;231      SystemInit_ExtMemCtl(); 
+;;;232    #endif /* DATA_IN_ExtSRAM */
+;;;233             
+;;;234      /* Configure the System clock source, PLL Multiplier and Divider factors, 
+;;;235         AHB/APBx prescalers and Flash settings ----------------------------------*/
+;;;236      SetSysClock();
 00003c  f7fffffe          BL       SetSysClock
-;;;236    
-;;;237      /* Configure the Vector Table location add offset address ------------------*/
-;;;238    #ifdef VECT_TAB_SRAM
-;;;239      SCB->VTOR = SRAM_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
-;;;240    #else
-;;;241      SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
+;;;237    
+;;;238      /* Configure the Vector Table location add offset address ------------------*/
+;;;239    #ifdef VECT_TAB_SRAM
+;;;240      SCB->VTOR = SRAM_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
+;;;241    #else
+;;;242      SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
 000040  f04f6000          MOV      r0,#0x8000000
 000044  4904              LDR      r1,|L3.88|
 000046  6008              STR      r0,[r1,#0]
-;;;242    #endif
-;;;243    }
+;;;243    #endif
+;;;244    }
 000048  bd10              POP      {r4,pc}
-;;;244    
+;;;245    
                           ENDP
 
 00004a  0000              DCW      0x0000

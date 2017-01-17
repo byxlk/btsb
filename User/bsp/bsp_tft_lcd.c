@@ -120,11 +120,11 @@ void LCD_HardReset(void)
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-	GPIO_SetBits(GPIOA, GPIO_Pin_1);
+	GPIO_SetBits(GPIOA, GPIO_Pin_8);
 	bsp_DelayMS(1);
-	GPIO_ResetBits(GPIOA, GPIO_Pin_1);
+	GPIO_ResetBits(GPIOA, GPIO_Pin_8);
 	bsp_DelayMS(10);
-	GPIO_SetBits(GPIOA, GPIO_Pin_1);
+	GPIO_SetBits(GPIOA, GPIO_Pin_8);
  	bsp_DelayMS(120);
 }
 
@@ -1601,7 +1601,7 @@ static void LCD_CtrlLinesConfig(void)
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* 使能 GPIOD */
-	RCC_APB2PeriphClockCmd(RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC, ENABLE);
 
 	/*  GPIO 配置为复用推挽输出 */
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;

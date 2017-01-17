@@ -2,6 +2,14 @@
 #include "stm32f2xx.h"
 
 
+//void SystemClockInit(void)
+//{
+//    RCC_DeInit();
+//    RCC_HSICmd(ENABLE);
+//    while(RCC_GetFlagStatus(RCC_FLAG_HSIRDY) == RESET);//等待HSI使能成功
+
+
+//}
 
 /*
 *********************************************************************************************************
@@ -20,7 +28,7 @@ void bsp_Init(void)
 
 		系统时钟缺省配置为72MHz，如果需要更改，可以修改 system_stm32f10x.c 文件
 	*/
-	
+
 	/* 使能CRC校验, 用于开启STemWin的使用 */
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_CRC, ENABLE);
 	

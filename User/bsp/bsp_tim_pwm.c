@@ -67,6 +67,43 @@
 	APB2 定时器有 TIM1, TIM8                    ---- 72M
 */
 
+uint32_t bsp_GetPinSource(uint16_t GPIOx)
+{
+        if(GPIOx == GPIO_Pin_0) return GPIO_PinSource0;
+        else if(GPIOx == GPIO_Pin_1) return GPIO_PinSource1;
+        else if(GPIOx == GPIO_Pin_2) return GPIO_PinSource2;
+        else if(GPIOx == GPIO_Pin_3) return GPIO_PinSource3;
+        else if(GPIOx == GPIO_Pin_4) return GPIO_PinSource4;
+        else if(GPIOx == GPIO_Pin_5) return GPIO_PinSource5;
+        else if(GPIOx == GPIO_Pin_6) return GPIO_PinSource6;
+        else if(GPIOx == GPIO_Pin_7) return GPIO_PinSource7;
+        else if(GPIOx == GPIO_Pin_8) return GPIO_PinSource8;
+        else if(GPIOx == GPIO_Pin_9) return GPIO_PinSource9;
+        else if(GPIOx == GPIO_Pin_10) return GPIO_PinSource10;
+        else if(GPIOx == GPIO_Pin_11) return GPIO_PinSource11;
+        else if(GPIOx == GPIO_Pin_12) return GPIO_PinSource12;
+        else if(GPIOx == GPIO_Pin_13) return GPIO_PinSource13;
+        else if(GPIOx == GPIO_Pin_14) return GPIO_PinSource14;
+        else return GPIO_PinSource15;
+}
+
+uint32_t bsp_GetGpioAfTIMx(TIM_TypeDef* TIMx)
+{
+       if(TIMx == TIM1) return GPIO_AF_TIM1;
+       else if(TIMx == TIM2) return GPIO_AF_TIM2;
+       else if(TIMx == TIM3) return GPIO_AF_TIM3;
+       else if(TIMx == TIM4) return GPIO_AF_TIM4;
+       else if(TIMx == TIM5) return GPIO_AF_TIM5;
+       else if(TIMx == TIM8) return GPIO_AF_TIM8;
+       else if(TIMx == TIM9) return GPIO_AF_TIM9;
+       else if(TIMx == TIM10) return GPIO_AF_TIM10;
+       else if(TIMx == TIM11) return GPIO_AF_TIM11;
+       else if(TIMx == TIM12) return GPIO_AF_TIM12;
+       else if(TIMx == TIM13) return GPIO_AF_TIM13;
+       else return GPIO_AF_TIM14;
+}
+
+
 /*
 *********************************************************************************************************
 *	函 数 名: bsp_GetRCCofGPIO
@@ -204,24 +241,19 @@ void bsp_ConfigTimGpio(GPIO_TypeDef* GPIOx, uint16_t GPIO_PinX, TIM_TypeDef* TIM
 	GPIO_InitTypeDef  GPIO_InitStructure;
 
 	/* 使能GPIO时钟 */
-	RCC_APB2PeriphClockCmd(bsp_GetRCCofGPIO(GPIOx), ENABLE);
+	RCC_AHB1PeriphClockCmd(bsp_GetRCCofGPIO(GPIOx), ENABLE);
 
-  	/* 使能TIM时钟 */
-	if ((TIMx == TIM1) || (TIMx == TIM8))
-	{
-		RCC_APB2PeriphClockCmd(bsp_GetRCCofTIM(TIMx), ENABLE);
-	}
-	else
-	{
-		RCC_APB1PeriphClockCmd(bsp_GetRCCofTIM(TIMx), ENABLE);
-	}
-
-	/* 配置GPIO */
+  	/* 配置GPIO */
 	GPIO_InitStructure.GPIO_Pin = GPIO_PinX;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;		/* 复用功能 */
         GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(GPIOx, &GPIO_InitStructure); 
+        
+        /* Connect TIM3 pins to AF2 */  
+        if(TIMx != TIM6 || TIMx != TIM7)
+             GPIO_PinAFConfig(GPIOx, bsp_GetPinSource(GPIO_PinX), bsp_GetGpioAfTIMx(TIMx));
 }
 
 /*
@@ -238,7 +270,7 @@ void bsp_ConfigGpioOut(GPIO_TypeDef* GPIOx, uint16_t GPIO_PinX)
 	GPIO_InitTypeDef  GPIO_InitStructure;
 
 	/* 使能GPIO时钟 */
-	RCC_APB2PeriphClockCmd(bsp_GetRCCofGPIO(GPIOx), ENABLE);
+	RCC_AHB1PeriphClockCmd(bsp_GetRCCofGPIO(GPIOx), ENABLE);
 
 	/* 配置GPIO */
 	GPIO_InitStructure.GPIO_Pin = GPIO_PinX;		/* 带入的形参 */
@@ -300,6 +332,16 @@ void bsp_SetTIMOutPWM(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIMx,
 		APB2 定时器有 TIM1, TIM8 ,TIM9, TIM10, TIM11
 
 	----------------------------------------------------------------------- */
+	/* 使能TIM时钟 */
+	if ((TIMx == TIM1) || (TIMx == TIM8) || (TIMx == TIM9) || (TIMx == TIM10) || (TIMx == TIM11))
+	{
+		RCC_APB2PeriphClockCmd(bsp_GetRCCofTIM(TIMx), ENABLE);
+	}
+	else
+	{
+		RCC_APB1PeriphClockCmd(bsp_GetRCCofTIM(TIMx), ENABLE);
+	}
+ 
 	if ((TIMx == TIM1) || (TIMx == TIM8) || (TIMx == TIM9) || (TIMx == TIM10) || (TIMx == TIM11))
 	{
 		/* APB2 定时器 */
@@ -399,23 +441,16 @@ void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIM
 	uint16_t usPrescaler;
 	uint32_t uiTIMxCLK;
 
-	if (_ulDutyCycle == 0)
+        /* 两个边界值直接以GPIO的模式使出电平值 */
+	if (_ulDutyCycle == 0 || _ulDutyCycle == 10000)
 	{		
 		TIM_Cmd(TIMx, DISABLE);		/* 关闭PWM输出 */
 		bsp_ConfigGpioOut(GPIOx, GPIO_Pin);	/* 配置GPIO为推挽输出 */		
-		GPIO_WriteBit(GPIOx, GPIO_Pin, Bit_RESET);	/* PWM = 0 */		
+		GPIO_WriteBit(GPIOx, GPIO_Pin, (_ulDutyCycle == 0) ? Bit_SET : Bit_RESET);	/* PWM = 0 : 1*/		
 		return;
 	}
-	else if (_ulDutyCycle == 10000)
-	{
-		TIM_Cmd(TIMx, DISABLE);		/* 关闭PWM输出 */
 
-		bsp_ConfigGpioOut(GPIOx, GPIO_Pin);	/* 配置GPIO为推挽输出 */		
-		GPIO_WriteBit(GPIOx, GPIO_Pin, Bit_SET);	/* PWM = 1 */	
-		return;
-	}
-	
-
+        /* GPIO 配置 */
 	bsp_ConfigTimGpio(GPIOx, GPIO_Pin, TIMx, _ucChannel);	/* 使能GPIO和TIM时钟，并连接TIM通道到GPIO */
 	
     /*-----------------------------------------------------------------------
@@ -432,7 +467,17 @@ void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIM
 		APB2 定时器有 TIM1, TIM8 ,TIM9, TIM10, TIM11
 
 	----------------------------------------------------------------------- */
+        /* 使能TIM时钟 */
 	if ((TIMx == TIM1) || (TIMx == TIM8) || (TIMx == TIM9) || (TIMx == TIM10) || (TIMx == TIM11))
+	{
+		RCC_APB2PeriphClockCmd(bsp_GetRCCofTIM(TIMx), ENABLE);
+	}
+	else
+	{
+		RCC_APB1PeriphClockCmd(bsp_GetRCCofTIM(TIMx), ENABLE);
+	}
+ 
+        if ((TIMx == TIM1) || (TIMx == TIM8) || (TIMx == TIM9) || (TIMx == TIM10) || (TIMx == TIM11))
 	{
 		/* APB2 定时器 */
 		uiTIMxCLK = SystemCoreClock;
@@ -459,19 +504,19 @@ void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIM
 	}
 
 	/* Time base configuration */
-	TIM_TimeBaseStructure.TIM_Period = usPeriod;
-	TIM_TimeBaseStructure.TIM_Prescaler = usPrescaler;
-	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseStructure.TIM_Period = usPeriod;//当定时器从0计数到usPeriod，即为一个定时周期
+	TIM_TimeBaseStructure.TIM_Prescaler = usPrescaler; //设置预分频
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;//设置时钟分频系数：不分频
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;//向上计数模式
 	TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;	
 	TIM_TimeBaseInit(TIMx, &TIM_TimeBaseStructure);
 
 	/* PWM1 Mode configuration: Channel1 */
 	TIM_OCStructInit(&TIM_OCInitStructure);		/* 初始化结构体成员 */
 	
-	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;//配置为PWM模式1
 	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Disable;		/* 和 bsp_SetTIMOutPWM_N() 不同 */
-	TIM_OCInitStructure.TIM_Pulse = (_ulDutyCycle * usPeriod) / 10000;
+	TIM_OCInitStructure.TIM_Pulse = (_ulDutyCycle * usPeriod) / 10000; //设置跳变值，当计数器计数到这个值时，电平发生跳变
 	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
 	
 	TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;		/* only for TIM1 and TIM8. */	
@@ -502,7 +547,7 @@ void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIM
 
 	TIM_ARRPreloadConfig(TIMx, ENABLE);
 
-	/* TIMx enable counter */
+        /* TIMx enable counter */
 	TIM_Cmd(TIMx, ENABLE);
 
 	/* 下面这句话对于TIM1和TIM8是必须的，对于TIM2-TIM6则不必要 */
@@ -511,7 +556,6 @@ void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIM
 		TIM_CtrlPWMOutputs(TIMx, ENABLE);
 	}
 }
-
 
 /*
 *********************************************************************************************************
