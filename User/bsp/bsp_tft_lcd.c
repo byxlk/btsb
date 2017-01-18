@@ -1691,7 +1691,7 @@ static void LCD_FSMCConfig(void)
 *	函 数 名: LCD_SetPwmBackLight
 *	功能说明: 初始化控制LCD背景光的GPIO,配置为PWM模式。
 *			当关闭背光时，将CPU IO设置为浮动输入模式（推荐设置为推挽输出，并驱动到低电平)；将TIM3关闭 省电
-*	形    参:  _bright 亮度，0是灭，255是最亮
+*	形    参:  _bright 亮度，0是灭，100是最亮
 *	返 回 值: 无
 *********************************************************************************************************
 */
@@ -1699,7 +1699,7 @@ void LCD_SetPwmBackLight(uint8_t _bright)
 {
 	/* STM32-V4开发板，PB1/TIM3_CH4/TIM8_CH3N 控制背光PWM ； 因为 TIM3用于红外解码。因此用TIM8_CH3N做背光PWM */
 	//bsp_SetTIMOutPWM(GPIOB, GPIO_Pin_1, TIM3, 4, 100, (_bright * 10000) /255);	// TIM3_CH4
-	bsp_SetTIMOutPWM_N(GPIOA, GPIO_Pin_2, TIM2, 3, 100, (_bright * 10000) /255);	// TIM2_CH3N
+	bsp_SetTIMOutPWM_N(GPIOA, GPIO_Pin_2, TIM2, 3, 200000, _bright);	// TIM2_CH3N
 }
 
 /*

@@ -271,9 +271,9 @@ typedef struct
 }GROUP_T;
 
 /* 背景光控制 */
-#define BRIGHT_MAX		255
+#define BRIGHT_MAX		100
 #define BRIGHT_MIN		0
-#define BRIGHT_DEFAULT	200
+#define BRIGHT_DEFAULT	50
 #define BRIGHT_STEP		5
 
 /* 可供外部模块调用的函数 */

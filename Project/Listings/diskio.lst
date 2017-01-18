@@ -1,0 +1,396 @@
+L 1 "..\FatFS\src\diskio.c"
+N/*-----------------------------------------------------------------------*/
+N/* Low level disk I/O module skeleton for FatFs     (C)ChaN, 2016        */
+N/*-----------------------------------------------------------------------*/
+N/* If a working storage control module is available, it should be        */
+N/* attached to the FatFs via a glue function rather than modifying it.   */
+N/* This is an example of glue functions to attach various exsisting      */
+N/* storage control modules to the FatFs module with a defined API.       */
+N/*-----------------------------------------------------------------------*/
+N
+N#include "diskio.h"		/* FatFs lower layer API */
+L 1 "..\FatFS\src\diskio.h" 1
+N/*-----------------------------------------------------------------------/
+N/  Low level disk interface modlue include file   (C)ChaN, 2014          /
+N/-----------------------------------------------------------------------*/
+N
+N#ifndef _DISKIO_DEFINED
+N#define _DISKIO_DEFINED
+N
+N#ifdef __cplusplus
+Sextern "C" {
+N#endif
+N
+N#include "integer.h"
+L 1 "..\FatFS\src\integer.h" 1
+N/*-------------------------------------------*/
+N/* Integer type definitions for FatFs module */
+N/*-------------------------------------------*/
+N
+N#ifndef _FF_INTEGER
+N#define _FF_INTEGER
+N
+N#ifdef _WIN32	/* FatFs development platform */
+S
+S#include <windows.h>
+S#include <tchar.h>
+Stypedef unsigned __int64 QWORD;
+S
+S
+N#else			/* Embedded platform */
+N
+N/* These types MUST be 16-bit or 32-bit */
+Ntypedef int				INT;
+Ntypedef unsigned int	UINT;
+N
+N/* This type MUST be 8-bit */
+Ntypedef unsigned char	BYTE;
+N
+N/* These types MUST be 16-bit */
+Ntypedef short			SHORT;
+Ntypedef unsigned short	WORD;
+Ntypedef unsigned short	WCHAR;
+N
+N/* These types MUST be 32-bit */
+Ntypedef long			LONG;
+Ntypedef unsigned long	DWORD;
+N
+N/* This type MUST be 64-bit (Remove this for C89 compatibility) */
+Ntypedef unsigned long long QWORD;
+N
+N#endif
+N
+N#endif
+L 13 "..\FatFS\src\diskio.h" 2
+N
+N
+N/* Status of Disk Functions */
+Ntypedef BYTE	DSTATUS;
+N
+N/* Results of Disk Functions */
+Ntypedef enum {
+N	RES_OK = 0,		/* 0: Successful */
+N	RES_ERROR,		/* 1: R/W Error */
+N	RES_WRPRT,		/* 2: Write Protected */
+N	RES_NOTRDY,		/* 3: Not Ready */
+N	RES_PARERR		/* 4: Invalid Parameter */
+N} DRESULT;
+N
+N
+N/*---------------------------------------*/
+N/* Prototypes for disk control functions */
+N
+N
+NDSTATUS disk_initialize (BYTE pdrv);
+NDSTATUS disk_status (BYTE pdrv);
+NDRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count);
+NDRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count);
+NDRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
+N
+N
+N/* Disk Status Bits (DSTATUS) */
+N
+N#define STA_NOINIT		0x01	/* Drive not initialized */
+N#define STA_NODISK		0x02	/* No medium in the drive */
+N#define STA_PROTECT		0x04	/* Write protected */
+N
+N
+N/* Command code for disk_ioctrl fucntion */
+N
+N/* Generic command (Used by FatFs) */
+N#define CTRL_SYNC			0	/* Complete pending write process (needed at _FS_READONLY == 0) */
+N#define GET_SECTOR_COUNT	1	/* Get media size (needed at _USE_MKFS == 1) */
+N#define GET_SECTOR_SIZE		2	/* Get sector size (needed at _MAX_SS != _MIN_SS) */
+N#define GET_BLOCK_SIZE		3	/* Get erase block size (needed at _USE_MKFS == 1) */
+N#define CTRL_TRIM			4	/* Inform device that the data on the block of sectors is no longer used (needed at _USE_TRIM == 1) */
+N
+N/* Generic command (Not used by FatFs) */
+N#define CTRL_POWER			5	/* Get/Set power status */
+N#define CTRL_LOCK			6	/* Lock/Unlock media removal */
+N#define CTRL_EJECT			7	/* Eject media */
+N#define CTRL_FORMAT			8	/* Create physical format on the media */
+N
+N/* MMC/SDC specific ioctl command */
+N#define MMC_GET_TYPE		10	/* Get card type */
+N#define MMC_GET_CSD			11	/* Get CSD */
+N#define MMC_GET_CID			12	/* Get CID */
+N#define MMC_GET_OCR			13	/* Get OCR */
+N#define MMC_GET_SDSTAT		14	/* Get SD status */
+N#define ISDIO_READ			55	/* Read data form SD iSDIO register */
+N#define ISDIO_WRITE			56	/* Write data to SD iSDIO register */
+N#define ISDIO_MRITE			57	/* Masked write data to SD iSDIO register */
+N
+N/* ATA/CF specific ioctl command */
+N#define ATA_GET_REV			20	/* Get F/W revision */
+N#define ATA_GET_MODEL		21	/* Get model name */
+N#define ATA_GET_SN			22	/* Get serial number */
+N
+N#ifdef __cplusplus
+S}
+N#endif
+N
+N#endif
+L 11 "..\FatFS\src\diskio.c" 2
+N
+N/* Definitions of physical drive number for each drive */
+N#define DEV_RAM		0	/* Example: Map Ramdisk to physical drive 0 */
+N#define DEV_MMC		1	/* Example: Map MMC/SD card to physical drive 1 */
+N#define DEV_USB		2	/* Example: Map USB MSD to physical drive 2 */
+N
+N
+N/*-----------------------------------------------------------------------*/
+N/* Get Drive Status                                                      */
+N/*-----------------------------------------------------------------------*/
+N
+NDSTATUS disk_status (
+N	BYTE pdrv		/* Physical drive nmuber to identify the drive */
+N)
+N{
+N	DSTATUS stat;
+N	//int result;
+N
+N	switch (pdrv) {
+N	case DEV_RAM :
+X	case 0 :
+N		//result = RAM_disk_status();
+N
+N		// translate the reslut code here
+N
+N		return stat;
+N
+N	case DEV_MMC :
+X	case 1 :
+N		//result = MMC_disk_status();
+N
+N		// translate the reslut code here
+N
+N		return stat;
+N
+N	case DEV_USB :
+X	case 2 :
+N		//result = USB_disk_status();
+N
+N		// translate the reslut code here
+N
+N		return stat;
+N	}
+N	return STA_NOINIT;
+X	return 0x01;
+N}
+N
+N
+N
+N/*-----------------------------------------------------------------------*/
+N/* Inidialize a Drive                                                    */
+N/*-----------------------------------------------------------------------*/
+N
+NDSTATUS disk_initialize (
+N	BYTE pdrv				/* Physical drive nmuber to identify the drive */
+N)
+N{
+N	DSTATUS stat;
+N	//int result;
+N
+N	switch (pdrv) {
+N	case DEV_RAM :
+X	case 0 :
+N		//result = RAM_disk_initialize();
+N
+N		// translate the reslut code here
+N
+N		return stat;
+N
+N	case DEV_MMC :
+X	case 1 :
+N		//result = MMC_disk_initialize();
+N
+N		// translate the reslut code here
+N
+N		return stat;
+N
+N	case DEV_USB :
+X	case 2 :
+N		//result = USB_disk_initialize();
+N
+N		// translate the reslut code here
+N
+N		return stat;
+N	}
+N	return STA_NOINIT;
+X	return 0x01;
+N}
+N
+N
+N
+N/*-----------------------------------------------------------------------*/
+N/* Read Sector(s)                                                        */
+N/*-----------------------------------------------------------------------*/
+N
+NDRESULT disk_read (
+N	BYTE pdrv,		/* Physical drive nmuber to identify the drive */
+N	BYTE *buff,		/* Data buffer to store read data */
+N	DWORD sector,	/* Start sector in LBA */
+N	UINT count		/* Number of sectors to read */
+N)
+N{
+N	DRESULT res;
+N	//int result;
+N
+N	switch (pdrv) {
+N	case DEV_RAM :
+X	case 0 :
+N		// translate the arguments here
+N
+N		//result = RAM_disk_read(buff, sector, count);
+N
+N		// translate the reslut code here
+N
+N		return res;
+N
+N	case DEV_MMC :
+X	case 1 :
+N		// translate the arguments here
+N
+N		//result = MMC_disk_read(buff, sector, count);
+N
+N		// translate the reslut code here
+N
+N		return res;
+N
+N	case DEV_USB :
+X	case 2 :
+N		// translate the arguments here
+N
+N		//result = USB_disk_read(buff, sector, count);
+N
+N		// translate the reslut code here
+N
+N		return res;
+N	}
+N
+N	return RES_PARERR;
+N}
+N
+N
+N
+N/*-----------------------------------------------------------------------*/
+N/* Write Sector(s)                                                       */
+N/*-----------------------------------------------------------------------*/
+N
+NDRESULT disk_write (
+N	BYTE pdrv,			/* Physical drive nmuber to identify the drive */
+N	const BYTE *buff,	/* Data to be written */
+N	DWORD sector,		/* Start sector in LBA */
+N	UINT count			/* Number of sectors to write */
+N)
+N{
+N	DRESULT res;
+N	//int result;
+N
+N	switch (pdrv) {
+N	case DEV_RAM :
+X	case 0 :
+N		// translate the arguments here
+N
+N		//result = RAM_disk_write(buff, sector, count);
+N
+N		// translate the reslut code here
+N
+N		return res;
+N
+N	case DEV_MMC :
+X	case 1 :
+N		// translate the arguments here
+N
+N		//result = MMC_disk_write(buff, sector, count);
+N
+N		// translate the reslut code here
+N
+N		return res;
+N
+N	case DEV_USB :
+X	case 2 :
+N		// translate the arguments here
+N
+N		//result = USB_disk_write(buff, sector, count);
+N
+N		// translate the reslut code here
+N
+N		return res;
+N	}
+N
+N	return RES_PARERR;
+N}
+N
+N
+N
+N/*-----------------------------------------------------------------------*/
+N/* Miscellaneous Functions                                               */
+N/*-----------------------------------------------------------------------*/
+N
+NDRESULT disk_ioctl (
+N	BYTE pdrv,		/* Physical drive nmuber (0..) */
+N	BYTE cmd,		/* Control code */
+N	void *buff		/* Buffer to send/receive control data */
+N)
+N{
+N	DRESULT res;
+N	//int result;
+N
+N	switch (pdrv) {
+N	case DEV_RAM :
+X	case 0 :
+N
+N		// Process of the command for the RAM drive
+N
+N		return res;
+N
+N	case DEV_MMC :
+X	case 1 :
+N
+N		// Process of the command for the MMC/SD card
+N
+N		return res;
+N
+N	case DEV_USB :
+X	case 2 :
+N
+N		// Process of the command the USB drive
+N
+N		return res;
+N	}
+N
+N	return RES_PARERR;
+N}
+N
+N
+N/*
+N*********************************************************************************************************
+N*	函 数 名: get_fattime
+N*	功能说明: 获得系统时间，用于改写文件的创建和修改时间。客户可以自行移植和系统的RTC关联起来
+N*	形    参: 无
+N*	返 回 值: 无
+N*********************************************************************************************************
+N*/
+NDWORD get_fattime (void)
+N{
+N	/* 如果有全局时钟，可按下面的格式进行时钟转换. 这个例子是2014-07-02 00:00:00 */
+N#if 0
+S	RTC_ReadClock();
+S	return  ((DWORD)(g_tRTC.Year - 1980) << 25)		/* Year  */
+S			| ((DWORD)g_tRTC.Mon << 21)				/* Month   */
+S			| ((DWORD)g_tRTC.Day << 16)				/* Day_m  1*/
+S			| ((DWORD)g_tRTC.Hour << 11)			/* Hour  */
+S			| ((DWORD)g_tRTC.Min << 5)				/* Min  */
+S			| ((DWORD)g_tRTC.Sec >> 1);				/* Sec  */
+S	
+N#else
+N	return	  ((DWORD)(2014 - 1980) << 25)	/* Year = 2014 */
+N			| ((DWORD)7 << 21)				/* Month = 7 */
+N			| ((DWORD)2 << 16)				/* Day_m = 2*/
+N			| ((DWORD)0 << 11)				/* Hour = 0 */
+N			| ((DWORD)0 << 5)				/* Min = 0 */
+N			| ((DWORD)0 >> 1);				/* Sec = 0 */
+N#endif	
+N}
+N
