@@ -5,6 +5,7 @@
 
 void GuiTaskTest(void) ;
 WM_HWIN CreateWindow(void);
+void bsp_RTC_Test(void);
 
 
 #endif

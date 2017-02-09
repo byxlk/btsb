@@ -23,6 +23,7 @@
 
 #include "DIALOG.h"
 #include "guitasktest.h"
+#include "bsp.h"
 
 /*********************************************************************
 *
@@ -292,6 +293,59 @@ void GuiTaskTest(void)
 
 // USER END
 
+void bsp_RTC_Test(void)
+{
+        char TempDate[] = {'2','0','0','0','-','0','1','-','0','1',' ','0','8',':','0','0',':','0','0',' ','W','7'};
+        GUI_Init();
+        GUI_SetBkColor(CL_BLUE);
+
+        GUI_Clear();
+        GUI_SetFont(&GUI_Font8x16);
+
+        //GUI_DispString("Hello World !");
+
+        while(1)
+        {
+                GUI_Delay(10);
+                GUI_GotoXY(0, 0);
+                bsp_RTC_GetClock();
+            #if 1
+                TempDate[0] = '0' + g_tRTC.Year /1000;
+                TempDate[1] = '0' + g_tRTC.Year /100 % 10;
+                TempDate[2] = '0' + g_tRTC.Year /10 % 10;
+                TempDate[3] = '0' + g_tRTC.Year % 10;
+                
+                TempDate[5] = '0' + g_tRTC.Mon / 10;
+                TempDate[6] = '0' + g_tRTC.Mon % 10;
+                
+                TempDate[8] = '0' + g_tRTC.Day /10;
+                TempDate[9] = '0' + g_tRTC.Day % 10;
+                
+                TempDate[21] = '0' + g_tRTC.Week;
+
+                TempDate[11] = '0' + g_tRTC.Hour / 10;
+                TempDate[12] = '0' + g_tRTC.Hour % 10;
+                 
+                TempDate[14] = '0' + g_tRTC.Min / 10;
+                TempDate[15] = '0' + g_tRTC.Min % 10;
+
+                TempDate[17] = '0' + g_tRTC.Sec / 10;
+                TempDate[18] = '0' + g_tRTC.Sec % 10;
+                
+                GUI_DispString(TempDate);
+                #else
+                GUI_DispDecAt(g_tRTC.Year, 0, 0, 5);
+                GUI_DispDecAt(g_tRTC.Mon, 48, 0, 3);
+                GUI_DispDecAt(g_tRTC.Day, 80, 0, 3);
+                GUI_DispDecAt(g_tRTC.Week, 112, 0, 2);
+                
+                GUI_DispDecAt(g_tRTC.Hour, 120, 0, 3);
+                GUI_DispDecAt(g_tRTC.Min, 152, 0, 2);
+                GUI_DispDecAt(g_tRTC.Sec, 184, 0, 3);
+                #endif
+        }
+        
+}
 
 /*************************** End of file ****************************/
 

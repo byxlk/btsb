@@ -268,7 +268,7 @@ void bsp_RTC_GetClock(void)
     RTC_GetDate(RTC_Format_BIN, &RTC_DateStructure);
     RTC_GetTime(RTC_Format_BIN, &RTC_TimeStructure);
 
-    g_tRTC.Year = RTC_DateStructure.RTC_Year;
+    g_tRTC.Year = RTC_DateStructure.RTC_Year+2000;
     g_tRTC.Mon = RTC_DateStructure.RTC_Month;
     g_tRTC.Day = RTC_DateStructure.RTC_Date;
     g_tRTC.Week = RTC_DateStructure.RTC_WeekDay;

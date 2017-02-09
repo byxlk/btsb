@@ -133,7 +133,8 @@ static void vTaskTest(void *pvParameters)
         vTaskDelay(1000);
         LCD_Fill_Rect(0, 0, 320, 240, CL_YELLOW);
    #endif
-        GuiTaskTest();
+        //GuiTaskTest();
+        bsp_RTC_Test();
     }  
 }
 /*
