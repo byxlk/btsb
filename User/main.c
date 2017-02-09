@@ -57,8 +57,8 @@
 *********************************************************************************************************
 */
 #include <includes.h>
-
-
+#include "MainTask.h"
+#include "guitasktest.h"
 /*
 **********************************************************************************************************
 											函数声明
@@ -81,6 +81,24 @@ static SemaphoreHandle_t  xMutex = NULL;
 
 /*
 *********************************************************************************************************
+*	函 数 名: vTaskGUI
+*	功能说明: emWin任务
+*	形    参: pvParameters 是在创建该任务时传递的形参
+*	返 回 值: 无
+*   优 先 级: 1   (数值越小优先级越低，这个跟uCOS相反)
+*********************************************************************************************************
+*/
+static void vTaskGUI(void *pvParameters)
+{
+	while (1) 
+	{
+		//MainTask();
+		vTaskDelay(1000);
+	}
+}
+
+/*
+*********************************************************************************************************
 *	函 数 名: vTaskAdcProc
 *	功能说明: AD转换处理		
 *	形    参: pvParameters 是在创建该任务时传递的形参
@@ -98,6 +116,28 @@ static void vTaskAdcProc(void *pvParameters)
 
 /*
 *********************************************************************************************************
+*	函 数 名: vTaskAdcProc
+*	功能说明: AD转换处理		
+*	形    参: pvParameters 是在创建该任务时传递的形参
+*	返 回 值: 无
+*   优 先 级: 2 
+*********************************************************************************************************
+*/
+static void vTaskTest(void *pvParameters)
+{
+    while(1)
+    {
+        vTaskDelay(1000);
+  #ifdef LCD_DRIVER_TEST
+        LCD_Fill_Rect(0, 0, 320, 240, CL_BLUE);
+        vTaskDelay(1000);
+        LCD_Fill_Rect(0, 0, 320, 240, CL_YELLOW);
+   #endif
+        GuiTaskTest();
+    }  
+}
+/*
+*********************************************************************************************************
 *	函 数 名: AppTaskCreate
 *	功能说明: 创建应用任务
 *	形    参：无
@@ -107,12 +147,12 @@ static void vTaskAdcProc(void *pvParameters)
 static void AppTaskCreate (void)
 {
         /* GUI 界面绘制 */
-	//xTaskCreate(  vTaskGUI,             /* 任务函数  */
-    //              "vTaskGUI",           /* 任务名    */
-    //              1024,                 /* 任务栈大小，单位word，也就是4字节 */
-    //              NULL,                 /* 任务参数  */
-    //              1,                    /* 任务优先级*/
-    //              NULL );               /* 任务句柄  */
+	xTaskCreate(  vTaskGUI,             /* 任务函数  */
+                  "vTaskGUI",           /* 任务名    */
+                  1024,                 /* 任务栈大小，单位word，也就是4字节 */
+                  NULL,                 /* 任务参数  */
+                  1,                    /* 任务优先级*/
+                  NULL );               /* 任务句柄  */
 
     /* 按键事件处理 */
     //xTaskCreate( vTaskTaskUserIF,   	/* 任务函数  */
@@ -153,6 +193,13 @@ static void AppTaskCreate (void)
                  NULL,           		/* 任务参数  */
                  5,              		/* 任务优先级*/
                  &xHandleTaskAdcProc );   /* 任务句柄  */
+    /* vTaskTest */
+    xTaskCreate( vTaskTest,     		/* 任务函数  */
+                 "vTaskTest",   		/* 任务名    */
+                 512,            		/* 任务栈大小，单位word，也就是4字节 */
+                 NULL,           		/* 任务参数  */
+                 5,              		/* 任务优先级*/
+                 NULL );   /* 任务句柄  */
 }
 
 /*
@@ -202,7 +249,7 @@ int main(void)
 		  目中不要使用，因为这个功能比较影响系统实时性。
 	   2. 为了正确获取FreeRTOS的调试信息，可以考虑将上面的关闭中断指令__set_PRIMASK(1); 注释掉。 
 	*/
-	vSetupSysInfoTest();
+	//vSetupSysInfoTest();
 	
 	/* 创建任务 */
 	AppTaskCreate();

@@ -28,7 +28,7 @@ static void Init_7789(void);
 static void ST7789V_SetDispWin(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth);
 static void ST7789V_QuitWinMode(void);
 static void ST7789V_SetCursor(uint16_t _usX, uint16_t _usY);
-
+static void ST7789V_ReadData(uint8_t *readBuf, uint8_t _uCount);
 static void ST7789V_WriteCmd(uint8_t _ucCmd);
 static void ST7789V_WriteParam(uint8_t _ucParam);
 
@@ -40,32 +40,33 @@ static void ST7789V_WriteParam(uint8_t _ucParam);
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void ST7789V_InitHard(void)
+uint32_t ST7789V_InitHard(void)
 {
 	uint32_t id;
 
 	id = ST7789V_ReadID();
 
-	if (id == 0x548066)
+	if (id == IC_ST7789V_ID)
 	{
 		Init_7789();	/* 初始化5420和4001屏硬件 */
 
-		//ST7789V_WriteCmd(0x23);
-		//ST7789V_WriteCmd(0x22);
-
 		s_RGBChgEn = 0;
 
-		ST7789V_PutPixel(1,1, 0x12);
-		g_ChipID = ST7789V_GetPixel(1,1);
+		//ST7789V_PutPixel(1,1, 0x12);
+		//g_ChipID = ST7789V_GetPixel(1,1);
 
-		ST7789V_PutPixel(1,1, 0x34);
-		g_ChipID = ST7789V_GetPixel(1,1);
+		//ST7789V_PutPixel(1,1, 0x34);
+		//g_ChipID = ST7789V_GetPixel(1,1);
 
-		ST7789V_PutPixel(1,1, 0x56);
-		g_ChipID = ST7789V_GetPixel(1,1);
+		//ST7789V_PutPixel(1,1, 0x56);
+		//g_ChipID = ST7789V_GetPixel(1,1);
 
 		g_ChipID = IC_7789;
+
+                return IC_7789;
 	}
+
+        return IC_UNKN;
 }
 
 /*
@@ -78,7 +79,6 @@ void ST7789V_InitHard(void)
 */
 void ST7789V_SetDirection(uint8_t _ucDir)
 {
-	
 	/*
 		Memory Access Control (36h)
 		This command defines read/write scanning direction of the frame memory.
@@ -101,28 +101,64 @@ void ST7789V_SetDirection(uint8_t _ucDir)
 	/* 0 表示竖屏(排线在下)，1表示竖屏(排线在上), 2表示横屏(排线在左边)  3表示横屏 (排线在右边) */
 	if (_ucDir == 0)
 	{
-		ST7789V_WriteParam(0xA8);	/* 横屏(排线在左边) */
-		g_LcdHeight = 320;
-		g_LcdWidth = 480;
+		ST7789V_WriteParam(0xA0);	/* 横屏(排线在左边) */
+		g_LcdHeight = 240;
+		g_LcdWidth = 320;
 	}
 	else if (_ucDir == 1)
 	{
-		ST7789V_WriteParam(0x68);	/* 横屏 (排线在右边) */
-		g_LcdHeight = 320;
-		g_LcdWidth = 480;
+		ST7789V_WriteParam(0x60);	/* 横屏 (排线在右边) */
+		g_LcdHeight = 240;
+		g_LcdWidth = 320;
 	}
 	else if (_ucDir == 2)
 	{
-		ST7789V_WriteParam(0xC8);	/* 竖屏(排线在上) */
-		g_LcdHeight = 480;
-		g_LcdWidth = 320;
+		ST7789V_WriteParam(0xC0);	/* 竖屏(排线在上) */
+		g_LcdHeight = 320;
+		g_LcdWidth = 240;
 	}
 	else if (_ucDir == 3)
 	{
-		ST7789V_WriteParam(0x08);	/* 竖屏(排线在下) */
-		g_LcdHeight = 480;
-		g_LcdWidth = 320;
+		ST7789V_WriteParam(0x00);	/* 竖屏(排线在下) */
+		g_LcdHeight = 320;
+		g_LcdWidth = 240;
 	}
+}
+
+static void ST7789V_SetGammaCtrl(void)
+{
+            ST7789V_WriteCmd(0xe0);  //PVGAMCTRL (E0h): Positive Voltage Gamma Control
+            ST7789V_WriteParam(0xf0);
+            ST7789V_WriteParam(0x00);
+            ST7789V_WriteParam(0x0a);
+            ST7789V_WriteParam(0x10);
+            ST7789V_WriteParam(0x12);
+            ST7789V_WriteParam(0x1b);
+            ST7789V_WriteParam(0x39);
+            ST7789V_WriteParam(0x44);
+            ST7789V_WriteParam(0x47);
+            ST7789V_WriteParam(0x28);
+            ST7789V_WriteParam(0x12);
+            ST7789V_WriteParam(0x10);
+            ST7789V_WriteParam(0x16);
+            ST7789V_WriteParam(0x1b);
+    
+            ST7789V_WriteCmd(0xe1);  //NVGAMCTRL (E1h): Negative Voltage Gamma Control
+            ST7789V_WriteParam(0xf0);
+            ST7789V_WriteParam(0x00);
+            ST7789V_WriteParam(0x0a);
+            ST7789V_WriteParam(0x10);
+            ST7789V_WriteParam(0x11);
+            ST7789V_WriteParam(0x1a);
+            ST7789V_WriteParam(0x3b);
+            ST7789V_WriteParam(0x34);
+            ST7789V_WriteParam(0x4e);
+            ST7789V_WriteParam(0x3a);
+            ST7789V_WriteParam(0x17);
+            ST7789V_WriteParam(0x16);
+            ST7789V_WriteParam(0x21);
+            ST7789V_WriteParam(0x22);
+
 }
 
 /*
@@ -137,119 +173,119 @@ static void Init_7789(void)
 {
 	/* 初始化LCD，写LCD寄存器进行配置 */
 
-#if 0
-	// VCI=2.8V
-	//************* Reset LCD Driver ****************//
-	LCD_nRESET = 1;
-	Delayms(1); // Delay 1ms
-	LCD_nRESET = 0;
-	Delayms(10); // Delay 10ms // This delay time is necessary
-	LCD_nRESET = 1;
-	Delayms(120); // Delay 100 ms
-#endif
-
 	//************* Start Initial Sequence **********//
-	/* Adjust Control 3 (F7h)  */
-	ST7789V_WriteCmd(0XF7);
-	ST7789V_WriteParam(0xA9);
-	ST7789V_WriteParam(0x51);
-	ST7789V_WriteParam(0x2C);
-	ST7789V_WriteParam(0x82);	/* DSI write DCS command, use loose packet RGB 666 */
+        //-------------------------------- SOFTWARE RESET --------------------------------------------------------//
+        
+        //---------------------------------------------------------------------------------------------------//
+        ST7789V_WriteCmd(0x11);     //Sleep out
+        bsp_DelayMS(120); //Delay 120ms
+        //--------------------------------Display and color format setting-------------------
+        ST7789V_WriteCmd(0x36); //Memory data access contro (MADCTL)
+        ST7789V_WriteParam(0x00);
+        ST7789V_WriteCmd(0x3a);  //Interface pixel format (COLMOD)
+        ST7789V_WriteParam(0x55);//16bit/pix 565
+        //--------------------------------ST7789S Frame rate setting----------------------------------//
+        //Set reg B2 as default value
+        ST7789V_WriteCmd(0xb2);  //PORCTRL (B2h): Porch Setting
+        ST7789V_WriteParam(0x0c);//BPA[6:0]: Back porch setting in normal mode. The minimum setting is 0x01
+        ST7789V_WriteParam(0x0c);//FPA[6:0]: Front porch setting in normal mode. The minimum setting is 0x01
+        ST7789V_WriteParam(0x00);//Disable separate porch control
+        ST7789V_WriteParam(0x33);
+        ST7789V_WriteParam(0x33);
+ 
+        ST7789V_WriteCmd(0xb7);  //GCTRL (B7h): Gate Control
+        ST7789V_WriteParam(0x35);
+        //---------------------------------ST7789S Power setting--------------------------------------//
+        ST7789V_WriteCmd(0xbb); //VCOMS (BBh): VCOMS Setting
+        ST7789V_WriteParam(0x2b);//offset 1.175V
 
-	/* Power Control 1 (C0h)  */
-	ST7789V_WriteCmd(0xC0);
-	ST7789V_WriteParam(0x11);
-	ST7789V_WriteParam(0x09);
+        ST7789V_WriteCmd(0xc3); //VRHS (C3h): VRH Set
+        ST7789V_WriteParam(0x17); // 4.7+/-( vcom+vcom offset+vdv)
 
-	/* Power Control 2 (C1h) */
-	ST7789V_WriteCmd(0xC1);
-	ST7789V_WriteParam(0x41);
+        ST7789V_WriteCmd(0xc4); //VDVS (C4h): VDV Set
+        ST7789V_WriteParam(0x20);// 0V - default value
 
-	/* VCOM Control (C5h)  */
-	ST7789V_WriteCmd(0XC5);
-	ST7789V_WriteParam(0x00);
-	ST7789V_WriteParam(0x0A);
-	ST7789V_WriteParam(0x80);
+        //FRCTRL2 (C6h): Frame Rate Control in Normal Mode
+        //Frame rate=10MHz/(320+FPA[6:0]+BPA[6:0])*(250+RTNA[4:0]*16)
+        //Frame rate=10MHz/(320+12         +12)         *(250+5*16) = 88HZ
+        ST7789V_WriteCmd(0xc6);//NLA2 NLA1 NLA0 (0x00: dot/0x07: column) RTNA4  RTNA3 RTNA2 RTNA1 RTNA0    Frame
+        ST7789V_WriteParam(0x05);
 
-	/* Frame Rate Control (In Normal Mode/Full Colors) (B1h) */
-	ST7789V_WriteCmd(0xB1);
-	ST7789V_WriteParam(0xB0);
-	ST7789V_WriteParam(0x11);
+        ST7789V_WriteCmd(0xd0); //PWCTRL1 (D0h): Power Control 1
+        ST7789V_WriteParam(0xa4);
+        ST7789V_WriteParam(0xa2);// dfault value is 81H
+        //--------------------------------ST7789S gamma setting---------------------------------------//
+        ST7789V_SetGammaCtrl(); //Set Gamma value control
 
-	/* Display Inversion Control (B4h) */
-	ST7789V_WriteCmd(0xB4);
-	ST7789V_WriteParam(0x02);
-
-	/* Display Function Control (B6h)  */
-	ST7789V_WriteCmd(0xB6);
-	ST7789V_WriteParam(0x02);
-	ST7789V_WriteParam(0x22);
-
-	/* Entry Mode Set (B7h)  */
-	ST7789V_WriteCmd(0xB7);
-	ST7789V_WriteParam(0xc6);
-
-	/* HS Lanes Control (BEh) */
-	ST7789V_WriteCmd(0xBE);
-	ST7789V_WriteParam(0x00);
-	ST7789V_WriteParam(0x04);
-
-	/* Set Image Function (E9h)  */
-	ST7789V_WriteCmd(0xE9);
-	ST7789V_WriteParam(0x00);
-
-	ST7789V_SetDirection(0);	/* 横屏(排线在左边) */
-
-	/* Interface Pixel Format (3Ah) */
-	ST7789V_WriteCmd(0x3A);
-	ST7789V_WriteParam(0x55);	/* 0x55 : 16 bits/pixel  */
-
-	/* PGAMCTRL (Positive Gamma Control) (E0h) */
-	ST7789V_WriteCmd(0xE0);
-	ST7789V_WriteParam(0x00);
-	ST7789V_WriteParam(0x07);
-	ST7789V_WriteParam(0x10);
-	ST7789V_WriteParam(0x09);
-	ST7789V_WriteParam(0x17);
-	ST7789V_WriteParam(0x0B);
-	ST7789V_WriteParam(0x41);
-	ST7789V_WriteParam(0x89);
-	ST7789V_WriteParam(0x4B);
-	ST7789V_WriteParam(0x0A);
-	ST7789V_WriteParam(0x0C);
-	ST7789V_WriteParam(0x0E);
-	ST7789V_WriteParam(0x18);
-	ST7789V_WriteParam(0x1B);
-	ST7789V_WriteParam(0x0F);
-
-	/* NGAMCTRL (Negative Gamma Control) (E1h)  */
-	ST7789V_WriteCmd(0XE1);
-	ST7789V_WriteParam(0x00);
-	ST7789V_WriteParam(0x17);
-	ST7789V_WriteParam(0x1A);
-	ST7789V_WriteParam(0x04);
-	ST7789V_WriteParam(0x0E);
-	ST7789V_WriteParam(0x06);
-	ST7789V_WriteParam(0x2F);
-	ST7789V_WriteParam(0x45);
-	ST7789V_WriteParam(0x43);
-	ST7789V_WriteParam(0x02);
-	ST7789V_WriteParam(0x0A);
-	ST7789V_WriteParam(0x09);
-	ST7789V_WriteParam(0x32);
-	ST7789V_WriteParam(0x36);
-	ST7789V_WriteParam(0x0F);
-
-	/* Sleep Out (11h */
-	ST7789V_WriteCmd(0x11);
-	bsp_DelayMS(120);
-	ST7789V_WriteCmd(0x29);	/* Display ON (29h) */
+        /* Table1 setting values */
+        ST7789V_WriteCmd(0x13); //NORON (13h): Normal Display Mode On
+        ST7789V_WriteCmd(0x20); // INVOFF (20h): Display Inversion Off
+        ST7789V_DispOn(); //Display on
 
 #if 1
 	/* 设置显示窗口 */
 	ST7789V_SetDispWin(0, 0, g_LcdHeight, g_LcdWidth);
 #endif
 }
+
+void ST7789V_SoftReset(void)
+{
+        ST7789V_WriteCmd(0X01);
+        ST7789V_WriteParam(0X01);
+        bsp_DelayMS(10);
+}
+/*
+*********************************************************************************************************
+*	函 数 名: ST7789V_ReadData()
+*	功能说明: 从LCD控制器芯片读取数据
+*	形    参: 无
+*	返 回 值: 数据
+*********************************************************************************************************
+*/
+static void ST7789V_ReadData(uint8_t *readBuf, uint8_t _uCount)
+{
+        //CS(CS)=PC9 RS(D/CX)=PC8 WR(WRX)=PC7 RD(RDX)=PC6 RST=PA8
+
+        uint8_t i =0x00;   
+        GPIO_InitTypeDef GPIO_InitStructure;
+
+	/* 使能 GPIOD */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+
+	/*  GPIO 配置为复用推挽输出 */
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; 
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+
+	/* LCD Data Bus */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+ 
+        // INIT status
+        //GPIO_SetBits(GPIOA, GPIO_Pin_8); //RST = 1;
+        //GPIO_SetBits(GPIOC, GPIO_Pin_8);  //DCX = 1, //DCX = 0;Write Comand
+        //GPIO_SetBits(GPIOC, GPIO_Pin_6);  // RD = 1
+        //GPIO_SetBits(GPIOC, GPIO_Pin_7);  //WR = 1;
+        //GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
+        GPIO_ResetBits(GPIOC, GPIO_Pin_9); // CS = 0
+
+        for(i = 0; i < _uCount; i++)
+        {
+                GPIO_ResetBits(GPIOC, GPIO_Pin_6); // RD = 0
+                GPIO_SetBits(GPIOC, GPIO_Pin_6);  //RD = 1;
+                readBuf[i] = (uint8_t)(GPIO_ReadInputData(GPIOB) & 0xFF);
+        }
+        GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
+
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+        GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+
+	/* LCD Data Bus */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+}
+
 
 /*
 *********************************************************************************************************
@@ -261,7 +297,24 @@ static void Init_7789(void)
 */
 static void ST7789V_WriteCmd(uint8_t _ucCmd)
 {
-	ST7789V_REG = _ucCmd;	/* 发送CMD */
+        //CS(CS)=PC9 RS(D/CX)=PC8 WR(WRX)=PC7 RD(RDX)=PC6 RST=PA8
+
+        // INIT status
+        //GPIO_SetBits(GPIOA, GPIO_Pin_8); //RST = 1;
+        //GPIO_SetBits(GPIOC, GPIO_Pin_8);  //DCX = 1, //DCX = 0;Write Comand
+        //GPIO_SetBits(GPIOC, GPIO_Pin_6);  // RD = 1
+        //GPIO_SetBits(GPIOC, GPIO_Pin_7);  //WR = 1;
+        //GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
+
+        GPIO_ResetBits(GPIOC, GPIO_Pin_9); // CS = 0
+        GPIO_ResetBits(GPIOC, GPIO_Pin_8);  //DCX = 0, //DCX = 0;Write Comand
+        GPIO_ResetBits(GPIOC, GPIO_Pin_7); // WR = 0
+        
+        GPIO_Write(GPIOB, (0xff << 8) | _ucCmd);
+        
+        GPIO_SetBits(GPIOC, GPIO_Pin_7);  //WR = 1;
+        GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
+        GPIO_SetBits(GPIOC, GPIO_Pin_8);  //DCX = 1, //DCX = 0;Write Comand
 }
 
 
@@ -275,9 +328,23 @@ static void ST7789V_WriteCmd(uint8_t _ucCmd)
 */
 static void ST7789V_WriteParam(uint8_t _ucParam)
 {
-	ST7789V_RAM = _ucParam;
-}
+        //CS(CS)=PC9 RS(D/CX)=PC8 WR(WRX)=PC7 RD(RDX)=PC6 RST=PA8
 
+        // INIT status
+        //GPIO_SetBits(GPIOA, GPIO_Pin_8); //RST = 1;
+        //GPIO_SetBits(GPIOC, GPIO_Pin_8);  //DCX = 1, //DCX = 0;Write Comand
+        //GPIO_SetBits(GPIOC, GPIO_Pin_6);  // RD = 1
+        //GPIO_SetBits(GPIOC, GPIO_Pin_7);  //WR = 1;
+        //GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
+
+        GPIO_ResetBits(GPIOC, GPIO_Pin_9); // CS = 0
+        GPIO_ResetBits(GPIOC, GPIO_Pin_7); // WR = 0
+        
+        GPIO_Write(GPIOB, (0xff << 8) | _ucParam);
+        
+        GPIO_SetBits(GPIOC, GPIO_Pin_7);  //WR = 1;
+        GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
+}
 /*
 *********************************************************************************************************
 *	函 数 名: ST7789V_SetDispWin
@@ -293,16 +360,16 @@ static void ST7789V_WriteParam(uint8_t _ucParam)
 static void ST7789V_SetDispWin(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth)
 {
 	ST7789V_WriteCmd(0X2A); 		/* 设置X坐标 */
-	ST7789V_WriteParam(_usX >> 8);	/* 起始点 */
-	ST7789V_WriteParam(_usX);
-	ST7789V_WriteParam((_usX + _usWidth - 1) >> 8);	/* 结束点 */
-	ST7789V_WriteParam(_usX + _usWidth - 1);
+	ST7789V_WriteParam((uint8_t)((_usX & 0xFF00) >> 8));	/* 起始点 */
+	ST7789V_WriteParam((uint8_t)(_usX & 0x00FF));
+	ST7789V_WriteParam((uint8_t)(((_usX + _usWidth - 1) & 0xFF00) >> 8));	/* 结束点 */
+	ST7789V_WriteParam((uint8_t)(_usX + _usWidth - 1));
 
 	ST7789V_WriteCmd(0X2B); 				  /* 设置Y坐标*/
-	ST7789V_WriteParam(_usY >> 8);   /* 起始点 */
-	ST7789V_WriteParam(_usY);
-	ST7789V_WriteParam((_usY + _usHeight - 1) >>8);		/* 结束点 */
-	ST7789V_WriteParam((_usY + _usHeight - 1));
+	ST7789V_WriteParam((uint8_t)((_usY & 0xFF00) >> 8));   /* 起始点 */
+	ST7789V_WriteParam((uint8_t)(_usY & 0x00FF));
+	ST7789V_WriteParam((uint8_t)(((_usY + _usHeight - 1) & 0xFF00) >>8));		/* 结束点 */
+	ST7789V_WriteParam((uint8_t)(_usY + _usHeight - 1));
 }
 
 /*
@@ -351,13 +418,10 @@ static void ST7789V_QuitWinMode(void)
 */
 uint32_t ST7789V_ReadID(void)
 {
-	uint8_t buf[4];
+	uint8_t buf[4] = {0x0};
 
-	ST7789V_REG = 0x04;
-	buf[0] = ST7789V_RAM;
-	buf[1] = ST7789V_RAM;
-	buf[2] = ST7789V_RAM;
-	buf[3] = ST7789V_RAM;
+        ST7789V_WriteCmd(0x04); //RDDID (Read Display ID)
+        ST7789V_ReadData(buf, 4);
 
 	return (buf[1] << 16) + (buf[2] << 8) + buf[3];
 }
@@ -372,7 +436,7 @@ uint32_t ST7789V_ReadID(void)
 */
 void ST7789V_DispOn(void)
 {
-	;
+    ST7789V_WriteCmd(0x29); //Display on
 }
 
 /*
@@ -385,7 +449,7 @@ void ST7789V_DispOn(void)
 */
 void ST7789V_DispOff(void)
 {
-	;
+    ST7789V_WriteCmd(0x28); //Display on
 }
 
 /*
@@ -403,27 +467,36 @@ void ST7789V_ClrScr(uint16_t _usColor)
 
 	ST7789V_SetDispWin(0, 0, g_LcdHeight, g_LcdWidth);
 
-	ST7789V_REG = 0x2C; 			/* 准备读写显存 */
+	ST7789V_WriteCmd(0x2C); 			/* 准备读写显存 */
 
 #if 1		/* 优化代码执行速度 */
-	n = (g_LcdHeight * g_LcdWidth) / 8;
+	n = (g_LcdHeight * g_LcdWidth) >> 3;  // DIV 8;
 	for (i = 0; i < n; i++)
 	{
-		ST7789V_RAM = _usColor;
-		ST7789V_RAM = _usColor;
-		ST7789V_RAM = _usColor;
-		ST7789V_RAM = _usColor;
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
 
-		ST7789V_RAM = _usColor;
-		ST7789V_RAM = _usColor;
-		ST7789V_RAM = _usColor;
-		ST7789V_RAM = _usColor;
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
 	}
 #else
 	n = g_LcdHeight * g_LcdWidth;
 	for (i = 0; i < n; i++)
 	{
-		ST7789V_RAM = _usColor;
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
 	}
 #endif
 
@@ -444,8 +517,9 @@ void ST7789V_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor)
 	ST7789V_SetCursor(_usX, _usY);	/* 设置光标位置 */
 
 	/* 写显存 */
-	ST7789V_REG = 0x2C;
-	ST7789V_RAM = _usColor;
+	ST7789V_WriteCmd(0x2C);
+	ST7789V_WriteParam(_usColor >> 8);
+	ST7789V_WriteParam(_usColor);
 }
 
 /*
@@ -460,17 +534,14 @@ void ST7789V_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor)
 */
 uint16_t ST7789V_GetPixel(uint16_t _usX, uint16_t _usY)
 {
-	uint16_t R = 0, G = 0, B = 0 ;
+	uint8_t buf[3] = {0x0};
 
 	ST7789V_SetCursor(_usX, _usY);	/* 设置光标位置 */
 
-	ST7789V_REG = 0x2E;
-	R = ST7789V_RAM; 	/* 第1个哑读，丢弃 */
-	R = ST7789V_RAM;
-	B = ST7789V_RAM;
-	G = ST7789V_RAM;
+	ST7789V_WriteCmd(0x2E);
+	ST7789V_ReadData(buf, 3); 	/* 第1个哑读，丢弃 */
 
-    return (((R >> 11) << 11) | ((G >> 10 ) << 5) | (B >> 11));
+    return ((buf[1] << 8) | buf[2]);
 }
 
 /*
@@ -579,12 +650,13 @@ void ST7789V_DrawHLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16
 
 	ST7789V_SetDispWin(_usX1, _usY1, 1, _usX2 - _usX1 + 1);
 
-	ST7789V_REG = 0x2C;
+	ST7789V_WriteCmd(0x2C);
 
 	/* 写显存 */
 	for (i = 0; i <_usX2-_usX1 + 1; i++)
 	{
-		ST7789V_RAM = _usColor;
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
 	}
 }
 
@@ -619,16 +691,18 @@ void ST7789V_DrawVLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usY2 , uint16
 */
 void ST7789V_DrawHColorLine(uint16_t _usX1 , uint16_t _usY1, uint16_t _usWidth, const uint16_t *_pColor)
 {
-	uint16_t i;
+	uint16_t i, colorValue ;
 	
 	ST7789V_SetDispWin(_usX1, _usY1, 1, _usWidth);
 
-	ST7789V_REG = 0x2C;
+	ST7789V_WriteCmd(0x2C);
 
 	/* 写显存 */
 	for (i = 0; i <_usWidth; i++)
 	{
-		ST7789V_RAM = *_pColor++;
+	        colorValue = *_pColor++;
+		ST7789V_WriteParam(colorValue>> 8);
+		ST7789V_WriteParam(colorValue);
 	}
 }
 
@@ -651,19 +725,21 @@ void ST7789V_DrawHTransLine(uint16_t _usX1 , uint16_t _usY1, uint16_t _usWidth, 
 	ST7789V_SetCursor(_usX1, _usY1);
 
 	/* 写显存 */
-	ST7789V_REG = 0x2C;
+	ST7789V_WriteCmd(0x2C);
 	for (i = 0,j = 0; i < _usWidth; i++, j++)
 	{
 		Index = *_pColor++;
 	    if (Index)
         {
-			 ST7789V_RAM = Index;
+			 ST7789V_WriteParam(Index >> 8);
+                        ST7789V_WriteParam(Index);
 		}
 		else
 		{
 			ST7789V_SetCursor(_usX1 + j, _usY1);
-			ST7789V_REG = 0x2C;
-			ST7789V_RAM = Index;
+			ST7789V_WriteCmd(0x2C);
+			ST7789V_WriteParam(Index >> 8);
+                        ST7789V_WriteParam(Index);
 		}
 	}
 }
@@ -723,10 +799,11 @@ void ST7789V_FillRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t
 
 	ST7789V_SetDispWin(_usX, _usY, _usHeight, _usWidth);
 
-	ST7789V_REG = 0x2C;
+	ST7789V_WriteCmd(0x2C);
 	for (i = 0; i < _usHeight * _usWidth; i++)
 	{
-		ST7789V_RAM = _usColor;
+		ST7789V_WriteParam(_usColor >> 8);
+		ST7789V_WriteParam(_usColor);
 	}
 }
 

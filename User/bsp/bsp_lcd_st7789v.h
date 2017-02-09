@@ -18,8 +18,9 @@
 #define IC_ST7789V_ID 0x858552
 
 /* 可供外部模块调用的函数 */
+void ST7789V_SoftReset(void);
 uint32_t ST7789V_ReadID(void);
-void ST7789V_InitHard(void);
+uint32_t ST7789V_InitHard(void);
 void ST7789V_DispOn(void);
 void ST7789V_DispOff(void);
 void ST7789V_ClrScr(uint16_t _usColor);

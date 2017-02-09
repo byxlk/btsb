@@ -73,8 +73,6 @@ void LCD_SetPwmBackLight(uint8_t _bright);
 */
 void LCD_InitHard(void)
 {
-	uint32_t id;
-
 	/* 配置LCD控制口线GPIO */
 	LCD_CtrlLinesConfig();
 
@@ -83,18 +81,22 @@ void LCD_InitHard(void)
 	/* FSMC重置后必须加延迟才能访问总线设备  */
 	bsp_DelayMS(20);
 
-	id = ST7789V_ReadID();
-	if (id == IC_ST7789V_ID)		/* 3.5寸屏 */
-	{
-		g_ChipID = IC_7789;
-		ST7789V_InitHard();
-	}
+	g_ChipID = ST7789V_InitHard();
+    if(g_ChipID == IC_7789)
+    {
+        LCD_SetDirection(2);
 
-	LCD_SetDirection(0);
+        LCD_ClrScr(CL_BLACK);	/* 清屏，显示全黑 */
 
-	LCD_ClrScr(CL_BLACK);	/* 清屏，显示全黑 */
+        LCD_SetBackLight(BRIGHT_DEFAULT);	 /* 打开背光，设置为缺省亮度 */
 
-	LCD_SetBackLight(BRIGHT_DEFAULT);	 /* 打开背光，设置为缺省亮度 */
+#ifdef LCD_DRIVER_TEST
+        LCD_ClrScr(CL_RED);
+        LCD_Fill_Rect(0, 0, 100, 50, CL_BLUE);
+        LCD_DrawCircle(120,  160,  30, CL_YELLOW);
+        LCD_DrawLine(0, 0, 240, 320, CL_GREEN);
+#endif
+    }
 }
 
 /*
@@ -772,6 +774,20 @@ uint16_t LCD_GetPixel(uint16_t _usX, uint16_t _usY)
 void LCD_DrawLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usY2 , uint16_t _usColor)
 {
 	ST7789V_DrawLine(_usX1 , _usY1 , _usX2, _usY2 , _usColor);
+}
+
+void LCD_Draw_VLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usY2, uint16_t _usColor)
+{
+        ST7789V_DrawVLine(_usX1, _usY1, _usY2, _usColor);
+}
+void LCD_Draw_HLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usX2, uint16_t _usColor)
+{
+        ST7789V_DrawHLine(_usX1, _usY1, _usX2, _usColor);
+}
+
+void LCD_Draw_HColorLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usWidth, const uint16_t * _pColor)
+{
+        ST7789V_DrawHColorLine(_usX1, _usY1, _usWidth, _pColor);
 }
 
 /*
@@ -1607,18 +1623,12 @@ static void LCD_CtrlLinesConfig(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; 
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 
 	/* LCD Data Bus */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0          /* D0 */
-		                        | GPIO_Pin_1          /* D1 */ 
-		                        | GPIO_Pin_2          /* D2 */
-		                        | GPIO_Pin_3          /* D3 */
-		                        | GPIO_Pin_4          /* D4 */
-		                        | GPIO_Pin_5          /* D5 */
-		                        | GPIO_Pin_6          /* D6 */
-		                        | GPIO_Pin_7;         /* D7 */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
+        GPIO_Write(GPIOB, 0XFF); //默认输出高电平
 
         /* LCD CMD Bus */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6          /* RD */
@@ -1626,6 +1636,10 @@ static void LCD_CtrlLinesConfig(void)
 		                        | GPIO_Pin_8          /* RS */
 		                        | GPIO_Pin_9;         /* CS */
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
+        GPIO_SetBits(GPIOC, GPIO_Pin_6);
+        GPIO_SetBits(GPIOC, GPIO_Pin_7);
+        GPIO_SetBits(GPIOC, GPIO_Pin_8);
+        GPIO_SetBits(GPIOC, GPIO_Pin_9);
 }
 
 #if 0

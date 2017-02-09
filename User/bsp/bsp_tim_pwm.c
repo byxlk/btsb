@@ -489,7 +489,7 @@ void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin,
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;//向上计数模式
 	
 	if(TIMx == TIM1 || TIMx == TIM8)
-	        TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;	
+		TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;	
     
 	TIM_TimeBaseInit(TIMx, &TIM_TimeBaseStructure);
 
@@ -551,7 +551,8 @@ void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin,
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPriority, uint8_t _SubPriority)
+void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, 
+                uint8_t _PreemptionPriority, uint8_t _SubPriority)
 {
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 	uint16_t usPeriod;
@@ -559,14 +560,10 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPr
 	uint32_t uiTIMxCLK;
 
   	/* 使能TIM时钟 */
-	if ((TIMx == TIM1) || (TIMx == TIM8))
-	{
+	if ((TIMx == TIM1) || (TIMx == TIM8) || (TIMx == TIM9) || (TIMx == TIM10) || (TIMx == TIM11))
 		RCC_APB2PeriphClockCmd(bsp_GetRCCofTIM(TIMx), ENABLE);
-	}
 	else
-	{
 		RCC_APB1PeriphClockCmd(bsp_GetRCCofTIM(TIMx), ENABLE);
-	}
 
 	if (_ulFreq == 0)
 	{
@@ -626,7 +623,7 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPr
 	}
 	else	/* APB1 定时器 .  */
 	{
-		uiTIMxCLK = SystemCoreClock;	// SystemCoreClock / 2;
+		uiTIMxCLK = SystemCoreClock /2;	// SystemCoreClock / 2;
 	}
 
 	if (_ulFreq < 100)
@@ -650,8 +647,10 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPr
 	TIM_TimeBaseStructure.TIM_Prescaler = usPrescaler;
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
 
+	if(TIMx == TIM1 || TIMx == TIM8)
+		TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;	
+    
 	TIM_TimeBaseInit(TIMx, &TIM_TimeBaseStructure);
 
 	TIM_ARRPreloadConfig(TIMx, ENABLE);
@@ -692,4 +691,4 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPr
 	}
 }
 
-/***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/
+/***************************** 安富莱电子 www.armfly.com (END OF FILE) ********************************/

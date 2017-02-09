@@ -75,6 +75,9 @@
 #include "bsp_tft_lcd.h"
 #include "bsp_lcd_st7789v.h"
 #include "bsp_tim_pwm.h"
+#include "bsp_cpu_rtc.h"
+#include "bsp_user_lib.h"
+
 //#include "bsp_led.h"
 //#include "bsp_timer.h"
 //#include "bsp_key.h"
@@ -130,7 +133,7 @@
 
 //#include "bsp_modbus.h"
 //#include "bsp_rs485_led.h"
-//#include "bsp_user_lib.h"
+
 
 //#include "bsp_dac8501.h"
 //#include "bsp_dac8562.h"

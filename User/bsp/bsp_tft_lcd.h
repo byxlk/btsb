@@ -40,7 +40,8 @@ enum
 	IC_61509 	= 0xB509,
 	IC_8875 	= 0x0075,	
 	IC_9488 	= 0x9488,
-	IC_7789 = 0x7789
+	IC_7789 	= 0x7789,
+	IC_UNKN 	= 0xEEEE
 };
 
 #define CHIP_STR_5420	"SPFD5420A"
@@ -288,6 +289,9 @@ void LCD_DispStr(uint16_t _usX, uint16_t _usY, char *_ptr, FONT_T *_tFont);
 void LCD_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor);
 uint16_t LCD_GetPixel(uint16_t _usX, uint16_t _usY);
 void LCD_DrawLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usY2 , uint16_t _usColor);
+void LCD_Draw_VLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usY2, uint16_t _usColor);
+void LCD_Draw_HLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usX2, uint16_t _usColor);
+void LCD_Draw_HColorLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usWidth, const uint16_t * _pColor);
 void LCD_DrawPoints(uint16_t *x, uint16_t *y, uint16_t _usSize, uint16_t _usColor);
 void LCD_DrawRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
 void LCD_DrawCircle(uint16_t _usX, uint16_t _usY, uint16_t _usRadius, uint16_t _usColor);
