@@ -36,7 +36,7 @@ const uint8_t mon_table[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void bsp_RTC_InitConfig(void)
+void bsp_InitRTC(void)
 {
      uint16_t u16_WaitForOscSource = 0;
      RTC_InitTypeDef   RTC_InitStructure;
@@ -77,8 +77,8 @@ void bsp_RTC_InitConfig(void)
         //RTC_ITConfig(RTC_IT_TS, ENABLE);
 
         /* Default date: 2016-01-01 default time: 08:00:00 */
-        bsp_RTC_SetDate(2016, RTC_Month_January, 0x01);//默认时间
-        bsp_RTC_SetTime(0x08, 0x00, 0x00);
+        bsp_RTC_SetDate(2016, RTC_Month_February, 29);//默认时间
+        bsp_RTC_SetTime(23, 58, 0);
 
         /* Configure the RTC Wakeup Clock source and Counter (Wakeup event each 1 second) */
         RTC_WakeUpClockConfig(RTC_WakeUpClock_RTCCLK_Div16);

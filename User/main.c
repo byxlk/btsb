@@ -79,6 +79,8 @@ static TaskHandle_t xHandleTaskAdcProc = NULL;
 
 static SemaphoreHandle_t  xMutex = NULL;
 
+SLEEP_DATA_T gSleep_Data;
+
 /*
 *********************************************************************************************************
 *	函 数 名: vTaskGUI
@@ -108,9 +110,18 @@ static void vTaskGUI(void *pvParameters)
 */
 static void vTaskAdcProc(void *pvParameters)
 {
+
+    //float uwVBATVoltage;    /* 板载电子电压 */
+    //float ufVoltage_PA0;    /* PA0引脚电压  */
+    //float ufVoltage_PC0;    /* PC0引脚电压  */
+
     while(1)
     {
         vTaskDelay(1000);
+        //uwVBATVoltage = ADC_ConvertedValue[1] * 3.3 / 4095;
+        //ufVoltage_PA0 = ADC_ConvertedValue[2] * 3.3 / 4095;
+        //ufVoltage_PC0 = ADC_ConvertedValue[3] * 3.3 / 4095;
+       // GetTemp(ADC_ConvertedValue[0]);
     }
 }
 
@@ -127,7 +138,7 @@ static void vTaskTest(void *pvParameters)
 {
     while(1)
     {
-        vTaskDelay(1000);
+        vTaskDelay(500);
   #ifdef LCD_DRIVER_TEST
         LCD_Fill_Rect(0, 0, 320, 240, CL_BLUE);
         vTaskDelay(1000);

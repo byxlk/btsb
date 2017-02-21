@@ -31,11 +31,11 @@
 
 void bsp_InitSPIBus(void);
 
-void bsp_spiWrite0(uint8_t _ucByte);
-uint8_t bsp_spiRead0(void);
+void bsp_spiWriteByte0(uint8_t _ucByte);
+uint8_t bsp_spiReadByte0(void);
 
-void bsp_spiWrite1(uint8_t _ucByte);
-uint8_t bsp_spiRead1(void);
+void bsp_spiWriteByte1(uint8_t _ucByte);
+uint8_t bsp_spiReadByte1(void);
 
 uint8_t bsp_SpiBusBusy(void);
 
@@ -45,6 +45,25 @@ void bsp_SpiBusEnter(void);
 void bsp_SpiBusExit(void);
 uint8_t bsp_SpiBusBusy(void);
 void bsp_SetSpiSck(uint8_t _data);
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+uint8_t SPI_disk_status(void);
+uint8_t SPI_disk_initialize(void);
+
+DRESULT SPI_disk_read(
+       	uint8_t *buff,		/* Data buffer to store read data */
+	uint32_t sector,	/* Start sector in LBA */
+	uint32_t count	);	/* Number of sectors to read */
+
+DRESULT SPI_disk_write(
+       	const uint8_t *buff,		/* Data buffer to store read data */
+	uint32_t sector,	/* Start sector in LBA */
+	uint32_t count	);	/* Number of sectors to read */
+
+DRESULT SPI_disk_ioctl(
+	uint8_t cmd,		/* Control code */
+	void *buff );	/* Buffer to send/receive control data */
+
 
 #endif
 

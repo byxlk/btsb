@@ -296,6 +296,12 @@ void GuiTaskTest(void)
 void bsp_RTC_Test(void)
 {
         char TempDate[] = {'2','0','0','0','-','0','1','-','0','1',' ','0','8',':','0','0',':','0','0',' ','W','7'};
+        uint8_t iCount = 0;
+        uint32_t ExtTemp = 0;
+        uint16_t IntTemp = 0;
+        uint32_t LightValue = 0;
+        uint32_t Mic_dB = 0;
+
         GUI_Init();
         GUI_SetBkColor(CL_BLUE);
 
@@ -306,7 +312,7 @@ void bsp_RTC_Test(void)
 
         while(1)
         {
-                GUI_Delay(10);
+                GUI_Delay(50);
                 GUI_GotoXY(0, 0);
                 bsp_RTC_GetClock();
             #if 1
@@ -343,9 +349,35 @@ void bsp_RTC_Test(void)
                 GUI_DispDecAt(g_tRTC.Min, 152, 0, 2);
                 GUI_DispDecAt(g_tRTC.Sec, 184, 0, 3);
                 #endif
+                              
+                if(iCount < 10) 
+                {
+                    iCount++;
+                    ExtTemp += getCurent_ExtTempValue();
+                    IntTemp += getCurent_IntTempValue(); 
+
+                    LightValue += getLightVLuxValue();
+                    Mic_dB += getMicAmp_dBValue();
+                }
+                else 
+                {
+                    GUI_GotoXY(0, 50);
+                    GUI_DispDec(IntTemp / 10, 3);
+                    GUI_GotoXY(60, 50);
+                    GUI_DispDec(ExtTemp / 10 , 4);
+                    GUI_GotoXY(120, 50);
+                    GUI_DispDec(LightValue / 10, 4);
+                    GUI_GotoXY(180, 50);
+                    GUI_DispDec(Mic_dB /10, 4);
+                    
+                    iCount = 0; 
+                    ExtTemp = 0;
+                    IntTemp = 0;
+                    LightValue = 0;
+                    Mic_dB = 0;
+                }
         }
-        
-}
+ }
 
 /*************************** End of file ****************************/
 

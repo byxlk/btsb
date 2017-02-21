@@ -50,6 +50,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "MainTask.h"
 
 #ifndef TRUE
 	#define TRUE  1
@@ -77,6 +78,8 @@
 #include "bsp_tim_pwm.h"
 #include "bsp_cpu_rtc.h"
 #include "bsp_user_lib.h"
+#include "bsp_spi_bus.h"
+#include "bsp_adc.h"
 
 //#include "bsp_led.h"
 //#include "bsp_timer.h"
@@ -118,7 +121,6 @@
 //#include "bsp_sim800.h"
 //#include "bsp_ra8875_flash.h"
 
-//#include "bsp_spi_bus.h"
 //#include "bsp_spi_flash.h"
 //#include "bsp_tm7705.h"
 //#include "bsp_vs1053b.h"

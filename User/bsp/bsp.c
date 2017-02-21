@@ -1,5 +1,6 @@
 #include "bsp.h"
 #include "stm32f2xx.h"
+#include "MainTask.h"
 
 
 //void SystemClockInit(void)
@@ -36,21 +37,22 @@ void bsp_Init(void)
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
 	bsp_InitDWT();       /* 初始DWT */
-	bsp_RTC_InitConfig(); /* 初始化RTC模块，配置默认时间:2016-01-01 08:00:00 */
 	bsp_InitUart(); 	 /* 初始化串口 */
+	bsp_InitRTC(); /* 初始化RTC模块，配置默认时间:2016-01-01 08:00:00 */
+	bsp_InitADC(); /* 初始化ADC模块，ADC1 - CH0 CH1 CH3 CH_Temp */
 	//bsp_InitLed(); 		 /* 初始LED指示灯端口 */
 	//bsp_InitKey();		 /* 初始化按键 */
 	
 	//bsp_InitI2C();       /* 配置I2C总线 */
 	
-	//bsp_InitSPIBus();	 /* 配置SPI总线 */
+	bsp_InitSPIBus();	 /* 配置SPI总线 */
 	
 	//bsp_InitExtSRAM();   /* 初始DWT */
 	LCD_InitHard();	     /* 初始化显示器硬件(配置GPIO和FSMC,给LCD发送初始化指令) */
 	//TOUCH_InitHard();    /* 初始化触摸 */
 	
 	/* 挂载文件系统 */
-	//result = f_mount(&fs, "0:/", 0);
+	result = f_mount(&fs, "0:/", 0);
 	
 }
 

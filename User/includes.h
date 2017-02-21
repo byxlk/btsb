@@ -63,6 +63,27 @@
 
 #include <bsp.h>
 
+typedef  struct {
+        /* Date and Time */
+	uint16_t Year;
+	uint8_t Mon;
+	uint8_t Day;	
+	uint8_t Hour;		
+	uint8_t Min;				
+	uint8_t Sec;					
+	uint8_t Week;	
+
+        /* Temperetuer */
+        uint8_t Temp;
+        
+        /* Light Data (Lux) */
+        uint16_t LightVal;
+        
+        /* Sound dB Value */
+        uint8_t Nois_dBVal;
+
+} SLEEP_DATA_T;
+
 /* 在主函数中调用 */
 extern void vSetupSysInfoTest(void);
 

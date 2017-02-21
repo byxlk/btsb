@@ -28,17 +28,30 @@
 */
 
 /* 定义SPI总线的 GPIO端口 */
-#define RCC_SCK 	RCC_APB2Periph_GPIOA
-#define PORT_SCK	GPIOA
-#define PIN_SCK		GPIO_Pin_5
+#define SPI_BUS   SPI1
+#define RCC_CS 	RCC_AHB1Periph_GPIOA
+#define PORT_CS	GPIOA
+#define PIN_CS	GPIO_Pin_4
+#define SOURCE_CS GPIO_PinSource4
+#define GPIO_AF_CS GPIO_AF_SPI1
 
-#define RCC_MISO 	RCC_APB2Periph_GPIOA
+#define RCC_SCK 	RCC_AHB1Periph_GPIOA
+#define PORT_SCK	GPIOA
+#define PIN_SCK	GPIO_Pin_5
+#define SOURCE_SCK GPIO_PinSource5
+#define GPIO_AF_SCK GPIO_AF_SPI1
+
+#define RCC_MISO 	RCC_AHB1Periph_GPIOA
 #define PORT_MISO	GPIOA
 #define PIN_MISO	GPIO_Pin_6
+#define SOURCE_MISO GPIO_PinSource6
+#define GPIO_AF_MISO GPIO_AF_SPI1
 
-#define RCC_MOSI 	RCC_APB2Periph_GPIOA
+#define RCC_MOSI 	RCC_AHB1Periph_GPIOA
 #define PORT_MOSI	GPIOA
 #define PIN_MOSI	GPIO_Pin_7
+#define SOURCE_MOSI GPIO_PinSource7
+#define GPIO_AF_MOSI GPIO_AF_SPI1
 
 #ifdef SOFT_SPI		/* 软件SPI */
 	#define SCK_0()		PORT_SCK->BRR = PIN_SCK
@@ -65,6 +78,12 @@
 	/* SPI SPE mask */
 	#define CR1_SPE_Set          ((uint16_t)0x0040)
 	#define CR1_SPE_Reset        ((uint16_t)0xFFBF)
+
+	/* Deselect sFLASH: Chip Select pin high */
+	#define bsp_SPI_CS_HIGH() GPIO_SetBits(PORT_CS, PIN_CS)
+
+	/* Select Flash: Chip Select pin low */
+	#define bsp_SPI_CS_LOW() GPIO_ResetBits(PORT_CS, PIN_CS)
 #endif
 
 uint8_t g_spi_busy = 0;		/* SPI 总线共享标志 */
@@ -87,7 +106,8 @@ void bsp_InitSPIBus(void)
 
 	/* 配置SPI引脚SCK、MISO 和 MOSI为复用推挽模式 */
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;	/* 推挽输出模式 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;	/* 推挽输出模式 */
+        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Pin = PIN_SCK;
 	GPIO_Init(PORT_SCK, &GPIO_InitStructure);
 
@@ -101,41 +121,56 @@ void bsp_InitSPIBus(void)
 
 #ifdef HARD_SPI		/* 硬件SPI */
 	GPIO_InitTypeDef GPIO_InitStructure;
+	SPI_InitTypeDef SPI_InitStructure;	
 
 	/* 开启 SPI 时钟 */
 	//RCC_APB2PeriphClockCmd(RCC_SPI, ENABLE);
-	
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 	
 	/* 使能 GPIO 时钟 */
-	RCC_APB2PeriphClockCmd(RCC_SCK | RCC_MOSI | RCC_MISO, ENABLE);	
+	RCC_APB1PeriphClockCmd(RCC_SCK | RCC_MOSI | RCC_MISO, ENABLE);	
 
 	/* 配置 SPI引脚SCK、MISO 和 MOSI为复用推挽模式 */
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_InitStructure.GPIO_Pin = PIN_SCK;	
 	GPIO_Init(PORT_SCK, &GPIO_InitStructure);
+	GPIO_PinAFConfig(PORT_SCK,SOURCE_SCK, GPIO_AF_SCK);
 	
 	GPIO_InitStructure.GPIO_Pin = PIN_MISO;	
 	GPIO_Init(PORT_MISO, &GPIO_InitStructure);
+	GPIO_PinAFConfig(PORT_MISO,SOURCE_MISO, GPIO_AF_MISO);
 
 	GPIO_InitStructure.GPIO_Pin = PIN_MOSI;	
 	GPIO_Init(PORT_MOSI, &GPIO_InitStructure);
-		
-	bsp_SPI_Init(SPI_Direction_2Lines_FullDuplex | SPI_Mode_Master | SPI_DataSize_8b
-		| SPI_CPOL_Low | SPI_CPHA_1Edge | SPI_NSS_Soft | SPI_BaudRatePrescaler_64 | SPI_FirstBit_MSB);	
-	
-	/* Activate the SPI mode (Reset I2SMOD bit in I2SCFGR register) */
-	SPI_HARD->I2SCFGR &= SPI_Mode_Select;		/* 选择SPI模式，不是I2S模式 */
+	GPIO_PinAFConfig(PORT_MOSI,SOURCE_MOSI, GPIO_AF_MOSI);
 
-	/*---------------------------- SPIx CRCPOLY Configuration --------------------*/
-	/* Write to SPIx CRCPOLY */
-	SPI_HARD->CRCPR = 7;		/* 一般不用 */
+	GPIO_InitStructure.GPIO_Pin = PIN_CS;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(PORT_CS, &GPIO_InitStructure);
 
+	bsp_SPI_CS_HIGH();
 
-	SPI_Cmd(SPI_HARD, DISABLE);			/* 先禁止SPI  */
+	/*!< SPI configuration */
+	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
+	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
+	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
 
-	SPI_Cmd(SPI_HARD, ENABLE);			/* 使能SPI  */
+	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
+	SPI_InitStructure.SPI_CRCPolynomial = 7;
+	SPI_Init(SPI_BUS, &SPI_InitStructure);
+
+	/*!< Enable the sFLASH_SPI  */
+	SPI_Cmd(SPI_BUS, ENABLE);		/* 使能SPI  */
 #endif
 }
 
@@ -185,7 +220,7 @@ void bsp_spiDelay(void)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void bsp_spiWrite0(uint8_t _ucByte)
+void bsp_spiWriteByte0(uint8_t _ucByte)
 {
 #ifdef SOFT_SPI		/* 软件SPI */
 	uint8_t i;
@@ -232,7 +267,7 @@ void bsp_spiWrite0(uint8_t _ucByte)
 *	返 回 值: 读到的数据
 *********************************************************************************************************
 */
-uint8_t bsp_spiRead0(void)
+uint8_t bsp_spiReadByte0(void)
 {
 #ifdef SOFT_SPI		/* 软件SPI */
 	uint8_t i;
@@ -282,7 +317,7 @@ uint8_t bsp_spiRead0(void)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void bsp_spiWrite1(uint8_t _ucByte)
+void bsp_spiWriteByte1(uint8_t _ucByte)
 {
 #ifdef SOFT_SPI		/* 软件SPI */
 	uint8_t i;
@@ -328,7 +363,7 @@ void bsp_spiWrite1(uint8_t _ucByte)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-uint8_t bsp_spiRead1(void)
+uint8_t bsp_spiReadByte1(void)
 {
 #ifdef SOFT_SPI		/* 软件SPI */
 	uint8_t i;
@@ -430,5 +465,42 @@ void bsp_SetSpiSck(uint8_t _data)
 }
 #endif
 
+//////////////////////////////////////////////////////////////////////////////////////////
+uint8_t SPI_disk_status(void)
+{
 
+    return 0;
+}
+
+uint8_t SPI_disk_initialize(void)
+{
+
+    return 0;
+}
+
+DRESULT SPI_disk_read(
+    uint8_t *buff,		/* Data buffer to store read data */
+	uint32_t sector,	/* Start sector in LBA */
+	uint32_t count	)	/* Number of sectors to read */
+{
+
+    return RES_OK;
+}
+
+DRESULT SPI_disk_write(
+   	const uint8_t *buff,		/* Data buffer to store read data */
+	uint32_t sector,	/* Start sector in LBA */
+	uint32_t count	)	/* Number of sectors to read */
+{
+
+    return RES_OK;
+}
+
+DRESULT SPI_disk_ioctl(
+	uint8_t cmd,		/* Control code */
+	void *buff)		/* Buffer to send/receive control data */
+{
+
+    return RES_OK;
+}
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

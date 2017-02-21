@@ -1713,7 +1713,7 @@ void LCD_SetPwmBackLight(uint8_t _bright)
 {
 	/* STM32-V4开发板，PB1/TIM3_CH4/TIM8_CH3N 控制背光PWM ； 因为 TIM3用于红外解码。因此用TIM8_CH3N做背光PWM */
 	//bsp_SetTIMOutPWM(GPIOB, GPIO_Pin_1, TIM3, 4, 100, (_bright * 10000) /255);	// TIM3_CH4
-	bsp_SetTIMOutPWM_N(GPIOA, GPIO_Pin_2, TIM2, 3, 200000, _bright);	// TIM2_CH3N
+	bsp_SetTIMOutPWM_N(GPIOA, GPIO_Pin_2, TIM2, 3, 2000, _bright);	// TIM2_CH3N
 }
 
 /*

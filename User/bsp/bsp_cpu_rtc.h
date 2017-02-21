@@ -33,7 +33,7 @@ typedef struct
 extern RTC_T g_tRTC;
 
 
-void bsp_RTC_InitConfig(void);
+void bsp_InitRTC(void);
 uint8_t IS_RTC_LeapYear(uint16_t _year);
 void bsp_RTC_SetTime(uint8_t _hour, uint8_t _min, uint8_t _sec);
 void bsp_RTC_SetDate(uint16_t _year, uint8_t _mon, uint8_t _day);
