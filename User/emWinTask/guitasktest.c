@@ -33,12 +33,17 @@
 */
 #define ID_WINDOW_0 (GUI_ID_USER + 0x00)
 #define ID_TEXT_0 (GUI_ID_USER + 0x01)
-#define ID_EDIT_0 (GUI_ID_USER + 0x02)
-#define ID_EDIT_1 (GUI_ID_USER + 0x03)
-#define ID_EDIT_2 (GUI_ID_USER + 0x04)
-#define ID_GRAPH_0 (GUI_ID_USER + 0x05)
-#define ID_EDIT_3 (GUI_ID_USER + 0x06)
-#define ID_EDIT_4 (GUI_ID_USER + 0x07)
+#define ID_TEXT_1 (GUI_ID_USER + 0x02)
+#define ID_EDIT_0 (GUI_ID_USER + 0x03)
+#define ID_TEXT_2 (GUI_ID_USER + 0x04)
+#define ID_EDIT_1 (GUI_ID_USER + 0x05)
+#define ID_TEXT_3 (GUI_ID_USER + 0x06)
+#define ID_EDIT_2 (GUI_ID_USER + 0x07)
+#define ID_TEXT_4 (GUI_ID_USER + 0x08)
+#define ID_EDIT_3 (GUI_ID_USER + 0x09)
+#define ID_PROGBAR_0 (GUI_ID_USER + 0x0A)
+#define ID_TEXT_5 (GUI_ID_USER + 0x0B)
+#define ID_EDIT_4 (GUI_ID_USER + 0x0C)
 
 
 // USER START (Optionally insert additional defines)
@@ -60,13 +65,18 @@
 */
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate[] = {
   { WINDOW_CreateIndirect, "Window", ID_WINDOW_0, 0, 0, 240, 320, 0, 0x0, 0 },
-  { TEXT_CreateIndirect, "Test Programe", ID_TEXT_0, 80, 20, 80, 20, 0, 0x0, 0 },
-  { EDIT_CreateIndirect, "TimeH", ID_EDIT_0, 20, 65, 80, 80, 0, 0x3, 0 },
-  { EDIT_CreateIndirect, "TimeM", ID_EDIT_1, 140, 65, 80, 80, 0, 0x3, 0 },
-  { EDIT_CreateIndirect, "Temp", ID_EDIT_2, 20, 290, 50, 20, 0, 0x3, 0 },
-  { GRAPH_CreateIndirect, "MicGraph", ID_GRAPH_0, 20, 168, 200, 100, 0, 0x0, 0 },
-  { EDIT_CreateIndirect, "Lux", ID_EDIT_3, 90, 290, 50, 20, 0, 0x5, 0 },
-  { EDIT_CreateIndirect, "Mic", ID_EDIT_4, 160, 290, 50, 20, 0, 0x5, 0 },
+  { TEXT_CreateIndirect, "Test Programe Demo", ID_TEXT_0, 66, 17, 105, 20, 0, 0x0, 0 },
+  { TEXT_CreateIndirect, "Temperature", ID_TEXT_1, 16, 63, 80, 20, 0, 0x0, 0 },
+  { EDIT_CreateIndirect, "tempvalue", ID_EDIT_0, 106, 62, 80, 20, 0, 0x4, 0 },
+  { TEXT_CreateIndirect, "Light Lux Value", ID_TEXT_2, 16, 91, 80, 20, 0, 0x0, 0 },
+  { EDIT_CreateIndirect, "lightlux", ID_EDIT_1, 106, 90, 80, 20, 0, 0x3, 0 },
+  { TEXT_CreateIndirect, "Mic dB Value", ID_TEXT_3, 16, 119, 80, 20, 0, 0x0, 0 },
+  { EDIT_CreateIndirect, "micdb", ID_EDIT_2, 106, 118, 80, 20, 0, 0x4, 0 },
+  { TEXT_CreateIndirect, "Date and Time:", ID_TEXT_4, 9, 188, 80, 20, 0, 0x0, 0 },
+  { EDIT_CreateIndirect, "dat", ID_EDIT_3, 36, 219, 160, 20, 0, 0x64, 0 },
+  { PROGBAR_CreateIndirect, "Progbar", ID_PROGBAR_0, 35, 263, 161, 20, 0, 0x0, 0 },
+  { TEXT_CreateIndirect, "MCU Temp Value", ID_TEXT_5, 17, 146, 80, 20, 0, 0x0, 0 },
+  { EDIT_CreateIndirect, "mcutemp", ID_EDIT_4, 106, 145, 80, 20, 0, 0x3, 0 },
   // USER START (Optionally insert additional widgets)
   // USER END
 };
@@ -95,30 +105,30 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
   switch (pMsg->MsgId) {
   case WM_INIT_DIALOG:
     //
-    // Initialization of 'TimeH'
+    // Initialization of 'tempvalue'
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_EDIT_0);
-    EDIT_SetText(hItem, "12");
+    EDIT_SetText(hItem, "-30");
     //
-    // Initialization of 'TimeM'
+    // Initialization of 'lightlux'
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_EDIT_1);
-    EDIT_SetText(hItem, "00");
+    EDIT_SetText(hItem, "0");
     //
-    // Initialization of 'Temp'
+    // Initialization of 'micdb'
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_EDIT_2);
-    EDIT_SetText(hItem, "-20");
+    EDIT_SetText(hItem, "0");
     //
-    // Initialization of 'Lux'
+    // Initialization of 'Edit'
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_EDIT_3);
-    EDIT_SetText(hItem, "1000");
+    EDIT_SetText(hItem, "2017-01-01 08:00:00 W7");
     //
-    // Initialization of 'Mic'
+    // Initialization of 'mcutemp'
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_EDIT_4);
-    EDIT_SetText(hItem, "3300");
+    EDIT_SetText(hItem, "0");
     // USER START (Optionally insert additional code for further widget initialization)
     // USER END
     break;
@@ -126,7 +136,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
     Id    = WM_GetId(pMsg->hWinSrc);
     NCode = pMsg->Data.v;
     switch(Id) {
-    case ID_EDIT_0: // Notifications sent by 'TimeH'
+    case ID_EDIT_0: // Notifications sent by 'tempvalue'
       switch(NCode) {
       case WM_NOTIFICATION_CLICKED:
         // USER START (Optionally insert code for reacting on notification message)
@@ -144,7 +154,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       // USER END
       }
       break;
-    case ID_EDIT_1: // Notifications sent by 'TimeM'
+    case ID_EDIT_1: // Notifications sent by 'lightlux'
       switch(NCode) {
       case WM_NOTIFICATION_CLICKED:
         // USER START (Optionally insert code for reacting on notification message)
@@ -162,7 +172,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       // USER END
       }
       break;
-    case ID_EDIT_2: // Notifications sent by 'Temp'
+    case ID_EDIT_2: // Notifications sent by 'micdb'
       switch(NCode) {
       case WM_NOTIFICATION_CLICKED:
         // USER START (Optionally insert code for reacting on notification message)
@@ -180,7 +190,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       // USER END
       }
       break;
-    case ID_EDIT_3: // Notifications sent by 'Lux'
+    case ID_EDIT_3: // Notifications sent by 'Edit'
       switch(NCode) {
       case WM_NOTIFICATION_CLICKED:
         // USER START (Optionally insert code for reacting on notification message)
@@ -198,7 +208,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
       // USER END
       }
       break;
-    case ID_EDIT_4: // Notifications sent by 'Mic'
+    case ID_EDIT_4: // Notifications sent by 'mcutemp'
       switch(NCode) {
       case WM_NOTIFICATION_CLICKED:
         // USER START (Optionally insert code for reacting on notification message)
@@ -259,10 +269,19 @@ WM_HWIN CreateWindow(void) {
 void GuiTaskTest(void) 
 {
 	int Value = 0;
-	WM_HWIN hDlgFrame;
+	char acText[5] = {0};
+	char TempDate[] = {'2','0','0','0','-','0','1','-','0','1',' ','0','8',':','0','0',':','0','0',' ','W','7'};
+        uint8_t iCount = 0;
+        int32_t ExtTemp = 0;
+        uint16_t IntTemp = 0;
+        uint32_t LightValue = 0;
+        uint32_t Mic_dB = 0;
+        
+	WM_HWIN hDlgFrame;        
 	
 	/* 初始化 */
 	GUI_Init();
+        GUI_Clear();
     //TOUCH_Calibration();
 	//GUI_CURSOR_Show();
 	//WM_SetCallback(WM_HBKWIN, _cbBkWindow);  
@@ -271,10 +290,11 @@ void GuiTaskTest(void)
 	
 	while(1) 
 	{
-		WM_HWIN hDlg, hText;
-		char acText[3] = {0};
-		
-		GUI_Delay(100);
+		WM_HWIN hDlg;
+		PROGBAR_Handle ahProgBar;
+                EDIT_Handle hEdit;
+
+		GUI_Delay(40);
 		/* 如果对话框被关闭就重新的将其再打开 */
 		if (!WM_IsWindow(hDlgFrame)) 
 		{
@@ -282,12 +302,135 @@ void GuiTaskTest(void)
 			hDlgFrame = CreateWindow();
 		}
 		
-		Value = (Value + 1) % 100;
-		acText[0] = '0' + Value / 10;
-		acText[1] = '0' + Value % 10;
 		hDlg = WM_GetClientWindow(hDlgFrame);
-		hText = WM_GetDialogItem(hDlg, ID_EDIT_0);
-		EDIT_SetText(hText, acText);
+		ahProgBar = WM_GetDialogItem(hDlg, ID_PROGBAR_0);
+
+		Value = (Value + 1) % 100;
+                mem_set(acText, 0x00, 5);
+		acText[0] = '0' + Value / 10;
+		acText[1] = '0' + Value % 10;                              
+		PROGBAR_SetText(ahProgBar, acText);
+                PROGBAR_SetValue(ahProgBar, Value);
+
+                hEdit = WM_GetDialogItem(hDlg, ID_EDIT_3);
+                bsp_RTC_GetClock();
+                TempDate[0] = '0' + g_tRTC.Year /1000;
+                TempDate[1] = '0' + g_tRTC.Year /100 % 10;
+                TempDate[2] = '0' + g_tRTC.Year /10 % 10;
+                TempDate[3] = '0' + g_tRTC.Year % 10;
+                
+                TempDate[5] = '0' + g_tRTC.Mon / 10;
+                TempDate[6] = '0' + g_tRTC.Mon % 10;
+                
+                TempDate[8] = '0' + g_tRTC.Day /10;
+                TempDate[9] = '0' + g_tRTC.Day % 10;
+                
+                TempDate[21] = '0' + g_tRTC.Week;
+
+                TempDate[11] = '0' + g_tRTC.Hour / 10;
+                TempDate[12] = '0' + g_tRTC.Hour % 10;
+                 
+                TempDate[14] = '0' + g_tRTC.Min / 10;
+                TempDate[15] = '0' + g_tRTC.Min % 10;
+
+                TempDate[17] = '0' + g_tRTC.Sec / 10;
+                TempDate[18] = '0' + g_tRTC.Sec % 10;
+                EDIT_SetText(hEdit, TempDate);
+                
+                if(iCount < 20) 
+                {
+                    iCount++;
+                    ExtTemp += getCurent_ExtTempValue();
+                    IntTemp += getCurent_IntTempValue(); 
+
+                    LightValue += getLightVLuxValue();
+                    Mic_dB += getMicAmp_dBValue();
+                }
+                else 
+                {
+                    hEdit = WM_GetDialogItem(hDlg, ID_EDIT_0);
+                    ExtTemp = ExtTemp /20;
+                    mem_set(acText, 0x00, 5);
+                    if(ExtTemp < 0)
+                    {
+                        acText[0] = '-';
+                        acText[1] = '0' + ExtTemp /10;
+                        acText[2] = '0' + ExtTemp %10;
+                    }
+                    else if (ExtTemp < 100 && ExtTemp >= 0)
+                    {
+                        acText[0] = '0' + ExtTemp /10;
+                        acText[1] = '0' + ExtTemp %10;
+                    }
+                    else
+                    {
+                        acText[0] = '0' + ExtTemp /100;
+                        acText[1] = '0' + ExtTemp /10 / 10;
+                        acText[2] = '0' + ExtTemp %10;
+                    }
+                    EDIT_SetText(hEdit, acText);
+                    
+                    hEdit = WM_GetDialogItem(hDlg, ID_EDIT_4);
+                    IntTemp = IntTemp /20;
+                    mem_set(acText, 0x00, 5);
+                    if (IntTemp < 100 )
+                    {
+                        acText[0] = '0' + IntTemp /10;
+                        acText[1] = '0' + IntTemp %10;
+                    }
+                    else
+                    {
+                        acText[0] = '0' + IntTemp /100;
+                        acText[1] = '0' + IntTemp /10 / 10;
+                        acText[2] = '0' + IntTemp %10;
+                    }
+                    EDIT_SetText(hEdit, acText);
+
+                    hEdit = WM_GetDialogItem(hDlg, ID_EDIT_1);
+                    LightValue = LightValue /20;
+                    mem_set(acText, 0x00, 5);
+                    if(LightValue < 100)
+                    {
+                        acText[0] = '0' + LightValue /10;
+                        acText[1] = '0' + LightValue %10;
+                    }
+                    else
+                    {
+                        acText[0] = '0' + LightValue /100;
+                        acText[1] = '0' + LightValue /10 / 10;
+                        acText[2] = '0' + LightValue %10;
+                    }
+                    EDIT_SetText(hEdit, acText);
+
+                    hEdit = WM_GetDialogItem(hDlg, ID_EDIT_2);
+                    Mic_dB = Mic_dB /20;
+                    mem_set(acText, 0x00, 5);
+                    if (Mic_dB < 100 )
+                    {
+                        acText[0] = '0' + Mic_dB /10;
+                        acText[1] = '0' + Mic_dB %10;
+                    }
+                    else if(Mic_dB < 1000)
+                    {
+                        acText[0] = '0' + Mic_dB /100;
+                        acText[1] = '0' + Mic_dB /10 / 10;
+                        acText[2] = '0' + Mic_dB %10;
+                    }
+                    else
+                    {
+                        acText[0] = '0' + Mic_dB /1000;
+                        acText[1] = '0' + Mic_dB /100 % 10;
+                        acText[2] = '0' + Mic_dB /10 % 10;
+                        acText[4] = '0' + Mic_dB % 10;
+                    }
+                    EDIT_SetText(hEdit, acText);
+                    
+                    iCount = 0; 
+                    ExtTemp = 0;
+                    IntTemp = 0;
+                    LightValue = 0;
+                    Mic_dB = 0;
+                }
 	}
 }
 
@@ -312,7 +455,7 @@ void bsp_RTC_Test(void)
 
         while(1)
         {
-                GUI_Delay(50);
+                GUI_Delay(10);
                 GUI_GotoXY(0, 0);
                 bsp_RTC_GetClock();
             #if 1
@@ -350,7 +493,7 @@ void bsp_RTC_Test(void)
                 GUI_DispDecAt(g_tRTC.Sec, 184, 0, 3);
                 #endif
                               
-                if(iCount < 10) 
+                if(iCount < 20) 
                 {
                     iCount++;
                     ExtTemp += getCurent_ExtTempValue();
@@ -362,13 +505,13 @@ void bsp_RTC_Test(void)
                 else 
                 {
                     GUI_GotoXY(0, 50);
-                    GUI_DispDec(IntTemp / 10, 3);
+                    GUI_DispDec(IntTemp / 20, 3);
                     GUI_GotoXY(60, 50);
-                    GUI_DispDec(ExtTemp / 10 , 4);
+                    GUI_DispDec(ExtTemp / 20 , 4);
                     GUI_GotoXY(120, 50);
-                    GUI_DispDec(LightValue / 10, 4);
+                    GUI_DispDec(LightValue / 20, 4);
                     GUI_GotoXY(180, 50);
-                    GUI_DispDec(Mic_dB /10, 4);
+                    GUI_DispDec(Mic_dB / 20, 4);
                     
                     iCount = 0; 
                     ExtTemp = 0;
@@ -380,4 +523,3 @@ void bsp_RTC_Test(void)
  }
 
 /*************************** End of file ****************************/
-

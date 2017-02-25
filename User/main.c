@@ -59,6 +59,7 @@
 #include <includes.h>
 #include "MainTask.h"
 #include "guitasktest.h"
+#include "spi_flash_fatfs.h"
 /*
 **********************************************************************************************************
 											º¯ÊýÉùÃ÷
@@ -138,14 +139,14 @@ static void vTaskTest(void *pvParameters)
 {
     while(1)
     {
-        vTaskDelay(500);
+        vTaskDelay(100);
   #ifdef LCD_DRIVER_TEST
         LCD_Fill_Rect(0, 0, 320, 240, CL_BLUE);
         vTaskDelay(1000);
         LCD_Fill_Rect(0, 0, 320, 240, CL_YELLOW);
    #endif
-        //GuiTaskTest();
-        bsp_RTC_Test();
+        GuiTaskTest();
+        //bsp_RTC_Test();
     }  
 }
 /*

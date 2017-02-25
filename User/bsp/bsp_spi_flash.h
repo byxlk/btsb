@@ -21,8 +21,7 @@ enum
 {
 	SST25VF016B_ID = 0xBF2541,
 	MX25L1606E_ID  = 0xC22015,
-	W25Q64_ID    = 0xEF4017,
-	W25Q128_ID   = 0xEF4018
+	W25Q64BV_ID    = 0xEF4017
 };
 
 typedef struct
@@ -40,9 +39,28 @@ void sf_EraseSector(uint32_t _uiSectorAddr);
 void sf_PageWrite(uint8_t * _pBuf, uint32_t _uiWriteAddr, uint16_t _usSize);
 uint8_t sf_WriteBuffer(uint8_t* _pBuf, uint32_t _uiWriteAddr, uint16_t _usWriteSize);
 void sf_ReadBuffer(uint8_t * _pBuf, uint32_t _uiReadAddr, uint32_t _uiSize);
-void sf_ReadInfo(void);
 
 extern SFLASH_T g_tSF;
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+DSTATUS SPI_disk_status(void);
+DSTATUS SPI_disk_initialize(void);
+
+DRESULT SPI_disk_read(
+       	uint8_t *buff,		/* Data buffer to store read data */
+	uint32_t sector,	/* Start sector in LBA */
+	uint32_t count	);	/* Number of sectors to read */
+
+DRESULT SPI_disk_write(
+       	const uint8_t *buff,		/* Data buffer to store read data */
+	uint32_t sector,	/* Start sector in LBA */
+	uint32_t count	);	/* Number of sectors to read */
+
+DRESULT SPI_disk_ioctl(
+	uint8_t cmd,		/* Control code */
+	void *buff );	/* Buffer to send/receive control data */
+
 
 #endif
 

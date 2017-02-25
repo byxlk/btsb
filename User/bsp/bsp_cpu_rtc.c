@@ -76,9 +76,9 @@ void bsp_InitRTC(void)
         /* Enable the RTC Second */
         //RTC_ITConfig(RTC_IT_TS, ENABLE);
 
-        /* Default date: 2016-01-01 default time: 08:00:00 */
-        bsp_RTC_SetDate(2016, RTC_Month_February, 29);//默认时间
-        bsp_RTC_SetTime(23, 58, 0);
+        /* Default date: 2017-01-01 default time: 08:00:00 */
+        bsp_RTC_SetDate(2017, RTC_Month_January, 1);//默认时间
+        bsp_RTC_SetTime(8, 58, 0);
 
         /* Configure the RTC Wakeup Clock source and Counter (Wakeup event each 1 second) */
         RTC_WakeUpClockConfig(RTC_WakeUpClock_RTCCLK_Div16);

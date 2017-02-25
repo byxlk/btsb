@@ -20,12 +20,74 @@
 
 #include "bsp.h"
 
-/* 串行Flsh的片选GPIO端口  */
-#define SF_RCC_CS 			RCC_APB2Periph_GPIOF
-#define SF_PORT_CS			GPIOF
-#define SF_PIN_CS			GPIO_Pin_11
-#define SF_CS_0()			SF_PORT_CS->BRR = SF_PIN_CS
-#define SF_CS_1()			SF_PORT_CS->BSRR = SF_PIN_CS
+/*
+	STM32F4XX 时钟计算.
+		HCLK = 168M
+		PCLK1 = HCLK / 4 = 42M
+		PCLK2 = HCLK / 2 = 84M
+
+		SPI2、SPI3 在 PCLK1, 时钟42M
+		SPI1       在 PCLK2, 时钟84M
+
+		STM32F4 支持的最大SPI时钟为 37.5 Mbits/S, 因此需要分频。
+*/
+
+#ifdef STM32_X3		/* 安富莱 STM32-X3 开发板 */
+	/*
+		安富莱STM32-X3 口线分配： 串行Flash型号为 W25Q64BVSSIG (80MHz)
+		PB12 = CS
+		PB13 = SCK
+		PB14 = MISO
+		PB15 = MOSI
+
+		STM32硬件SPI接口 = SPI2
+	*/
+	#define SPI_FLASH			SPI2
+
+	#define ENABLE_SPI_RCC() 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI2, ENABLE)
+
+	#define SPI_BAUD			SPI_BaudRatePrescaler_1		/* 选择2分频时, SCK时钟 = 21M */
+
+	/* 片选口线置低选中  */
+	#define SF_CS_LOW()			GPIOB->BSRRH = GPIO_Pin_12
+
+	/* 片选口线置高不选中 */
+	#define SF_CS_HIGH()		GPIOB->BSRRL = GPIO_Pin_12
+#else
+	/*
+		安富莱STM32-V5 开发板口线分配：  串行Flash型号为 W25Q64BVSSIG (80MHz)
+		PB3/SPI3_SCK/SPI1_SCK
+		PB4/SPI3_MISO/SPI1_MISO
+		PB5/SPI3_MOSI/SPI1_MOSI
+		PF8/SF_CS
+
+		STM32硬件SPI接口 = SPI3 或者 SPI1
+
+		由于SPI1的时钟源是84M, SPI3的时钟源是42M。为了获得更快的速度，软件上选择SPI1。
+	*/
+	//#define SPI_FLASH			SPI3
+	#define SPI_FLASH			SPI1
+
+	//#define ENABLE_SPI_RCC() 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE)
+	#define ENABLE_SPI_RCC() 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE)
+
+	/*
+		【SPI时钟最快是2分频，不支持不分频】
+		如果是SPI1，2分频时SCK时钟 = 42M，4分频时SCK时钟 = 21M
+		如果是SPI3, 2分频时SCK时钟 = 21M
+	*/
+	#define SPI_BAUD			SPI_BaudRatePrescaler_4
+
+	/* 片选GPIO端口  */
+	#define SF_CS_GPIO			GPIOF
+	#define SF_CS_PIN			GPIO_Pin_8
+#endif
+
+/* 片选口线置低选中  */
+#define SF_CS_LOW()       SF_CS_GPIO->BSRRH = SF_CS_PIN
+
+/* 片选口线置高不选中 */
+#define SF_CS_HIGH()      SF_CS_GPIO->BSRRL = SF_CS_PIN
 
 #define CMD_AAI       0xAD  	/* AAI 连续编程指令(FOR SST25VF016B) */
 #define CMD_DISWR	  0x04		/* 禁止写, 退出AAI状态 */
@@ -43,56 +105,140 @@
 
 SFLASH_T g_tSF;
 
+void sf_ReadInfo(void);
+static uint8_t sf_SendByte(uint8_t _ucValue);
 static void sf_WriteEnable(void);
 static void sf_WriteStatus(uint8_t _ucValue);
 static void sf_WaitForWriteEnd(void);
 static uint8_t sf_NeedErase(uint8_t * _ucpOldBuf, uint8_t *_ucpNewBuf, uint16_t _uiLen);
 static uint8_t sf_CmpData(uint32_t _uiSrcAddr, uint8_t *_ucpTar, uint32_t _uiSize);
 static uint8_t sf_AutoWritePage(uint8_t *_ucpSrc, uint32_t _uiWrAddr, uint16_t _usWrLen);
-static uint8_t s_spiBuf[4*1024];	/* 用于写函数，先读出整个page，修改缓冲区后，再整个page回写 */
 
-static void sf_CfgSpiHard(void);
-static void sf_ConfigGPIO(void);
-static void sf_SetCS(uint8_t _level);
+static void bsp_CfgSPIForSFlash(void);
+
+static uint8_t s_spiBuf[4*1024];	/* 用于写函数，先读出整个page，修改缓冲区后，再整个page回写 */
 
 /*
 *********************************************************************************************************
-*	函 数 名: sf_ConfigGPIO
-*	功能说明: 配置串行Flash的片选GPIO。 设置为推挽输出
-*	形    参: 无
+*	函 数 名: bsp_InitSpiFlash
+*	功能说明: 初始化串行Flash硬件接口（配置STM32的SPI时钟、GPIO)
+*	形    参:  无
 *	返 回 值: 无
 *********************************************************************************************************
 */
-static void sf_ConfigGPIO(void)
+void bsp_InitSFlash(void)
 {
+
+#ifdef STM32_X3		/* 安富莱 STM32-X3 开发板 */
 	/*
-		安富莱STM32-V4 开发板口线分配：  串行Flash型号为 W25Q64BVSSIG (80MHz)
-		PF8/SF_CS
+		安富莱STM32-X4 口线分配： 串行Flash型号为 W25Q64BVSSIG (80MHz)
+		PB12 = CS
+		PB13 = SCK
+		PB14 = MISO
+		PB15 = MOSI
+
+		STM32硬件SPI接口 = SPI2
 	*/
-	GPIO_InitTypeDef GPIO_InitStructure;
+	{
+		GPIO_InitTypeDef GPIO_InitStructure;
 
-	/* 使能GPIO 时钟 */
-	RCC_APB2PeriphClockCmd(SF_RCC_CS, ENABLE);
+		/* 使能GPIO 时钟 */
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 
-	/* 配置片选口线为推挽输出模式 */
-	sf_SetCS(1);		/* 片选置高，不选中 */
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Pin = SF_PIN_CS;
-	GPIO_Init(SF_PORT_CS, &GPIO_InitStructure);
+		/* 配置 SCK, MISO 、 MOSI 为复用功能 */
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_SPI2);
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource14, GPIO_AF_SPI2);
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource15, GPIO_AF_SPI2);
+
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+		GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14;
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+		/* 配置片选口线为推挽输出模式 */
+		SF_CS_HIGH();		/* 片选置高，不选中 */
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
+	}
+#else
+	/*
+		安富莱STM32-V5 开发板口线分配：  串行Flash型号为 W25Q64BVSSIG (80MHz)
+		PB3/SPI3_SCK
+		PB4/SPI3_MISO
+		PB5/SPI3_MOSI
+		PF8/SF_CS
+
+		STM32硬件SPI接口 = SPI3
+	*/
+	{
+		GPIO_InitTypeDef GPIO_InitStructure;
+
+		/* 使能GPIO 时钟 */
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOF, ENABLE);
+
+		/* 配置 SCK, MISO 、 MOSI 为复用功能 */
+		//GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_SPI3);
+		//GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_SPI3);
+		//GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_SPI3);
+		/* 配置 SCK, MISO 、 MOSI 为复用功能 */
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_SPI1);
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_SPI1);
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_SPI1);
+
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+		GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+		/* 配置片选口线为推挽输出模式 */
+		SF_CS_HIGH();		/* 片选置高，不选中 */
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+		GPIO_Init(GPIOF, &GPIO_InitStructure);
+	}
+#endif
+
+	/* 配置SPI硬件参数用于访问串行Flash */
+	bsp_CfgSPIForSFlash();
+
+	sf_ReadInfo();				/* 自动识别芯片型号 */
+
+	SF_CS_LOW();				/* 软件方式，使能串行Flash片选 */
+	sf_SendByte(CMD_DISWR);		/* 发送禁止写入的命令,即使能软件写保护 */
+	SF_CS_HIGH();				/* 软件方式，禁能串行Flash片选 */
+
+	sf_WaitForWriteEnd();		/* 等待串行Flash内部操作完成 */
+
+	sf_WriteStatus(0);			/* 解除所有BLOCK的写保护 */
 }
 
 /*
 *********************************************************************************************************
-*	函 数 名: sf_CfgSpiHard
+*	函 数 名: bsp_CfgSPIForSFlash
 *	功能说明: 配置STM32内部SPI硬件的工作模式、速度等参数，用于访问SPI接口的串行Flash。
-*	形    参: 无
+*	形    参:  无
 *	返 回 值: 无
 *********************************************************************************************************
 */
-static void sf_CfgSpiHard(void)
+static void bsp_CfgSPIForSFlash(void)
 {
 	SPI_InitTypeDef  SPI_InitStructure;
+
+	/* 打开SPI时钟 */
+	ENABLE_SPI_RCC();
 
 	/* 配置SPI硬件参数 */
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;	/* 数据方向：2线全双工 */
@@ -105,74 +251,16 @@ static void sf_CfgSpiHard(void)
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;		/* 时钟的第2个边沿采样数据 */
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;			/* 片选控制方式：软件控制 */
 
-	/* 设置波特率预分频系数 SPI_BaudRatePrescaler_8 ，实测SCK周期 96ns, 10.4MHz */
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;
+	/* 设置波特率预分频系数 */
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BAUD;
 
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;	/* 数据位传输次序：高位先传 */
 	SPI_InitStructure.SPI_CRCPolynomial = 7;			/* CRC多项式寄存器，复位后为7。本例程不用 */
-	SPI_Init(SPI1, &SPI_InitStructure);
+	SPI_Init(SPI_FLASH, &SPI_InitStructure);
 
-	SPI_Cmd(SPI1, ENABLE);				/* 使能SPI  */
-}
+	SPI_Cmd(SPI_FLASH, DISABLE);			/* 先禁止SPI  */
 
-/*
-*********************************************************************************************************
-*	函 数 名: sf_SetCS(0)
-*	功能说明: 设置CS。 用于运行中SPI共享。
-*	形    参: 无
-	返 回 值: 无
-*********************************************************************************************************
-*/
-static void sf_SetCS(uint8_t _level)
-{
-	if (_level == 0)
-	{
-		bsp_SpiBusEnter();	/* 占用SPI总线， 用于总线共享 */
-
-		#ifdef SOFT_SPI		/* 软件SPI */
-			bsp_SetSpiSck(1);
-			SF_CS_0();
-		#endif
-
-		#ifdef HARD_SPI		/* 硬件SPI */
-
-			bsp_SPI_Init(SPI_Direction_2Lines_FullDuplex | SPI_Mode_Master | SPI_DataSize_8b
-				| SPI_CPOL_High | SPI_CPHA_2Edge | SPI_NSS_Soft | SPI_BaudRatePrescaler_8 | SPI_FirstBit_MSB);
-
-			SF_CS_0();
-		#endif
-	}
-	else
-	{
-		SF_CS_1();
-
-		bsp_SpiBusExit();	/* 释放SPI总线， 用于总线共享 */
-	}
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: bsp_InitSpiFlash
-*	功能说明: 初始化串行Flash硬件接口（配置STM32的SPI时钟、GPIO)
-*	形    参:  无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void bsp_InitSFlash(void)
-{
-	sf_ConfigGPIO();			/* 配置GPIO */
-	
-	//sf_CfgSpiHard();
-
-	sf_ReadInfo();				/* 自动识别芯片型号 */
-
-	sf_SetCS(0);				/* 软件方式，使能串行Flash片选 */
-	bsp_spiWrite1(CMD_DISWR);		/* 发送禁止写入的命令,即使能软件写保护 */
-	sf_SetCS(1);				/* 软件方式，禁能串行Flash片选 */
-
-	sf_WaitForWriteEnd();		/* 等待串行Flash内部操作完成 */
-
-	sf_WriteStatus(0);			/* 解除所有BLOCK的写保护 */
+	SPI_Cmd(SPI_FLASH, ENABLE);				/* 使能SPI  */
 }
 
 /*
@@ -188,12 +276,12 @@ void sf_EraseSector(uint32_t _uiSectorAddr)
 	sf_WriteEnable();								/* 发送写使能命令 */
 
 	/* 擦除扇区操作 */
-	sf_SetCS(0);									/* 使能片选 */
-	bsp_spiWrite1(CMD_SE);								/* 发送擦除命令 */
-	bsp_spiWrite1((_uiSectorAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
-	bsp_spiWrite1((_uiSectorAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
-	bsp_spiWrite1(_uiSectorAddr & 0xFF);				/* 发送扇区地址低8bit */
-	sf_SetCS(1);									/* 禁能片选 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_SE);								/* 发送擦除命令 */
+	sf_SendByte((_uiSectorAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiSectorAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+	sf_SendByte(_uiSectorAddr & 0xFF);				/* 发送扇区地址低8bit */
+	SF_CS_HIGH();									/* 禁能片选 */
 
 	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
 }
@@ -211,9 +299,9 @@ void sf_EraseChip(void)
 	sf_WriteEnable();								/* 发送写使能命令 */
 
 	/* 擦除扇区操作 */
-	sf_SetCS(0);									/* 使能片选 */
-	bsp_spiWrite1(CMD_BE);							/* 发送整片擦除命令 */
-	sf_SetCS(1);									/* 禁能片选 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_BE);							/* 发送整片擦除命令 */
+	SF_CS_HIGH();									/* 禁能片选 */
 
 	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
 }
@@ -242,14 +330,14 @@ void sf_PageWrite(uint8_t * _pBuf, uint32_t _uiWriteAddr, uint16_t _usSize)
 
 		sf_WriteEnable();								/* 发送写使能命令 */
 
-		sf_SetCS(0);									/* 使能片选 */
-		bsp_spiWrite1(CMD_AAI);							/* 发送AAI命令(地址自动增加编程) */
-		bsp_spiWrite1((_uiWriteAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
-		bsp_spiWrite1((_uiWriteAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
-		bsp_spiWrite1(_uiWriteAddr & 0xFF);				/* 发送扇区地址低8bit */
-		bsp_spiWrite1(*_pBuf++);							/* 发送第1个数据 */
-		bsp_spiWrite1(*_pBuf++);							/* 发送第2个数据 */
-		sf_SetCS(1);									/* 禁能片选 */
+		SF_CS_LOW();									/* 使能片选 */
+		sf_SendByte(CMD_AAI);							/* 发送AAI命令(地址自动增加编程) */
+		sf_SendByte((_uiWriteAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+		sf_SendByte((_uiWriteAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+		sf_SendByte(_uiWriteAddr & 0xFF);				/* 发送扇区地址低8bit */
+		sf_SendByte(*_pBuf++);							/* 发送第1个数据 */
+		sf_SendByte(*_pBuf++);							/* 发送第2个数据 */
+		SF_CS_HIGH();									/* 禁能片选 */
 
 		sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
 
@@ -257,18 +345,18 @@ void sf_PageWrite(uint8_t * _pBuf, uint32_t _uiWriteAddr, uint16_t _usSize)
 
 		for (i = 0; i < _usSize / 2; i++)
 		{
-			sf_SetCS(0);								/* 使能片选 */
-			bsp_spiWrite1(CMD_AAI);						/* 发送AAI命令(地址自动增加编程) */
-			bsp_spiWrite1(*_pBuf++);						/* 发送数据 */
-			bsp_spiWrite1(*_pBuf++);						/* 发送数据 */
-			sf_SetCS(1);								/* 禁能片选 */
+			SF_CS_LOW();								/* 使能片选 */
+			sf_SendByte(CMD_AAI);						/* 发送AAI命令(地址自动增加编程) */
+			sf_SendByte(*_pBuf++);						/* 发送数据 */
+			sf_SendByte(*_pBuf++);						/* 发送数据 */
+			SF_CS_HIGH();								/* 禁能片选 */
 			sf_WaitForWriteEnd();						/* 等待串行Flash内部写操作完成 */
 		}
 
 		/* 进入写保护状态 */
-		sf_SetCS(0);
-		bsp_spiWrite1(CMD_DISWR);
-		sf_SetCS(1);
+		SF_CS_LOW();
+		sf_SendByte(CMD_DISWR);
+		SF_CS_HIGH();
 
 		sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
 	}
@@ -278,18 +366,18 @@ void sf_PageWrite(uint8_t * _pBuf, uint32_t _uiWriteAddr, uint16_t _usSize)
 		{
 			sf_WriteEnable();								/* 发送写使能命令 */
 
-			sf_SetCS(0);									/* 使能片选 */
-			bsp_spiWrite1(0x02);								/* 发送AAI命令(地址自动增加编程) */
-			bsp_spiWrite1((_uiWriteAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
-			bsp_spiWrite1((_uiWriteAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
-			bsp_spiWrite1(_uiWriteAddr & 0xFF);				/* 发送扇区地址低8bit */
+			SF_CS_LOW();									/* 使能片选 */
+			sf_SendByte(0x02);								/* 发送AAI命令(地址自动增加编程) */
+			sf_SendByte((_uiWriteAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+			sf_SendByte((_uiWriteAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+			sf_SendByte(_uiWriteAddr & 0xFF);				/* 发送扇区地址低8bit */
 
 			for (i = 0; i < 256; i++)
 			{
-				bsp_spiWrite1(*_pBuf++);					/* 发送数据 */
+				sf_SendByte(*_pBuf++);					/* 发送数据 */
 			}
 
-			sf_SetCS(1);								/* 禁止片选 */
+			SF_CS_HIGH();								/* 禁止片选 */
 
 			sf_WaitForWriteEnd();						/* 等待串行Flash内部写操作完成 */
 
@@ -297,9 +385,9 @@ void sf_PageWrite(uint8_t * _pBuf, uint32_t _uiWriteAddr, uint16_t _usSize)
 		}
 
 		/* 进入写保护状态 */
-		sf_SetCS(0);
-		bsp_spiWrite1(CMD_DISWR);
-		sf_SetCS(1);
+		SF_CS_LOW();
+		sf_SendByte(CMD_DISWR);
+		SF_CS_HIGH();
 
 		sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
 	}
@@ -324,16 +412,16 @@ void sf_ReadBuffer(uint8_t * _pBuf, uint32_t _uiReadAddr, uint32_t _uiSize)
 	}
 
 	/* 擦除扇区操作 */
-	sf_SetCS(0);									/* 使能片选 */
-	bsp_spiWrite1(CMD_READ);							/* 发送读命令 */
-	bsp_spiWrite1((_uiReadAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
-	bsp_spiWrite1((_uiReadAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
-	bsp_spiWrite1(_uiReadAddr & 0xFF);				/* 发送扇区地址低8bit */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_READ);							/* 发送读命令 */
+	sf_SendByte((_uiReadAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiReadAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+	sf_SendByte(_uiReadAddr & 0xFF);				/* 发送扇区地址低8bit */
 	while (_uiSize--)
 	{
-		*_pBuf++ = bsp_spiRead1();			/* 读一个字节并存储到pBuf，读完后指针自加1 */
+		*_pBuf++ = sf_SendByte(DUMMY_BYTE);			/* 读一个字节并存储到pBuf，读完后指针自加1 */
 	}
-	sf_SetCS(1);									/* 禁能片选 */
+	SF_CS_HIGH();									/* 禁能片选 */
 }
 
 /*
@@ -361,22 +449,22 @@ static uint8_t sf_CmpData(uint32_t _uiSrcAddr, uint8_t *_ucpTar, uint32_t _uiSiz
 		return 0;
 	}
 
-	sf_SetCS(0);									/* 使能片选 */
-	bsp_spiWrite1(CMD_READ);							/* 发送读命令 */
-	bsp_spiWrite1((_uiSrcAddr & 0xFF0000) >> 16);		/* 发送扇区地址的高8bit */
-	bsp_spiWrite1((_uiSrcAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
-	bsp_spiWrite1(_uiSrcAddr & 0xFF);					/* 发送扇区地址低8bit */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_READ);							/* 发送读命令 */
+	sf_SendByte((_uiSrcAddr & 0xFF0000) >> 16);		/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiSrcAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+	sf_SendByte(_uiSrcAddr & 0xFF);					/* 发送扇区地址低8bit */
 	while (_uiSize--)
 	{
 		/* 读一个字节 */
-		ucValue = bsp_spiRead1();
+		ucValue = sf_SendByte(DUMMY_BYTE);
 		if (*_ucpTar++ != ucValue)
 		{
-			sf_SetCS(1);
+			SF_CS_HIGH();
 			return 1;
 		}
 	}
-	sf_SetCS(1);
+	SF_CS_HIGH();
 	return 0;
 }
 
@@ -652,12 +740,12 @@ uint32_t sf_ReadID(void)
 	uint32_t uiID;
 	uint8_t id1, id2, id3;
 
-	sf_SetCS(0);									/* 使能片选 */
-	bsp_spiWrite1(CMD_RDID);								/* 发送读ID命令 */
-	id1 = bsp_spiRead1();					/* 读ID的第1个字节 */
-	id2 = bsp_spiRead1();					/* 读ID的第2个字节 */
-	id3 = bsp_spiRead1();					/* 读ID的第3个字节 */
-	sf_SetCS(1);									/* 禁能片选 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_RDID);								/* 发送读ID命令 */
+	id1 = sf_SendByte(DUMMY_BYTE);					/* 读ID的第1个字节 */
+	id2 = sf_SendByte(DUMMY_BYTE);					/* 读ID的第2个字节 */
+	id3 = sf_SendByte(DUMMY_BYTE);					/* 读ID的第3个字节 */
+	SF_CS_HIGH();									/* 禁能片选 */
 
 	uiID = ((uint32_t)id1 << 16) | ((uint32_t)id2 << 8) | id3;
 
@@ -692,18 +780,11 @@ void sf_ReadInfo(void)
 				g_tSF.PageSize = 4 * 1024;			/* 页面大小 = 4K */
 				break;
 
-			case W25Q64_ID:
-				strcpy(g_tSF.ChipName, "W25Q64");
+			case W25Q64BV_ID:
+				strcpy(g_tSF.ChipName, "W25Q64BV");
 				g_tSF.TotalSize = 8 * 1024 * 1024;	/* 总容量 = 8M */
 				g_tSF.PageSize = 4 * 1024;			/* 页面大小 = 4K */
 				break;
-
-
-			case W25Q128_ID:
-				strcpy(g_tSF.ChipName, "W25Q128");
-				g_tSF.TotalSize = 16 * 1024 * 1024;	/* 总容量 = 16M */
-				g_tSF.PageSize = 4 * 1024;			/* 页面大小 = 4K */
-				break;			
 
 			default:
 				strcpy(g_tSF.ChipName, "Unknow Flash");
@@ -716,6 +797,29 @@ void sf_ReadInfo(void)
 
 /*
 *********************************************************************************************************
+*	函 数 名: sf_SendByte
+*	功能说明: 向器件发送一个字节，同时从MISO口线采样器件返回的数据
+*	形    参:  _ucByte : 发送的字节值
+*	返 回 值: 从MISO口线采样器件返回的数据
+*********************************************************************************************************
+*/
+static uint8_t sf_SendByte(uint8_t _ucValue)
+{
+	/* 等待上个数据未发送完毕 */
+	while (SPI_I2S_GetFlagStatus(SPI_FLASH, SPI_I2S_FLAG_TXE) == RESET);
+
+	/* 通过SPI硬件发送1个字节 */
+	SPI_I2S_SendData(SPI_FLASH, _ucValue);
+
+	/* 等待接收一个字节任务完成 */
+	while (SPI_I2S_GetFlagStatus(SPI_FLASH, SPI_I2S_FLAG_RXNE) == RESET);
+
+	/* 返回从SPI总线读到的数据 */
+	return SPI_I2S_ReceiveData(SPI_FLASH);
+}
+
+/*
+*********************************************************************************************************
 *	函 数 名: sf_WriteEnable
 *	功能说明: 向器件发送写使能命令
 *	形    参:  无
@@ -724,9 +828,9 @@ void sf_ReadInfo(void)
 */
 static void sf_WriteEnable(void)
 {
-	sf_SetCS(0);									/* 使能片选 */
-	bsp_spiWrite1(CMD_WREN);								/* 发送命令 */
-	sf_SetCS(1);									/* 禁能片选 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_WREN);								/* 发送命令 */
+	SF_CS_HIGH();									/* 禁能片选 */
 }
 
 /*
@@ -743,22 +847,22 @@ static void sf_WriteStatus(uint8_t _ucValue)
 	if (g_tSF.ChipID == SST25VF016B_ID)
 	{
 		/* 第1步：先使能写状态寄存器 */
-		sf_SetCS(0);									/* 使能片选 */
-		bsp_spiWrite1(CMD_EWRSR);							/* 发送命令， 允许写状态寄存器 */
-		sf_SetCS(1);									/* 禁能片选 */
+		SF_CS_LOW();									/* 使能片选 */
+		sf_SendByte(CMD_EWRSR);							/* 发送命令， 允许写状态寄存器 */
+		SF_CS_HIGH();									/* 禁能片选 */
 
 		/* 第2步：再写状态寄存器 */
-		sf_SetCS(0);									/* 使能片选 */
-		bsp_spiWrite1(CMD_WRSR);							/* 发送命令， 写状态寄存器 */
-		bsp_spiWrite1(_ucValue);							/* 发送数据：状态寄存器的值 */
-		sf_SetCS(1);									/* 禁能片选 */
+		SF_CS_LOW();									/* 使能片选 */
+		sf_SendByte(CMD_WRSR);							/* 发送命令， 写状态寄存器 */
+		sf_SendByte(_ucValue);							/* 发送数据：状态寄存器的值 */
+		SF_CS_HIGH();									/* 禁能片选 */
 	}
 	else
 	{
-		sf_SetCS(0);									/* 使能片选 */
-		bsp_spiWrite1(CMD_WRSR);							/* 发送命令， 写状态寄存器 */
-		bsp_spiWrite1(_ucValue);							/* 发送数据：状态寄存器的值 */
-		sf_SetCS(1);									/* 禁能片选 */
+		SF_CS_LOW();									/* 使能片选 */
+		sf_SendByte(CMD_WRSR);							/* 发送命令， 写状态寄存器 */
+		sf_SendByte(_ucValue);							/* 发送数据：状态寄存器的值 */
+		SF_CS_HIGH();									/* 禁能片选 */
 	}
 }
 
@@ -772,10 +876,81 @@ static void sf_WriteStatus(uint8_t _ucValue)
 */
 static void sf_WaitForWriteEnd(void)
 {
-	sf_SetCS(0);									/* 使能片选 */
-	bsp_spiWrite1(CMD_RDSR);							/* 发送命令， 读状态寄存器 */
-	while((bsp_spiRead1() & WIP_FLAG) == SET);	/* 判断状态寄存器的忙标志位 */
-	sf_SetCS(1);									/* 禁能片选 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_RDSR);							/* 发送命令， 读状态寄存器 */
+	while((sf_SendByte(DUMMY_BYTE) & WIP_FLAG) == SET);	/* 判断状态寄存器的忙标志位 */
+	SF_CS_HIGH();									/* 禁能片选 */
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+DSTATUS SPI_disk_status(void)
+{
+
+    return RES_OK;
+}
+
+DSTATUS SPI_disk_initialize(void)
+{
+
+    bsp_InitSFlash();
+
+    return RES_OK;
+}
+
+DRESULT SPI_disk_read(
+    uint8_t *buff,		/* Data buffer to store read data */
+	uint32_t sector,	/* Start sector in LBA */
+	uint32_t count	)	/* Number of sectors to read */
+{
+    sf_ReadBuffer(buff, sector << 12, count<<12);
+    return RES_OK;
+}
+
+DRESULT SPI_disk_write(
+   	const uint8_t *buff,		/* Data buffer to store read data */
+	uint32_t sector,	/* Start sector in LBA */
+	uint32_t count	)	/* Number of sectors to read */
+{
+    uint8_t i;
+				
+    for(i = 0; i < count; i++)
+    {
+    	sf_WriteBuffer((uint8_t *)buff, sector << 12, 4096);	
+    }
+
+    return RES_OK;
+}
+
+DRESULT SPI_disk_ioctl(
+	uint8_t cmd,		/* Control code */
+	void *buff)		/* Buffer to send/receive control data */
+{
+    switch(cmd)
+    {
+    	/* SPI Flash不需要同步 */
+    	case CTRL_SYNC :  
+    		return RES_OK;
+    	
+    	/* 返回SPI Flash扇区大小 */
+    	case GET_SECTOR_SIZE:
+    		*((WORD *)buff) = 4096;  
+    		return RES_OK;
+    	
+    	/* 返回SPI Flash扇区数 */
+    	case GET_SECTOR_COUNT:
+    		*((DWORD *)buff) = 2048;    
+    		return RES_OK;
+    	
+    	/* 下面这两项暂时未用 */
+    	case GET_BLOCK_SIZE:   
+    		return RES_OK;
+    	
+    	case CTRL_TRIM:
+    		return RES_OK;       
+    }
+    return RES_OK;
+}
+
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

@@ -28735,770 +28735,6 @@ void SysTick_CLKSourceConfig(uint32_t SysTick_CLKSource);
 #line 51 "..\\User\\bsp\\bsp.h"
 #line 52 "..\\User\\bsp\\bsp.h"
 #line 53 "..\\User\\bsp\\bsp.h"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
- 
-#line 1 "..\\User\\bsp\\bsp_dwt.h"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-void bsp_InitDWT(void);
-void bsp_DelayUS(uint32_t _ulDelayTime);
-void bsp_DelayMS(uint32_t _ulDelayTime);
-
-
-
- 
-#line 74 "..\\User\\bsp\\bsp.h"
-#line 1 "..\\User\\bsp\\bsp_uart_fifo.h"
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
- 
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
- 
-typedef enum
-{
-	COM1 = 0,	 
-	COM2 = 1,	 
-	COM3 = 2,	 
-	COM4 = 3,	 
-	COM5 = 4,	 
-}COM_PORT_E;
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-typedef struct
-{
-	USART_TypeDef *uart;		 
-	uint8_t *pTxBuf;			 
-	uint8_t *pRxBuf;			 
-	uint16_t usTxBufSize;		 
-	uint16_t usRxBufSize;		 
-	volatile uint16_t usTxWrite;			 
-	volatile uint16_t usTxRead;			 
-	volatile uint16_t usTxCount;			 
-
-	volatile uint16_t usRxWrite;			 
-	volatile uint16_t usRxRead;			 
-	volatile uint16_t usRxCount;			 
-
-	void (*SendBefor)(void); 	 
-	void (*SendOver)(void); 	 
-	void (*ReciveNew)(uint8_t _byte);	 
-}UART_T;
-
-void bsp_InitUart(void);
-void comSendBuf(COM_PORT_E _ucPort, uint8_t *_ucaBuf, uint16_t _usLen);
-void comSendChar(COM_PORT_E _ucPort, uint8_t _ucByte);
-uint8_t comGetChar(COM_PORT_E _ucPort, uint8_t *_pByte);
-
-void comClearTxFifo(COM_PORT_E _ucPort);
-void comClearRxFifo(COM_PORT_E _ucPort);
-
-void RS485_SendBuf(uint8_t *_ucaBuf, uint16_t _usLen);
-void RS485_SendStr(char *_pBuf);
-
-void bsp_Set485Baud(uint32_t _baud);
-
-void bsp_SetUart1Baud(uint32_t _baud);
-void bsp_SetUart2Baud(uint32_t _baud);
-
-
-
- 
-#line 75 "..\\User\\bsp\\bsp.h"
-#line 1 "..\\User\\bsp\\bsp_tft_lcd.h"
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
- 
-enum
-{
-	IC_5420		= 0x5420,
-	IC_4001		= 0x4001,
-	IC_61509 	= 0xB509,
-	IC_8875 	= 0x0075,	
-	IC_9488 	= 0x9488,
-	IC_7789 	= 0x7789,
-	IC_UNKN 	= 0xEEEE
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-enum
-{
-	CL_WHITE        = (((255 >> 3) << 11) | ((255 >> 2) << 5) | (255 >> 3)),	 
-	CL_BLACK        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (0 >> 3)),	 
-	CL_RED          = (((255 >> 3) << 11) | ((0 >> 2) << 5) | (0 >> 3)),	 
-	CL_GREEN        = (((0 >> 3) << 11) | ((255 >> 2) << 5) | (0 >> 3)),	 
-	CL_BLUE         = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (255 >> 3)),	 
-	CL_YELLOW       = (((255 >> 3) << 11) | ((255 >> 2) << 5) | (0 >> 3)),	 
-
-	CL_GREY			= (((98 >> 3) << 11) | ((98 >> 2) << 5) | (98 >> 3)), 	 
-	CL_GREY1		= (((150 >> 3) << 11) | ((150 >> 2) << 5) | (150 >> 3)), 	 
-	CL_GREY2		= (((180 >> 3) << 11) | ((180 >> 2) << 5) | (180 >> 3)), 	 
-	CL_GREY3		= (((200 >> 3) << 11) | ((200 >> 2) << 5) | (200 >> 3)), 	 
-	CL_GREY4		= (((230 >> 3) << 11) | ((230 >> 2) << 5) | (230 >> 3)), 	 
-
-	CL_BUTTON_GREY	= (((220 >> 3) << 11) | ((220 >> 2) << 5) | (220 >> 3)),  
-
-	CL_MAGENTA      = 0xF81F,	 
-	CL_CYAN         = 0x7FFF,	 
-
-	CL_BLUE1        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (240 >> 3)),		 
-	CL_BLUE2        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (128 >> 3)),		 
-	CL_BLUE3        = (((68 >> 3) << 11) | ((68 >> 2) << 5) | (255 >> 3)),		 
-	CL_BLUE4        = (((0 >> 3) << 11) | ((64 >> 2) << 5) | (128 >> 3)),		 
-
-	 
-	CL_BTN_FACE		= (((236 >> 3) << 11) | ((233 >> 2) << 5) | (216 >> 3)),	 
-	
-	CL_BTN_FONT		= CL_BLACK,				 
-	
-	CL_BOX_BORDER1	= (((172 >> 3) << 11) | ((168 >> 2) << 5) | (153 >> 3)),	 
-	CL_BOX_BORDER2	= (((255 >> 3) << 11) | ((255 >> 2) << 5) | (255 >> 3)),	 
-
-
-	CL_MASK			= 0x9999	 
-};
-
- 
-enum
-{
-	ALIGN_LEFT = 0,
-	ALIGN_CENTER = 1,
-	ALIGN_RIGHT = 2
-};
-
- 
-enum
-{
-	EDIT_BORDER_COLOR		= CL_BLUE2,		 
-	EDIT_BACK_COLOR			= CL_WHITE,			 
-};
-
- 
-enum
-{
-	BUTTON_BORDER_COLOR		= CL_BLUE2,			 
-	BUTTON_BORDER1_COLOR	= CL_WHITE,			 
-	BUTTON_BORDER2_COLOR	= CL_GREY1,			 
-	BUTTON_BACK_COLOR		= CL_GREY3,			 
-	BUTTON_ACTIVE_COLOR		= CL_CYAN,			 
-};
-
- 
-enum
-{
-	WIN_BORDER_COLOR	= CL_BLUE4,		 
-	WIN_TITLE_COLOR		= CL_BLUE3,		 
-	WIN_CAPTION_COLOR	= CL_WHITE,		 
-	WIN_BODY_COLOR		= CL_GREY2,		 
-};
-
- 
-enum
-{
-	CHECK_BOX_BORDER_COLOR	= CL_BLUE2,		 
-	CHECK_BOX_BACK_COLOR	= CL_GREY3,		 
-	CHECK_BOX_CHECKED_COLOR	= CL_RED,		 
-
-	CHECK_BOX_H			= 24,				 
-	CHECK_BOX_W			= 24,				 
-};
-
- 
-typedef enum
-{
-	FC_ST_12 = 0,		 
-	FC_ST_16,			 
-	FC_ST_24,			 
-	FC_ST_32,			 	
-	
-	FC_RA8875_16,		 
-	FC_RA8875_24,		 
-	FC_RA8875_32		 	
-}FONT_CODE_E;
-
- 
-typedef struct
-{
-	FONT_CODE_E FontCode;	 
-	uint16_t FrontColor; 
-	uint16_t BackColor;	 
-	uint16_t Space;		 
-}FONT_T;
-
- 
-typedef enum
-{
-	ID_ICON		= 1,
-	ID_WIN		= 2,
-	ID_LABEL	= 3,
-	ID_BUTTON	= 4,
-	ID_CHECK 	= 5,
-	ID_EDIT 	= 6,
-	ID_GROUP 	= 7,
-}CONTROL_ID_T;
-
- 
-typedef struct
-{
-	uint8_t id;
-	uint16_t Left;		 
-	uint16_t Top;		 
-	uint16_t Height;	 
-	uint16_t Width;		 
-	uint16_t *pBmp;		 
-	char  Text[16];	 
-}ICON_T;
-
- 
-typedef struct
-{
-	uint8_t id;
-	uint16_t Left;
-	uint16_t Top;
-	uint16_t Height;
-	uint16_t Width;
-	uint16_t Color;
-	FONT_T *Font;
-	char *pCaption;
-}WIN_T;
-
- 
-typedef struct
-{
-	uint8_t id;
-	uint16_t Left;			 
-	uint16_t Top;			 
-	uint16_t Height;		 
-	uint16_t Width;			 
-	uint16_t MaxLen;		 
-	FONT_T *Font;			 
-	char  *pCaption;
-}LABEL_T;
-
- 
-typedef struct
-{
-	uint8_t id;
-	uint16_t Left;
-	uint16_t Top;
-	uint16_t Height;
-	uint16_t Width;
-	 
-	FONT_T *Font;			 
-	char *pCaption;
-	uint8_t Focus;			 
-}BUTTON_T;
-
- 
-typedef struct
-{
-	uint8_t id;
-	uint16_t Left;
-	uint16_t Top;
-	uint16_t Height;
-	uint16_t Width;
-	uint16_t Color;
-	FONT_T *Font;			 
-	char   *pCaption;
-	char Text[32];			 
-}EDIT_T;
-
- 
-typedef struct
-{
-	uint8_t id;
-	uint16_t Left;			 
-	uint16_t Top;			 
-	uint16_t Height;		 
-	uint16_t Width;			 
-	uint16_t Color;			 
-	FONT_T *Font;			 
-	char  *pCaption;
-	uint8_t Checked;		 
-}CHECK_T;
-
- 
-typedef struct
-{
-	uint8_t id;
-	uint16_t Left;			 
-	uint16_t Top;			 
-	uint16_t Height;		 
-	uint16_t Width;			 
-	FONT_T *Font;			 
-	char  *pCaption;
-}GROUP_T;
-
- 
-
-
-
-
-
- 
-void LCD_InitHard(void);
-void LCD_GetChipDescribe(char *_str);
-uint16_t LCD_GetHeight(void);
-uint16_t LCD_GetWidth(void);
-void LCD_DispOn(void);
-void LCD_DispOff(void);
-void LCD_ClrScr(uint16_t _usColor);
-void LCD_DispStr(uint16_t _usX, uint16_t _usY, char *_ptr, FONT_T *_tFont);
-void LCD_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor);
-uint16_t LCD_GetPixel(uint16_t _usX, uint16_t _usY);
-void LCD_DrawLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usY2 , uint16_t _usColor);
-void LCD_Draw_VLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usY2, uint16_t _usColor);
-void LCD_Draw_HLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usX2, uint16_t _usColor);
-void LCD_Draw_HColorLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usWidth, const uint16_t * _pColor);
-void LCD_DrawPoints(uint16_t *x, uint16_t *y, uint16_t _usSize, uint16_t _usColor);
-void LCD_DrawRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
-void LCD_DrawCircle(uint16_t _usX, uint16_t _usY, uint16_t _usRadius, uint16_t _usColor);
-void LCD_DrawBMP(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t *_ptr);
-void LCD_SetBackLight(uint8_t _bright);
-uint8_t LCD_GetBackLight(void);
-
-void LCD_Fill_Rect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
-
-void LCD_DrawWin(WIN_T *_pWin);
-void LCD_DrawIcon(const ICON_T *_tIcon, FONT_T *_tFont, uint8_t _ucFocusMode);
-void LCD_DrawEdit(EDIT_T *_pEdit);
-void LCD_DrawButton(BUTTON_T *_pBtn);
-void LCD_DrawLabel(LABEL_T *_pLabel);
-void LCD_DrawCheckBox(CHECK_T *_pCheckBox);
-void LCD_DrawGroupBox(GROUP_T *_pBox);
-
-void LCD_DispControl(void *_pControl);
-
-void LCD_DrawIcon32(const ICON_T *_tIcon, FONT_T *_tFont, uint8_t _ucFocusMode);
-void LCD_DrawBmp32(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint8_t *_pBmp);
-
-uint16_t LCD_GetFontWidth(FONT_T *_tFont);
-uint16_t LCD_GetFontHeight(FONT_T *_tFont);
-uint16_t LCD_GetStrWidth(char *_ptr, FONT_T *_tFont);
-void LCD_DispStrEx(uint16_t _usX, uint16_t _usY, char *_ptr, FONT_T *_tFont, uint16_t _Width,
-	uint8_t _Align);
-
-void LCD_SetDirection(uint8_t _dir);
-uint8_t LCD_ButtonTouchDown(BUTTON_T *_btn, uint16_t _usX, uint16_t _usY);
-uint8_t LCD_ButtonTouchRelease(BUTTON_T *_btn, uint16_t _usX, uint16_t _usY);
-void LCD_InitButton(BUTTON_T *_btn, uint16_t _x, uint16_t _y, uint16_t _h, uint16_t _w, char *_pCaption, FONT_T *_pFont);
-
- 
-extern uint16_t g_ChipID;			 
-extern uint16_t g_LcdHeight;		 
-extern uint16_t g_LcdWidth;			 
-extern uint8_t g_LcdDirection;		 
-
-
-
-
-#line 76 "..\\User\\bsp\\bsp.h"
-#line 1 "..\\User\\bsp\\bsp_lcd_st7789v.h"
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
- 
-void ST7789V_SoftReset(void);
-uint32_t ST7789V_ReadID(void);
-uint32_t ST7789V_InitHard(void);
-void ST7789V_DispOn(void);
-void ST7789V_DispOff(void);
-void ST7789V_ClrScr(uint16_t _usColor);
-void ST7789V_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor);
-uint16_t ST7789V_GetPixel(uint16_t _usX, uint16_t _usY);
-void ST7789V_DrawLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usY2 , uint16_t _usColor);
-void ST7789V_DrawHLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usColor);
-void ST7789V_DrawHColorLine(uint16_t _usX1 , uint16_t _usY1, uint16_t _usWidth, const uint16_t *_pColor);
-void ST7789V_DrawHTransLine(uint16_t _usX1 , uint16_t _usY1, uint16_t _usWidth, const uint16_t *_pColor);
-void ST7789V_DrawRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
-void ST7789V_FillRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
-void ST7789V_DrawCircle(uint16_t _usX, uint16_t _usY, uint16_t _usRadius, uint16_t _usColor);
-void ST7789V_DrawBMP(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t *_ptr);
-
-void ST7789V_SetBackLight(uint8_t _bright);
-void ST7789V_SetDirection(uint8_t _ucDir);
-
-void ST7789V_DrawVLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usY2 , uint16_t _usColor);
-
-
-
- 
-#line 77 "..\\User\\bsp\\bsp.h"
-#line 1 "..\\User\\bsp\\bsp_tim_pwm.h"
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-void bsp_SetTIMOutPWM(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIMx, uint8_t _ucChannel,
-	 uint32_t _ulFreq, uint32_t _ulDutyCycle);
-
-void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIMx, uint8_t _ucChannel,
-	 uint32_t _ulFreq, uint32_t _ulDutyCycle);
-	 
-void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPriority, uint8_t _SubPriority);
-
-
-
- 
-#line 78 "..\\User\\bsp\\bsp.h"
-#line 1 "..\\User\\bsp\\bsp_cpu_rtc.h"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-#line 21 "..\\User\\bsp\\bsp_cpu_rtc.h"
-
-typedef struct
-{
-	uint16_t Year;
-	uint8_t Mon;
-	uint8_t Day;	
-	uint8_t Hour;		
-	uint8_t Min;				
-	uint8_t Sec;					
-	uint8_t Week;	
-}RTC_T;
-
-extern RTC_T g_tRTC;
-
-
-void bsp_RTC_InitConfig(void);
-uint8_t IS_RTC_LeapYear(uint16_t _year);
-void bsp_RTC_SetTime(uint8_t _hour, uint8_t _min, uint8_t _sec);
-void bsp_RTC_SetDate(uint16_t _year, uint8_t _mon, uint8_t _day);
-uint32_t bsp_RTC_GetSecond(uint16_t _year, uint8_t _mon, uint8_t _day, uint8_t _hour, uint8_t _min, uint8_t _sec);
-void bsp_RTC_ReadClock(RTC_DateTypeDef *pDate, RTC_TimeTypeDef   *pTime);
-uint8_t bsp_RTC_CalcWeek(uint16_t _year, uint8_t _mon, uint8_t _day);
-void bsp_RTC_GetClock(void);
-
-
-
- 
-
-#line 79 "..\\User\\bsp\\bsp.h"
-#line 1 "..\\User\\bsp\\bsp_user_lib.h"
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-int str_len(char *_str);
-void str_cpy(char *_tar, char *_src);
-int str_cmp(char * s1, char * s2);
-void mem_set(char *_tar, char _data, int _len);
-uint8_t dec_to_bcd(uint8_t dat);
-void int_to_str(int _iNumber, char *_pBuf, unsigned char _len);
-int str_to_int(char *_pStr);
-
-uint16_t BEBufToUint16(uint8_t *_pBuf);
-uint16_t LEBufToUint16(uint8_t *_pBuf);
-
-uint32_t BEBufToUint32(uint8_t *_pBuf);
-uint32_t LEBufToUint32(uint8_t *_pBuf);
-
-uint16_t CRC16_Modbus(uint8_t *_pBuf, uint16_t _usLen) ;
-int32_t  CaculTwoPoint(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x);
-
-
-
- 
-#line 80 "..\\User\\bsp\\bsp.h"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-void bsp_Init(void);
-void bsp_Idle(void);
-void BSP_Tick_Init (void);
-
-
-
- 
-#line 65 "..\\User\\includes.h"
-
- 
-extern void vSetupSysInfoTest(void);
-
-
-
- 
-#line 16 "..\\User\\emWinTask\\App_SysFunction.c"
 #line 1 "..\\User\\emWinTask\\MainTask.h"
 
 
@@ -41191,6 +40427,11 @@ typedef struct {
 	WORD	id;				 
 	WORD	n_rootdir;		 
 	WORD	csize;			 
+
+
+
+
+	WCHAR*	lfnbuf;			 
 #line 114 "..\\FatFS\\src\\ff.h"
 	DWORD	last_clst;		 
 	DWORD	free_clst;		 
@@ -41253,7 +40494,12 @@ typedef struct {
 	DWORD	sect;			 
 	BYTE*	dir;			 
 	BYTE	fn[12];			 
-#line 197 "..\\FatFS\\src\\ff.h"
+
+	DWORD	blk_ofs;		 
+
+
+
+
 } DIR;
 
 
@@ -41266,10 +40512,10 @@ typedef struct {
 	WORD	ftime;			 
 	BYTE	fattrib;		 
 
+	TCHAR	altname[13];			 
+	TCHAR	fname[255 + 1];	 
 
 
-
-	TCHAR	fname[13];		 
 
 } FILINFO;
 
@@ -41357,7 +40603,14 @@ DWORD get_fattime (void);
 
 
  
-#line 313 "..\\FatFS\\src\\ff.h"
+
+WCHAR ff_convert (WCHAR chr, UINT dir);	 
+WCHAR ff_wtoupper (WCHAR chr);			 
+
+
+
+
+
 
  
 #line 321 "..\\FatFS\\src\\ff.h"
@@ -41401,6 +40654,80 @@ DWORD get_fattime (void);
 
 
 #line 42 "..\\User\\emWinTask\\MainTask.h"
+#line 1 "..\\FatFS\\src\\diskio.h"
+
+
+ 
+
+
+
+
+
+
+
+
+#line 13 "..\\FatFS\\src\\diskio.h"
+
+
+ 
+typedef BYTE	DSTATUS;
+
+ 
+typedef enum {
+	RES_OK = 0,		 
+	RES_ERROR,		 
+	RES_WRPRT,		 
+	RES_NOTRDY,		 
+	RES_PARERR		 
+} DRESULT;
+
+
+ 
+ 
+
+
+DSTATUS disk_initialize (BYTE pdrv);
+DSTATUS disk_status (BYTE pdrv);
+DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count);
+DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count);
+DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
+
+
+ 
+
+
+
+
+
+
+ 
+
+ 
+
+
+
+
+
+
+ 
+
+
+
+
+
+ 
+#line 70 "..\\FatFS\\src\\diskio.h"
+
+ 
+
+
+
+
+
+
+
+
+#line 43 "..\\User\\emWinTask\\MainTask.h"
 
 
 
@@ -41432,6 +40759,1109 @@ extern const  GUI_FONT GUI_FontHZ_SimSun_2424;
 
 
  
+#line 54 "..\\User\\bsp\\bsp.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+ 
+#line 1 "..\\User\\bsp\\bsp_dwt.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+void bsp_InitDWT(void);
+void bsp_DelayUS(uint32_t _ulDelayTime);
+void bsp_DelayMS(uint32_t _ulDelayTime);
+
+
+
+ 
+#line 75 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_uart_fifo.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+ 
+typedef enum
+{
+	COM1 = 0,	 
+	COM2 = 1,	 
+	COM3 = 2,	 
+	COM4 = 3,	 
+	COM5 = 4,	 
+}COM_PORT_E;
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+typedef struct
+{
+	USART_TypeDef *uart;		 
+	uint8_t *pTxBuf;			 
+	uint8_t *pRxBuf;			 
+	uint16_t usTxBufSize;		 
+	uint16_t usRxBufSize;		 
+	volatile uint16_t usTxWrite;			 
+	volatile uint16_t usTxRead;			 
+	volatile uint16_t usTxCount;			 
+
+	volatile uint16_t usRxWrite;			 
+	volatile uint16_t usRxRead;			 
+	volatile uint16_t usRxCount;			 
+
+	void (*SendBefor)(void); 	 
+	void (*SendOver)(void); 	 
+	void (*ReciveNew)(uint8_t _byte);	 
+}UART_T;
+
+void bsp_InitUart(void);
+void comSendBuf(COM_PORT_E _ucPort, uint8_t *_ucaBuf, uint16_t _usLen);
+void comSendChar(COM_PORT_E _ucPort, uint8_t _ucByte);
+uint8_t comGetChar(COM_PORT_E _ucPort, uint8_t *_pByte);
+
+void comClearTxFifo(COM_PORT_E _ucPort);
+void comClearRxFifo(COM_PORT_E _ucPort);
+
+void RS485_SendBuf(uint8_t *_ucaBuf, uint16_t _usLen);
+void RS485_SendStr(char *_pBuf);
+
+void bsp_Set485Baud(uint32_t _baud);
+
+void bsp_SetUart1Baud(uint32_t _baud);
+void bsp_SetUart2Baud(uint32_t _baud);
+
+
+
+ 
+#line 76 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_tft_lcd.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+enum
+{
+	IC_5420		= 0x5420,
+	IC_4001		= 0x4001,
+	IC_61509 	= 0xB509,
+	IC_8875 	= 0x0075,	
+	IC_9488 	= 0x9488,
+	IC_7789 	= 0x7789,
+	IC_UNKN 	= 0xEEEE
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+enum
+{
+	CL_WHITE        = (((255 >> 3) << 11) | ((255 >> 2) << 5) | (255 >> 3)),	 
+	CL_BLACK        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (0 >> 3)),	 
+	CL_RED          = (((255 >> 3) << 11) | ((0 >> 2) << 5) | (0 >> 3)),	 
+	CL_GREEN        = (((0 >> 3) << 11) | ((255 >> 2) << 5) | (0 >> 3)),	 
+	CL_BLUE         = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (255 >> 3)),	 
+	CL_YELLOW       = (((255 >> 3) << 11) | ((255 >> 2) << 5) | (0 >> 3)),	 
+
+	CL_GREY			= (((98 >> 3) << 11) | ((98 >> 2) << 5) | (98 >> 3)), 	 
+	CL_GREY1		= (((150 >> 3) << 11) | ((150 >> 2) << 5) | (150 >> 3)), 	 
+	CL_GREY2		= (((180 >> 3) << 11) | ((180 >> 2) << 5) | (180 >> 3)), 	 
+	CL_GREY3		= (((200 >> 3) << 11) | ((200 >> 2) << 5) | (200 >> 3)), 	 
+	CL_GREY4		= (((230 >> 3) << 11) | ((230 >> 2) << 5) | (230 >> 3)), 	 
+
+	CL_BUTTON_GREY	= (((220 >> 3) << 11) | ((220 >> 2) << 5) | (220 >> 3)),  
+
+	CL_MAGENTA      = 0xF81F,	 
+	CL_CYAN         = 0x7FFF,	 
+
+	CL_BLUE1        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (240 >> 3)),		 
+	CL_BLUE2        = (((0 >> 3) << 11) | ((0 >> 2) << 5) | (128 >> 3)),		 
+	CL_BLUE3        = (((68 >> 3) << 11) | ((68 >> 2) << 5) | (255 >> 3)),		 
+	CL_BLUE4        = (((0 >> 3) << 11) | ((64 >> 2) << 5) | (128 >> 3)),		 
+
+	 
+	CL_BTN_FACE		= (((236 >> 3) << 11) | ((233 >> 2) << 5) | (216 >> 3)),	 
+	
+	CL_BTN_FONT		= CL_BLACK,				 
+	
+	CL_BOX_BORDER1	= (((172 >> 3) << 11) | ((168 >> 2) << 5) | (153 >> 3)),	 
+	CL_BOX_BORDER2	= (((255 >> 3) << 11) | ((255 >> 2) << 5) | (255 >> 3)),	 
+
+
+	CL_MASK			= 0x9999	 
+};
+
+ 
+enum
+{
+	ALIGN_LEFT = 0,
+	ALIGN_CENTER = 1,
+	ALIGN_RIGHT = 2
+};
+
+ 
+enum
+{
+	EDIT_BORDER_COLOR		= CL_BLUE2,		 
+	EDIT_BACK_COLOR			= CL_WHITE,			 
+};
+
+ 
+enum
+{
+	BUTTON_BORDER_COLOR		= CL_BLUE2,			 
+	BUTTON_BORDER1_COLOR	= CL_WHITE,			 
+	BUTTON_BORDER2_COLOR	= CL_GREY1,			 
+	BUTTON_BACK_COLOR		= CL_GREY3,			 
+	BUTTON_ACTIVE_COLOR		= CL_CYAN,			 
+};
+
+ 
+enum
+{
+	WIN_BORDER_COLOR	= CL_BLUE4,		 
+	WIN_TITLE_COLOR		= CL_BLUE3,		 
+	WIN_CAPTION_COLOR	= CL_WHITE,		 
+	WIN_BODY_COLOR		= CL_GREY2,		 
+};
+
+ 
+enum
+{
+	CHECK_BOX_BORDER_COLOR	= CL_BLUE2,		 
+	CHECK_BOX_BACK_COLOR	= CL_GREY3,		 
+	CHECK_BOX_CHECKED_COLOR	= CL_RED,		 
+
+	CHECK_BOX_H			= 24,				 
+	CHECK_BOX_W			= 24,				 
+};
+
+ 
+typedef enum
+{
+	FC_ST_12 = 0,		 
+	FC_ST_16,			 
+	FC_ST_24,			 
+	FC_ST_32,			 	
+	
+	FC_RA8875_16,		 
+	FC_RA8875_24,		 
+	FC_RA8875_32		 	
+}FONT_CODE_E;
+
+ 
+typedef struct
+{
+	FONT_CODE_E FontCode;	 
+	uint16_t FrontColor; 
+	uint16_t BackColor;	 
+	uint16_t Space;		 
+}FONT_T;
+
+ 
+typedef enum
+{
+	ID_ICON		= 1,
+	ID_WIN		= 2,
+	ID_LABEL	= 3,
+	ID_BUTTON	= 4,
+	ID_CHECK 	= 5,
+	ID_EDIT 	= 6,
+	ID_GROUP 	= 7,
+}CONTROL_ID_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;		 
+	uint16_t Top;		 
+	uint16_t Height;	 
+	uint16_t Width;		 
+	uint16_t *pBmp;		 
+	char  Text[16];	 
+}ICON_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;
+	uint16_t Top;
+	uint16_t Height;
+	uint16_t Width;
+	uint16_t Color;
+	FONT_T *Font;
+	char *pCaption;
+}WIN_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;			 
+	uint16_t Top;			 
+	uint16_t Height;		 
+	uint16_t Width;			 
+	uint16_t MaxLen;		 
+	FONT_T *Font;			 
+	char  *pCaption;
+}LABEL_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;
+	uint16_t Top;
+	uint16_t Height;
+	uint16_t Width;
+	 
+	FONT_T *Font;			 
+	char *pCaption;
+	uint8_t Focus;			 
+}BUTTON_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;
+	uint16_t Top;
+	uint16_t Height;
+	uint16_t Width;
+	uint16_t Color;
+	FONT_T *Font;			 
+	char   *pCaption;
+	char Text[32];			 
+}EDIT_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;			 
+	uint16_t Top;			 
+	uint16_t Height;		 
+	uint16_t Width;			 
+	uint16_t Color;			 
+	FONT_T *Font;			 
+	char  *pCaption;
+	uint8_t Checked;		 
+}CHECK_T;
+
+ 
+typedef struct
+{
+	uint8_t id;
+	uint16_t Left;			 
+	uint16_t Top;			 
+	uint16_t Height;		 
+	uint16_t Width;			 
+	FONT_T *Font;			 
+	char  *pCaption;
+}GROUP_T;
+
+ 
+
+
+
+
+
+ 
+void LCD_InitHard(void);
+void LCD_GetChipDescribe(char *_str);
+uint16_t LCD_GetHeight(void);
+uint16_t LCD_GetWidth(void);
+void LCD_DispOn(void);
+void LCD_DispOff(void);
+void LCD_ClrScr(uint16_t _usColor);
+void LCD_DispStr(uint16_t _usX, uint16_t _usY, char *_ptr, FONT_T *_tFont);
+void LCD_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor);
+uint16_t LCD_GetPixel(uint16_t _usX, uint16_t _usY);
+void LCD_DrawLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usY2 , uint16_t _usColor);
+void LCD_Draw_VLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usY2, uint16_t _usColor);
+void LCD_Draw_HLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usX2, uint16_t _usColor);
+void LCD_Draw_HColorLine(uint16_t _usX1, uint16_t _usY1, uint16_t _usWidth, const uint16_t * _pColor);
+void LCD_DrawPoints(uint16_t *x, uint16_t *y, uint16_t _usSize, uint16_t _usColor);
+void LCD_DrawRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+void LCD_DrawCircle(uint16_t _usX, uint16_t _usY, uint16_t _usRadius, uint16_t _usColor);
+void LCD_DrawBMP(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t *_ptr);
+void LCD_SetBackLight(uint8_t _bright);
+uint8_t LCD_GetBackLight(void);
+
+void LCD_Fill_Rect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+
+void LCD_DrawWin(WIN_T *_pWin);
+void LCD_DrawIcon(const ICON_T *_tIcon, FONT_T *_tFont, uint8_t _ucFocusMode);
+void LCD_DrawEdit(EDIT_T *_pEdit);
+void LCD_DrawButton(BUTTON_T *_pBtn);
+void LCD_DrawLabel(LABEL_T *_pLabel);
+void LCD_DrawCheckBox(CHECK_T *_pCheckBox);
+void LCD_DrawGroupBox(GROUP_T *_pBox);
+
+void LCD_DispControl(void *_pControl);
+
+void LCD_DrawIcon32(const ICON_T *_tIcon, FONT_T *_tFont, uint8_t _ucFocusMode);
+void LCD_DrawBmp32(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint8_t *_pBmp);
+
+uint16_t LCD_GetFontWidth(FONT_T *_tFont);
+uint16_t LCD_GetFontHeight(FONT_T *_tFont);
+uint16_t LCD_GetStrWidth(char *_ptr, FONT_T *_tFont);
+void LCD_DispStrEx(uint16_t _usX, uint16_t _usY, char *_ptr, FONT_T *_tFont, uint16_t _Width,
+	uint8_t _Align);
+
+void LCD_SetDirection(uint8_t _dir);
+uint8_t LCD_ButtonTouchDown(BUTTON_T *_btn, uint16_t _usX, uint16_t _usY);
+uint8_t LCD_ButtonTouchRelease(BUTTON_T *_btn, uint16_t _usX, uint16_t _usY);
+void LCD_InitButton(BUTTON_T *_btn, uint16_t _x, uint16_t _y, uint16_t _h, uint16_t _w, char *_pCaption, FONT_T *_pFont);
+
+ 
+extern uint16_t g_ChipID;			 
+extern uint16_t g_LcdHeight;		 
+extern uint16_t g_LcdWidth;			 
+extern uint8_t g_LcdDirection;		 
+
+
+
+
+#line 77 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_lcd_st7789v.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+ 
+void ST7789V_SoftReset(void);
+uint32_t ST7789V_ReadID(void);
+uint32_t ST7789V_InitHard(void);
+void ST7789V_DispOn(void);
+void ST7789V_DispOff(void);
+void ST7789V_ClrScr(uint16_t _usColor);
+void ST7789V_PutPixel(uint16_t _usX, uint16_t _usY, uint16_t _usColor);
+uint16_t ST7789V_GetPixel(uint16_t _usX, uint16_t _usY);
+void ST7789V_DrawLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usY2 , uint16_t _usColor);
+void ST7789V_DrawHLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usX2 , uint16_t _usColor);
+void ST7789V_DrawHColorLine(uint16_t _usX1 , uint16_t _usY1, uint16_t _usWidth, const uint16_t *_pColor);
+void ST7789V_DrawHTransLine(uint16_t _usX1 , uint16_t _usY1, uint16_t _usWidth, const uint16_t *_pColor);
+void ST7789V_DrawRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+void ST7789V_FillRect(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t _usColor);
+void ST7789V_DrawCircle(uint16_t _usX, uint16_t _usY, uint16_t _usRadius, uint16_t _usColor);
+void ST7789V_DrawBMP(uint16_t _usX, uint16_t _usY, uint16_t _usHeight, uint16_t _usWidth, uint16_t *_ptr);
+
+void ST7789V_SetBackLight(uint8_t _bright);
+void ST7789V_SetDirection(uint8_t _ucDir);
+
+void ST7789V_DrawVLine(uint16_t _usX1 , uint16_t _usY1 , uint16_t _usY2 , uint16_t _usColor);
+
+
+
+ 
+#line 78 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_tim_pwm.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+void bsp_SetTIMOutPWM(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIMx, uint8_t _ucChannel,
+	 uint32_t _ulFreq, uint32_t _ulDutyCycle);
+
+void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIMx, uint8_t _ucChannel,
+	 uint32_t _ulFreq, uint32_t _ulDutyCycle);
+	 
+void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPriority, uint8_t _SubPriority);
+
+
+
+ 
+#line 79 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_cpu_rtc.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+#line 21 "..\\User\\bsp\\bsp_cpu_rtc.h"
+
+typedef struct
+{
+	uint16_t Year;
+	uint8_t Mon;
+	uint8_t Day;	
+	uint8_t Hour;		
+	uint8_t Min;				
+	uint8_t Sec;					
+	uint8_t Week;	
+}RTC_T;
+
+extern RTC_T g_tRTC;
+
+
+void bsp_InitRTC(void);
+uint8_t IS_RTC_LeapYear(uint16_t _year);
+void bsp_RTC_SetTime(uint8_t _hour, uint8_t _min, uint8_t _sec);
+void bsp_RTC_SetDate(uint16_t _year, uint8_t _mon, uint8_t _day);
+uint32_t bsp_RTC_GetSecond(uint16_t _year, uint8_t _mon, uint8_t _day, uint8_t _hour, uint8_t _min, uint8_t _sec);
+void bsp_RTC_ReadClock(RTC_DateTypeDef *pDate, RTC_TimeTypeDef   *pTime);
+uint8_t bsp_RTC_CalcWeek(uint16_t _year, uint8_t _mon, uint8_t _day);
+void bsp_RTC_GetClock(void);
+
+
+
+ 
+
+#line 80 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_user_lib.h"
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+int str_len(char *_str);
+void str_cpy(char *_tar, char *_src);
+int str_cmp(char * s1, char * s2);
+void mem_set(char *_tar, char _data, int _len);
+uint8_t dec_to_bcd(uint8_t dat);
+void int_to_str(int _iNumber, char *_pBuf, unsigned char _len);
+int str_to_int(char *_pStr);
+
+uint16_t BEBufToUint16(uint8_t *_pBuf);
+uint16_t LEBufToUint16(uint8_t *_pBuf);
+
+uint32_t BEBufToUint32(uint8_t *_pBuf);
+uint32_t LEBufToUint32(uint8_t *_pBuf);
+
+uint16_t CRC16_Modbus(uint8_t *_pBuf, uint16_t _usLen) ;
+int32_t  CaculTwoPoint(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x);
+
+
+
+ 
+#line 81 "..\\User\\bsp\\bsp.h"
+
+#line 1 "..\\User\\bsp\\bsp_spi_flash.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+ 
+enum
+{
+	SST25VF016B_ID = 0xBF2541,
+	MX25L1606E_ID  = 0xC22015,
+	W25Q64BV_ID    = 0xEF4017
+};
+
+typedef struct
+{
+	uint32_t ChipID;		 
+	char ChipName[16];		 
+	uint32_t TotalSize;		 
+	uint16_t PageSize;		 
+}SFLASH_T;
+
+void bsp_InitSFlash(void);
+uint32_t sf_ReadID(void);
+void sf_EraseChip(void);
+void sf_EraseSector(uint32_t _uiSectorAddr);
+void sf_PageWrite(uint8_t * _pBuf, uint32_t _uiWriteAddr, uint16_t _usSize);
+uint8_t sf_WriteBuffer(uint8_t* _pBuf, uint32_t _uiWriteAddr, uint16_t _usWriteSize);
+void sf_ReadBuffer(uint8_t * _pBuf, uint32_t _uiReadAddr, uint32_t _uiSize);
+
+extern SFLASH_T g_tSF;
+
+
+
+DSTATUS SPI_disk_status(void);
+DSTATUS SPI_disk_initialize(void);
+
+DRESULT SPI_disk_read(
+       	uint8_t *buff,		 
+	uint32_t sector,	 
+	uint32_t count	);	 
+
+DRESULT SPI_disk_write(
+       	const uint8_t *buff,		 
+	uint32_t sector,	 
+	uint32_t count	);	 
+
+DRESULT SPI_disk_ioctl(
+	uint8_t cmd,		 
+	void *buff );	 
+
+
+
+
+ 
+#line 83 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_adc.h"
+
+
+
+
+
+
+void bsp_InitADC(void);
+
+int8_t getCurent_IntTempValue(void);
+int8_t getCurent_ExtTempValue(void);
+uint8_t getLightVLuxValue(void);
+uint16_t getMicAmp_dBValue(void);
+
+
+
+
+#line 84 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_timer.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+ 
+
+
+ 
+typedef enum
+{
+	TMR_ONCE_MODE = 0,		 
+	TMR_AUTO_MODE = 1		 
+}TMR_MODE_E;
+
+ 
+typedef struct
+{
+	volatile uint8_t Mode;		 
+	volatile uint8_t Flag;		 
+	volatile uint32_t Count;	 
+	volatile uint32_t PreLoad;	 
+}SOFT_TMR;
+
+ 
+void bsp_InitTimer(void);
+
+
+void bsp_StartTimer(uint8_t _id, uint32_t _period);
+void bsp_StartAutoTimer(uint8_t _id, uint32_t _period);
+void bsp_StopTimer(uint8_t _id);
+uint8_t bsp_CheckTimer(uint8_t _id);
+int32_t bsp_GetRunTime(void);
+
+
+
+ 
+#line 85 "..\\User\\bsp\\bsp.h"
+#line 1 "..\\User\\bsp\\bsp_key.h"
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+typedef enum
+{
+	KID_K1 = 0,
+	KID_K2,
+	KID_K3,
+	KID_JOY_U,
+	KID_JOY_D,
+	KID_JOY_L,
+	KID_JOY_R,
+	KID_JOY_OK
+}KEY_ID_E;
+
+
+
+
+
+ 
+
+
+
+
+
+ 
+typedef struct
+{
+	 
+	uint8_t (*IsKeyDownFunc)(void);  
+
+	uint8_t  Count;			 
+	uint16_t LongCount;		 
+	uint16_t LongTime;		 
+	uint8_t  State;			 
+	uint8_t  RepeatSpeed;	 
+	uint8_t  RepeatCount;	 
+}KEY_T;
+
+
+
+
+
+
+
+ 
+typedef enum
+{
+	KEY_NONE = 0,			 
+
+	KEY_1_DOWN,				 
+	KEY_1_UP,				 
+	KEY_1_LONG,				 
+
+	KEY_2_DOWN,				 
+	KEY_2_UP,				 
+	KEY_2_LONG,				 
+
+	KEY_3_DOWN,				 
+	KEY_3_UP,				 
+	KEY_3_LONG,				 
+
+	KEY_4_DOWN,				 
+	KEY_4_UP,				 
+	KEY_4_LONG,				 
+
+	KEY_5_DOWN,				 
+	KEY_5_UP,				 
+	KEY_5_LONG,				 
+
+	KEY_6_DOWN,				 
+	KEY_6_UP,				 
+	KEY_6_LONG,				 
+
+	KEY_7_DOWN,				 
+	KEY_7_UP,				 
+	KEY_7_LONG,				 
+
+	KEY_8_DOWN,				 
+	KEY_8_UP,				 
+	KEY_8_LONG,				 
+
+	 
+	KEY_9_DOWN,				 
+	KEY_9_UP,				 
+	KEY_9_LONG,				 
+
+	KEY_10_DOWN,			 
+	KEY_10_UP,				 
+	KEY_10_LONG,			 
+}KEY_ENUM;
+
+ 
+
+typedef struct
+{
+	uint8_t Buf[10];		 
+	uint8_t Read;					 
+	uint8_t Write;					 
+	uint8_t Read2;					 
+}KEY_FIFO_T;
+
+ 
+void bsp_InitKey(void);
+void bsp_KeyScan(void);
+void bsp_PutKey(uint8_t _KeyCode);
+uint8_t bsp_GetKey(void);
+uint8_t bsp_GetKey2(void);
+uint8_t bsp_GetKeyState(KEY_ID_E _ucKeyID);
+void bsp_SetKeyParam(uint8_t _ucKeyID, uint16_t _LongTime, uint8_t  _RepeatSpeed);
+void bsp_ClearKey(void);
+
+
+
+ 
+#line 86 "..\\User\\bsp\\bsp.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+void bsp_Init(void);
+void bsp_Idle(void);
+void BSP_Tick_Init (void);
+void bsp_LedToggle(uint8_t led_no);
+
+
+
+
+
+ 
+#line 65 "..\\User\\includes.h"
+
+typedef  struct {
+         
+	uint16_t Year;
+	uint8_t Mon;
+	uint8_t Day;	
+	uint8_t Hour;		
+	uint8_t Min;				
+	uint8_t Sec;					
+	uint8_t Week;	
+
+         
+        uint8_t Temp;
+        
+         
+        uint16_t LightVal;
+        
+         
+        uint8_t Nois_dBVal;
+
+} SLEEP_DATA_T;
+
+ 
+extern void vSetupSysInfoTest(void);
+
+
+
+ 
+#line 16 "..\\User\\emWinTask\\App_SysFunction.c"
 #line 17 "..\\User\\emWinTask\\App_SysFunction.c"
 
 

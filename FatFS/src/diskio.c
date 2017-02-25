@@ -8,11 +8,13 @@
 /*-----------------------------------------------------------------------*/
 
 #include "diskio.h"		/* FatFs lower layer API */
+#include "bsp.h"
 
 /* Definitions of physical drive number for each drive */
 #define DEV_RAM		0	/* Example: Map Ramdisk to physical drive 0 */
 #define DEV_MMC		1	/* Example: Map MMC/SD card to physical drive 1 */
 #define DEV_USB		2	/* Example: Map USB MSD to physical drive 2 */
+#define DEV_SPI		3
 
 
 /*-----------------------------------------------------------------------*/
@@ -47,6 +49,13 @@ DSTATUS disk_status (
 		// translate the reslut code here
 
 		return stat;
+        case DEV_SPI :
+            stat = SPI_disk_status();
+        
+            // translate the reslut code here
+        
+            return stat;
+
 	}
 	return STA_NOINIT;
 }
@@ -85,6 +94,14 @@ DSTATUS disk_initialize (
 		// translate the reslut code here
 
 		return stat;
+
+        case DEV_SPI :
+            stat = SPI_disk_initialize();
+        
+            // translate the reslut code here
+        
+            return stat;
+
 	}
 	return STA_NOINIT;
 }
@@ -128,6 +145,14 @@ DRESULT disk_read (
 		// translate the arguments here
 
 		//result = USB_disk_read(buff, sector, count);
+
+		// translate the reslut code here
+
+		return res;
+	case DEV_SPI :
+		// translate the arguments here
+
+		res = SPI_disk_read(buff, sector, count);
 
 		// translate the reslut code here
 
@@ -180,6 +205,16 @@ DRESULT disk_write (
 		// translate the reslut code here
 
 		return res;
+
+	case DEV_SPI :
+		// translate the arguments here
+
+		res = SPI_disk_write(buff, sector, count);
+
+		// translate the reslut code here
+
+		return res;
+
 	}
 
 	return RES_PARERR;
@@ -217,6 +252,11 @@ DRESULT disk_ioctl (
 
 		// Process of the command the USB drive
 
+		return res;
+	case DEV_SPI :
+
+		// Process of the command the USB drive
+                res = SPI_disk_ioctl(cmd, buff);
 		return res;
 	}
 

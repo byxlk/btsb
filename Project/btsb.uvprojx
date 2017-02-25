@@ -644,6 +644,11 @@
               <FileType>5</FileType>
               <FilePath>..\FatFS\src\integer.h</FilePath>
             </File>
+            <File>
+              <FileName>cc936.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\FatFS\src\option\cc936.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -724,6 +729,11 @@
               <FileType>5</FileType>
               <FilePath>..\User\includes.h</FilePath>
             </File>
+            <File>
+              <FileName>spi_flash_fatfs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\spi_flash_fatfs.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -768,6 +778,26 @@
               <FileName>bsp_user_lib.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\bsp\bsp_user_lib.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_spi_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_spi_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_key.c</FilePath>
             </File>
           </Files>
         </Group>

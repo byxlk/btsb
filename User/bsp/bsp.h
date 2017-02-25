@@ -78,12 +78,15 @@
 #include "bsp_tim_pwm.h"
 #include "bsp_cpu_rtc.h"
 #include "bsp_user_lib.h"
-#include "bsp_spi_bus.h"
+//#include "bsp_spi_bus.h"
+#include "bsp_spi_flash.h"
 #include "bsp_adc.h"
+#include "bsp_timer.h"
+#include "bsp_key.h"
 
 //#include "bsp_led.h"
-//#include "bsp_timer.h"
-//#include "bsp_key.h"
+
+
 
 
 //#include "bsp_msg.h"
@@ -147,6 +150,9 @@
 void bsp_Init(void);
 void bsp_Idle(void);
 void BSP_Tick_Init (void);
+void bsp_LedToggle(uint8_t led_no);
+
+
 
 #endif
 
