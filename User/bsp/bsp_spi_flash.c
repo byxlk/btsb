@@ -20,74 +20,52 @@
 
 #include "bsp.h"
 
-/*
-	STM32F4XX 时钟计算.
-		HCLK = 168M
-		PCLK1 = HCLK / 4 = 42M
-		PCLK2 = HCLK / 2 = 84M
+/***************************************************************************************
+**	STM32F4XX 时钟计算.
+**		HCLK = 168M
+**		PCLK1 = HCLK / 4 = 42M
+**		PCLK2 = HCLK / 2 = 84M
+**
+**		SPI2、SPI3 在 PCLK1, 时钟42M
+**		SPI1       在 PCLK2, 时钟84M
+**
+**		STM32F4 支持的最大SPI时钟为 37.5 Mbits/S, 因此需要分频。
+**
+**		安富莱STM32-V5 开发板口线分配：  串行Flash型号为 W25Q64BVSSIG (80MHz)
+**		PB3/SPI3_SCK/SPI1_SCK
+**		PB4/SPI3_MISO/SPI1_MISO
+**		PB5/SPI3_MOSI/SPI1_MOSI
+**		PF8/SF_CS
+**
+**		STM32硬件SPI接口 = SPI3 或者 SPI1
+**
+**		由于SPI1的时钟源是84M, SPI3的时钟源是42M。为了获得更快的速度，软件上选择SPI1。
+*****************************************************************************************/
+//#define SPI_FLASH			SPI3
+#define SPI_FLASH			SPI1
 
-		SPI2、SPI3 在 PCLK1, 时钟42M
-		SPI1       在 PCLK2, 时钟84M
+//#define ENABLE_SPI_RCC() 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE)
+#define ENABLE_SPI_RCC() 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE)
 
-		STM32F4 支持的最大SPI时钟为 37.5 Mbits/S, 因此需要分频。
-*/
+/***************************************************************
+**	【SPI时钟最快是2分频，不支持不分频】
+**	如果是SPI1，2分频时SCK时钟 = 42M，4分频时SCK时钟 = 21M
+**	如果是SPI3, 2分频时SCK时钟 = 21M
+***************************************************************/
+#define SPI_BAUD			SPI_BaudRatePrescaler_4
 
-#ifdef STM32_X3		/* 安富莱 STM32-X3 开发板 */
-	/*
-		安富莱STM32-X3 口线分配： 串行Flash型号为 W25Q64BVSSIG (80MHz)
-		PB12 = CS
-		PB13 = SCK
-		PB14 = MISO
-		PB15 = MOSI
-
-		STM32硬件SPI接口 = SPI2
-	*/
-	#define SPI_FLASH			SPI2
-
-	#define ENABLE_SPI_RCC() 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI2, ENABLE)
-
-	#define SPI_BAUD			SPI_BaudRatePrescaler_1		/* 选择2分频时, SCK时钟 = 21M */
-
-	/* 片选口线置低选中  */
-	#define SF_CS_LOW()			GPIOB->BSRRH = GPIO_Pin_12
-
-	/* 片选口线置高不选中 */
-	#define SF_CS_HIGH()		GPIOB->BSRRL = GPIO_Pin_12
-#else
-	/*
-		安富莱STM32-V5 开发板口线分配：  串行Flash型号为 W25Q64BVSSIG (80MHz)
-		PB3/SPI3_SCK/SPI1_SCK
-		PB4/SPI3_MISO/SPI1_MISO
-		PB5/SPI3_MOSI/SPI1_MOSI
-		PF8/SF_CS
-
-		STM32硬件SPI接口 = SPI3 或者 SPI1
-
-		由于SPI1的时钟源是84M, SPI3的时钟源是42M。为了获得更快的速度，软件上选择SPI1。
-	*/
-	//#define SPI_FLASH			SPI3
-	#define SPI_FLASH			SPI1
-
-	//#define ENABLE_SPI_RCC() 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE)
-	#define ENABLE_SPI_RCC() 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE)
-
-	/*
-		【SPI时钟最快是2分频，不支持不分频】
-		如果是SPI1，2分频时SCK时钟 = 42M，4分频时SCK时钟 = 21M
-		如果是SPI3, 2分频时SCK时钟 = 21M
-	*/
-	#define SPI_BAUD			SPI_BaudRatePrescaler_4
-
-	/* 片选GPIO端口  */
-	#define SF_CS_GPIO			GPIOF
-	#define SF_CS_PIN			GPIO_Pin_8
-#endif
-
-/* 片选口线置低选中  */
-#define SF_CS_LOW()       SF_CS_GPIO->BSRRH = SF_CS_PIN
+/* 片选GPIO端口  */
+#define SF_CS_GPIO			GPIOA
+#define SF_CS_PIN			GPIO_Pin_4
 
 /* 片选口线置高不选中 */
-#define SF_CS_HIGH()      SF_CS_GPIO->BSRRL = SF_CS_PIN
+/* Deselect sFLASH: Chip Select pin high */
+#define SF_CS_HIGH() GPIO_SetBits(SF_CS_GPIO, SF_CS_PIN)
+
+/* 片选口线置低选中  */
+/* Select Flash: Chip Select pin low */
+#define SF_CS_LOW() GPIO_ResetBits(SF_CS_GPIO, SF_CS_PIN)
+
 
 #define CMD_AAI       0xAD  	/* AAI 连续编程指令(FOR SST25VF016B) */
 #define CMD_DISWR	  0x04		/* 禁止写, 退出AAI状态 */
@@ -122,107 +100,52 @@ static uint8_t s_spiBuf[4*1024];	/* 用于写函数，先读出整个page，修改缓冲区后，再
 *********************************************************************************************************
 *	函 数 名: bsp_InitSpiFlash
 *	功能说明: 初始化串行Flash硬件接口（配置STM32的SPI时钟、GPIO)
-*	形    参:  无
+*              只包括 SCK、 MOSI、 MISO口线的配置。不包括片选CS，
+*              也不包括外设芯片特有的INT、BUSY等
+*	形    参: 无
 *	返 回 值: 无
 *********************************************************************************************************
 */
 void bsp_InitSFlash(void)
 {
+	/***************************************************************************
+	**	串行Flash型号为 W25Q64BVSSIG (80MHz)
+	**	PA5/SPI1_SCK
+	**	PA6/SPI1_MISO
+	**	PA7/SPI1_MOSI
+	**	PA4/SPI1_CS
+     **
+	**	STM32硬件SPI接口 = SPI1
+	****************************************************************************/
+	GPIO_InitTypeDef GPIO_InitStructure;
 
-#ifdef STM32_X3		/* 安富莱 STM32-X3 开发板 */
-	/*
-		安富莱STM32-X4 口线分配： 串行Flash型号为 W25Q64BVSSIG (80MHz)
-		PB12 = CS
-		PB13 = SCK
-		PB14 = MISO
-		PB15 = MOSI
+	/* 使能GPIO 时钟 */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
-		STM32硬件SPI接口 = SPI2
-	*/
-	{
-		GPIO_InitTypeDef GPIO_InitStructure;
+	/* 配置 SCK, MISO 、 MOSI 为复用功能 */
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_SPI1);
 
-		/* 使能GPIO 时钟 */
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
 
-		/* 配置 SCK, MISO 、 MOSI 为复用功能 */
-		GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_SPI2);
-		GPIO_PinAFConfig(GPIOB, GPIO_PinSource14, GPIO_AF_SPI2);
-		GPIO_PinAFConfig(GPIOB, GPIO_PinSource15, GPIO_AF_SPI2);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
+	GPIO_Init(SF_CS_GPIO, &GPIO_InitStructure);
 
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-		GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+	/* 配置片选口线为推挽输出模式 */
 
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14;
-		GPIO_Init(GPIOB, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = SF_CS_PIN;  
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(SF_CS_GPIO, &GPIO_InitStructure);
 
-		/* 配置片选口线为推挽输出模式 */
-		SF_CS_HIGH();		/* 片选置高，不选中 */
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
-		GPIO_Init(GPIOB, &GPIO_InitStructure);
-	}
-#else
-	/*
-		安富莱STM32-V5 开发板口线分配：  串行Flash型号为 W25Q64BVSSIG (80MHz)
-		PB3/SPI3_SCK
-		PB4/SPI3_MISO
-		PB5/SPI3_MOSI
-		PF8/SF_CS
+	SF_CS_HIGH();		/* 片选置高，不选中 */
 
-		STM32硬件SPI接口 = SPI3
-	*/
-	{
-		GPIO_InitTypeDef GPIO_InitStructure;
-
-		/* 使能GPIO 时钟 */
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOF, ENABLE);
-
-		/* 配置 SCK, MISO 、 MOSI 为复用功能 */
-		//GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_SPI3);
-		//GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_SPI3);
-		//GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_SPI3);
-		/* 配置 SCK, MISO 、 MOSI 为复用功能 */
-		GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_SPI1);
-		GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_SPI1);
-		GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_SPI1);
-
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-		GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
-
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
-		GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-		/* 配置片选口线为推挽输出模式 */
-		SF_CS_HIGH();		/* 片选置高，不选中 */
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-		GPIO_Init(GPIOF, &GPIO_InitStructure);
-	}
-#endif
-
-	/* 配置SPI硬件参数用于访问串行Flash */
-	bsp_CfgSPIForSFlash();
-
-	sf_ReadInfo();				/* 自动识别芯片型号 */
-
-	SF_CS_LOW();				/* 软件方式，使能串行Flash片选 */
-	sf_SendByte(CMD_DISWR);		/* 发送禁止写入的命令,即使能软件写保护 */
-	SF_CS_HIGH();				/* 软件方式，禁能串行Flash片选 */
-
-	sf_WaitForWriteEnd();		/* 等待串行Flash内部操作完成 */
-
-	sf_WriteStatus(0);			/* 解除所有BLOCK的写保护 */
 }
 
 /*
@@ -252,7 +175,7 @@ static void bsp_CfgSPIForSFlash(void)
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;			/* 片选控制方式：软件控制 */
 
 	/* 设置波特率预分频系数 */
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BAUD;
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
 
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;	/* 数据位传输次序：高位先传 */
 	SPI_InitStructure.SPI_CRCPolynomial = 7;			/* CRC多项式寄存器，复位后为7。本例程不用 */
@@ -894,6 +817,19 @@ DSTATUS SPI_disk_initialize(void)
 {
 
     bsp_InitSFlash();
+
+    /* 配置SPI硬件参数用于访问串行Flash */
+    bsp_CfgSPIForSFlash();
+
+    sf_ReadInfo();				/* 自动识别芯片型号 */
+
+    SF_CS_LOW();				/* 软件方式，使能串行Flash片选 */
+    sf_SendByte(CMD_DISWR);		/* 发送禁止写入的命令,即使能软件写保护 */
+    SF_CS_HIGH();				/* 软件方式，禁能串行Flash片选 */
+
+    sf_WaitForWriteEnd();		/* 等待串行Flash内部操作完成 */
+
+    sf_WriteStatus(0);			/* 解除所有BLOCK的写保护 */
 
     return RES_OK;
 }

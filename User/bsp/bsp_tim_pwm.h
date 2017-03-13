@@ -22,6 +22,10 @@ void bsp_SetTIMOutPWM_N(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIM
 	 
 void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq, uint8_t _PreemptionPriority, uint8_t _SubPriority);
 
+void bsp_InitTimCounter(void);
+
+uint16_t bsp_GetMicdBValue(void);
+
 #endif
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

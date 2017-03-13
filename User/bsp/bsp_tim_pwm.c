@@ -691,4 +691,91 @@ void bsp_SetTIMforInt(TIM_TypeDef* TIMx, uint32_t _ulFreq,
 	}
 }
 
+
+void bsp_SetTimInputCount(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, TIM_TypeDef* TIMx)
+{
+    /************************************************************************* 
+   ** TIM3_CH2 为脉冲输入口
+   ** 1. 配置GPIO_GPIOA_PIN7 输入
+   ** 2. 配置TIM3 计数器在TI2 端的上升沿计数:
+   ** 1). TIMx_CCMR1: CC2S =01; 配置通道2检测TI2输入的上升沿
+   ** 2). TIMx_CCMR1:IC2F =000; 选择输入滤波器带宽
+   ** 3). TIMx_CCER: CC2P =0;  配置上升沿极性
+   ** 4). TIMx_SMCR: SMS =111;  选择定时器外部时钟模式1 
+   ** 5). TIMx_SMCR: TS =110;  选择TI2作为触发输入源
+   ** 6). TIMx_CR1: CEN? =1; 启动计数器
+   *************************************************************************/
+
+    GPIO_InitTypeDef GPIO_InitStructure;
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+    
+    RCC_APB2PeriphClockCmd(bsp_GetRCCofGPIO(GPIOx), ENABLE);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOx, &GPIO_InitStructure);
+
+    RCC_APB1PeriphClockCmd(bsp_GetRCCofTIM(TIMx), ENABLE);
+
+    TIM_TimeBaseStructure.TIM_Period = 0xFFFF; 
+    TIM_TimeBaseStructure.TIM_Prescaler = 0x00; 
+    TIM_TimeBaseStructure.TIM_ClockDivision = 0x0; /*定时器时钟(CK_INT)频率与数字滤波器(ETR,TIx)
+                                                 使用的采样频率之间的分频比为1*/
+    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up; 
+    TIM_TimeBaseInit( TIMx, &TIM_TimeBaseStructure); // Time base configuration? 
+ 
+    /********************************************************************
+   ** tmpccmr1 |= (uint16_t)(TIM_ICFilter << 12);**** // CCMR1_IC2F
+   ** tmpccmr1 |= (uint16_t)(TIM_ICSelection << 8); // CCMR1_CC2S
+   ** 由TIM_TIxExternalCLK1Source_TI2决定了
+   ** TIM_ICSelection=TIM_ICSelection_DirectTI:**? CCMR1_CC2S = 01;
+   ** TIM_ICPolarity_Rising******** = CCER_CC2P
+   ** TIM_TIxExternalCLK1Source_TI2 = TIM_SMCR_TS
+   ** 该函数定义了TIM_SlaveMode_External1;外部时钟模式1
+   ********************************************************************/
+
+    TIM_TIxExternalClockConfig(TIMx, TIM_TIxExternalCLK1Source_TI2, TIM_ICPolarity_Rising, 0);
+
+    TIM_SetCounter(TIMx, 0);// 清零计数器CNT
+
+    TIM_Cmd(TIMx, ENABLE);
+}
+
+void bsp_InitTimCounter(void)
+{
+    bsp_SetTimInputCount(GPIOA, GPIO_Pin_8, TIM3);
+    TIM_SetCounter(TIM3, 0); // 清零计数器CNT
+    TIM_Cmd(TIM3,ENABLE);
+}
+
+uint16_t bsp_GetMicdBValue(void)
+{
+    uint16_t db_value = 0;
+    uint16_t CountPulse = 0;
+
+    TIM_Cmd(TIM3,DISABLE);
+    CountPulse = TIM_GetCounter(TIM3) * 20;
+    TIM_SetCounter(TIM3, 0); // 清零计数器CNT
+    TIM_Cmd(TIM3,ENABLE);
+
+    
+    if((CountPulse >= 20) && (CountPulse <= 40))
+        db_value = 1100 - CountPulse * 10;
+    else if((CountPulse > 40) && (CountPulse <= 100))
+        db_value = 533-  CountPulse / 3;
+    else if((CountPulse > 100) && (CountPulse <= 500))
+        db_value = 503 - 11 * CountPulse / 40;
+    else if((CountPulse > 500) && (CountPulse <= 1000))
+        db_value = 380 + CountPulse /50;
+    else if((CountPulse > 1000) && (CountPulse <= 300))
+        db_value = 450 - CountPulse / 20;
+    else if((CountPulse > 3000) && (CountPulse <= 10000))
+        db_value = 215 + CountPulse / 35;
+
+    return db_value;
+}
+
+
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) ********************************/

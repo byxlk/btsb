@@ -147,6 +147,7 @@ static void vTaskTest(void *pvParameters)
    #endif
         GuiTaskTest();
         //bsp_RTC_Test();
+        //DemoFatFS();
     }  
 }
 /*

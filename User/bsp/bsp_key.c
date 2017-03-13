@@ -23,100 +23,76 @@
 
 #include "bsp.h"
 
+/**********************************************************************************************
+**	该程序适用于安富莱STM32-X3、STM32-V5开发板
+**
+**	如果用于其它硬件，请修改GPIO定义和 IsKeyDown1 - IsKeyDown8 函数
+**
+**	如果用户的按键个数小于8个，你可以将多余的按键全部定义为和第1个按键一样，并不影响程序功能
+**	#define KEY_COUNT    8	  这个在 bsp_key.h 文件中定义
+***********************************************************************************************/
+/* STM32_V5 */
 /*
-	该程序适用于安富莱STM32-X3、STM32-V5开发板
-
-	如果用于其它硬件，请修改GPIO定义和 IsKeyDown1 - IsKeyDown8 函数
-
-	如果用户的按键个数小于8个，你可以将多余的按键全部定义为和第1个按键一样，并不影响程序功能
-	#define KEY_COUNT    8	  这个在 bsp_key.h 文件中定义
+	安富莱STM32-V5 按键口线分配：
+		K1 键      : PI8   (低电平表示按下)
+		K2 键      : PC13  (低电平表示按下)
+		K3 键      : PI11  (低电平表示按下)
+		摇杆UP键   : PH2   (低电平表示按下)
+		摇杆DOWN键 : PH3   (低电平表示按下)
+		摇杆LEFT键 : PF11  (低电平表示按下)
+		摇杆RIGHT键: PG7   (低电平表示按下)
+		摇杆OK键   : PH15  (低电平表示按下)
 */
+#if 0
+/* 按键口对应的RCC时钟 */
+#define RCC_ALL_KEY 	(RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOF | RCC_AHB1Periph_GPIOH | RCC_AHB1Periph_GPIOI | RCC_AHB1Periph_GPIOG)
 
-#ifdef STM32_X3		/* 安富莱 STM32-X3 开发板 */
-	/*
-		安富莱STM32-X 按键口线分配：
-			K1键       : PC13 (低电平表示按下)
-			K2键       : PC0  (低电平表示按下)
-			K3键       : PC1  (低电平表示按下)
-			摇杆UP键   : PC2  (低电平表示按下)
-			摇杆DOWN键 : PC3  (低电平表示按下)
-			摇杆LEFT键 : PC4  (低电平表示按下)
-			摇杆RIGHT键: PA0  (低电平表示按下)
-			摇杆OK键   : PA1  (低电平表示按下)
-	*/
-	#define RCC_ALL_KEY 	(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOC)	/* 按键口对应的RCC时钟 */
+#define GPIO_PORT_K1    GPIOI
+#define GPIO_PIN_K1	    GPIO_Pin_8
 
-	#define GPIO_PORT_K1    GPIOC
-	#define GPIO_PIN_K1	    GPIO_Pin_13
+#define GPIO_PORT_K2    GPIOC
+#define GPIO_PIN_K2	    GPIO_Pin_13
 
-	#define GPIO_PORT_K2    GPIOC
-	#define GPIO_PIN_K2	    GPIO_Pin_0
+#define GPIO_PORT_K3    GPIOI
+#define GPIO_PIN_K3	    GPIO_Pin_11
 
-	#define GPIO_PORT_K3    GPIOC
-	#define GPIO_PIN_K3	    GPIO_Pin_1
+#define GPIO_PORT_K4    GPIOH
+#define GPIO_PIN_K4	    GPIO_Pin_2
 
-	#define GPIO_PORT_K4    GPIOC
-	#define GPIO_PIN_K4	    GPIO_Pin_3
+#define GPIO_PORT_K5    GPIOH
+#define GPIO_PIN_K5	    GPIO_Pin_3
 
-	#define GPIO_PORT_K5    GPIOC
-	#define GPIO_PIN_K5	    GPIO_Pin_4
+#define GPIO_PORT_K6    GPIOF
+#define GPIO_PIN_K6	    GPIO_Pin_11
 
-	#define GPIO_PORT_K6    GPIOC
-	#define GPIO_PIN_K6	    GPIO_Pin_2
+#define GPIO_PORT_K7    GPIOG
+#define GPIO_PIN_K7	    GPIO_Pin_7
 
-	#define GPIO_PORT_K7    GPIOA
-	#define GPIO_PIN_K7	    GPIO_Pin_1
+#define GPIO_PORT_K8    GPIOH
+#define GPIO_PIN_K8	    GPIO_Pin_15
+#else
+/* 按键口对应的RCC时钟 */
+#define RCC_ALL_KEY 	(RCC_AHB1Periph_GPIOC)
 
-	#define GPIO_PORT_K8    GPIOA
-	#define GPIO_PIN_K8	    GPIO_Pin_0
+#define GPIO_PORT_INT    GPIOC
+#define GPIO_PIN_INT	    GPIO_Pin_1
 
-#else	/* STM32_V5 */
-	/*
-		安富莱STM32-V5 按键口线分配：
-			K1 键      : PI8   (低电平表示按下)
-			K2 键      : PC13  (低电平表示按下)
-			K3 键      : PI11  (低电平表示按下)
-			摇杆UP键   : PH2   (低电平表示按下)
-			摇杆DOWN键 : PH3   (低电平表示按下)
-			摇杆LEFT键 : PF11  (低电平表示按下)
-			摇杆RIGHT键: PG7   (低电平表示按下)
-			摇杆OK键   : PH15  (低电平表示按下)
-	*/
+#define GPIO_PORT_SDA    GPIOC
+#define GPIO_PIN_SDA	    GPIO_Pin_2
 
-	/* 按键口对应的RCC时钟 */
-	#define RCC_ALL_KEY 	(RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOF | RCC_AHB1Periph_GPIOH | RCC_AHB1Periph_GPIOI | RCC_AHB1Periph_GPIOG)
-
-	#define GPIO_PORT_K1    GPIOI
-	#define GPIO_PIN_K1	    GPIO_Pin_8
-
-	#define GPIO_PORT_K2    GPIOC
-	#define GPIO_PIN_K2	    GPIO_Pin_13
-
-	#define GPIO_PORT_K3    GPIOI
-	#define GPIO_PIN_K3	    GPIO_Pin_11
-
-	#define GPIO_PORT_K4    GPIOH
-	#define GPIO_PIN_K4	    GPIO_Pin_2
-
-	#define GPIO_PORT_K5    GPIOH
-	#define GPIO_PIN_K5	    GPIO_Pin_3
-
-	#define GPIO_PORT_K6    GPIOF
-	#define GPIO_PIN_K6	    GPIO_Pin_11
-
-	#define GPIO_PORT_K7    GPIOG
-	#define GPIO_PIN_K7	    GPIO_Pin_7
-
-	#define GPIO_PORT_K8    GPIOH
-	#define GPIO_PIN_K8	    GPIO_Pin_15
+#define GPIO_PORT_SCK    GPIOC
+#define GPIO_PIN_SCK	    GPIO_Pin_3
 #endif
 
+/////////////////////////////////////////////////////////////////
 static KEY_T s_tBtn[KEY_COUNT];
 static KEY_FIFO_T s_tKey;		/* 按键FIFO变量,结构体 */
+uint8_t g_ucKey1IRQ; /* 用于按键一的外部中断标志 0：表示没有外部中断 X：其它表示产生按键中断 */
 
 static void bsp_InitKeyVar(void);
 static void bsp_InitKeyHard(void);
 static void bsp_DetectKey(uint8_t i);
+static void bsp_InitKeyEXTI(void);
 
 /*
 *********************************************************************************************************
@@ -126,25 +102,15 @@ static void bsp_DetectKey(uint8_t i);
 *	返 回 值: 返回值1 表示按下，0表示未按下
 *********************************************************************************************************
 */
-#ifdef STM32_X3		/* 安富莱 STM32-X3 开发板 */
-	static uint8_t IsKeyDown1(void) {if ((GPIO_PORT_K1->IDR & GPIO_PIN_K1) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown2(void) {if ((GPIO_PORT_K2->IDR & GPIO_PIN_K2) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown3(void) {if ((GPIO_PORT_K3->IDR & GPIO_PIN_K3) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown4(void) {if ((GPIO_PORT_K4->IDR & GPIO_PIN_K4) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown5(void) {if ((GPIO_PORT_K5->IDR & GPIO_PIN_K5) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown6(void) {if ((GPIO_PORT_K6->IDR & GPIO_PIN_K6) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown7(void) {if ((GPIO_PORT_K7->IDR & GPIO_PIN_K7) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown8(void) {if ((GPIO_PORT_K8->IDR & GPIO_PIN_K8) == 0) return 1;else return 0;}
-#else				/* 安富莱 STM32-V5 开发板 */
-	static uint8_t IsKeyDown1(void) {if ((GPIO_PORT_K1->IDR & GPIO_PIN_K1) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown2(void) {if ((GPIO_PORT_K2->IDR & GPIO_PIN_K2) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown3(void) {if ((GPIO_PORT_K3->IDR & GPIO_PIN_K3) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown4(void) {if ((GPIO_PORT_K4->IDR & GPIO_PIN_K4) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown5(void) {if ((GPIO_PORT_K5->IDR & GPIO_PIN_K5) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown6(void) {if ((GPIO_PORT_K6->IDR & GPIO_PIN_K6) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown7(void) {if ((GPIO_PORT_K7->IDR & GPIO_PIN_K7) == 0) return 1;else return 0;}
-	static uint8_t IsKeyDown8(void) {if ((GPIO_PORT_K8->IDR & GPIO_PIN_K8) == 0) return 1;else return 0;}
-#endif
+        /* 安富莱 STM32-V5 开发板 */
+	static uint8_t IsKeyDown1(void) {if (1) return 1;else return 0;}
+	static uint8_t IsKeyDown2(void) {if (0) return 1;else return 0;}
+	static uint8_t IsKeyDown3(void) {if (0) return 1;else return 0;}
+	static uint8_t IsKeyDown4(void) {if (0) return 1;else return 0;}
+	static uint8_t IsKeyDown5(void) {if (0) return 1;else return 0;}
+	static uint8_t IsKeyDown6(void) {if (0) return 1;else return 0;}
+	static uint8_t IsKeyDown7(void) {if (0) return 1;else return 0;}
+	static uint8_t IsKeyDown8(void) {if (0) return 1;else return 0;}
 	static uint8_t IsKeyDown9(void) {if (IsKeyDown1() && IsKeyDown2()) return 1;else return 0;}
 	static uint8_t IsKeyDown10(void) {if (IsKeyDown1() && IsKeyDown2()) return 1;else return 0;}
 
@@ -158,8 +124,10 @@ static void bsp_DetectKey(uint8_t i);
 */
 void bsp_InitKey(void)
 {
+	g_ucKey1IRQ = 0;
 	bsp_InitKeyVar();		/* 初始化按键变量 */
 	bsp_InitKeyHard();		/* 初始化按键硬件 */
+	//bsp_InitKeyEXTI(); /* 配置K1为外部中断触发 */
 }
 
 /*
@@ -301,29 +269,15 @@ static void bsp_InitKeyHard(void)
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;	/* 无需上下拉电阻 */
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	/* IO口最大速度 */
 
-	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_K1;
-	GPIO_Init(GPIO_PORT_K1, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_K2;
-	GPIO_Init(GPIO_PORT_K2, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_K3;
-	GPIO_Init(GPIO_PORT_K3, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_K4;
-	GPIO_Init(GPIO_PORT_K4, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_K5;
-	GPIO_Init(GPIO_PORT_K5, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_K6;
-	GPIO_Init(GPIO_PORT_K6, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_K7;
-	GPIO_Init(GPIO_PORT_K7, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_K8;
-	GPIO_Init(GPIO_PORT_K8, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;        /* 设为输入口 */
+	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_SDA;
+	GPIO_Init(GPIO_PORT_SDA, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_INT;
+	GPIO_Init(GPIO_PORT_INT, &GPIO_InitStructure);
+    
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;        /* 设为输入口 */
+	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_SCK;
+	GPIO_Init(GPIO_PORT_SCK, &GPIO_InitStructure);
 }
 
 /*
@@ -383,6 +337,43 @@ static void bsp_InitKeyVar(void)
 	/* 组合键 */
 	s_tBtn[8].IsKeyDownFunc = IsKeyDown9;
 	s_tBtn[9].IsKeyDownFunc = IsKeyDown10;
+}
+
+/*
+********************************************************************************
+* 函 数 名: bsp_InitKeyEXTI
+* 功能说明: 将所有的按键配置成外部中断触发方式，除了摇杆右键，因为摇杆右键和按键三
+* 使用的中断线都是EXTI_Line11，同时使用的话，只会一个有效
+* 形 参: 无
+* 返 回 值: 无
+********************************************************************************
+*/
+static void bsp_InitKeyEXTI(void)
+{
+    EXTI_InitTypeDef EXTI_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
+    /* 使能SYSCFG时钟 */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+
+    /* 连接 EXTI Line8 到 PI8 引脚 */
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOI, EXTI_PinSource1);
+    
+    /* 配置 EXTI LineXXX */
+    EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+    
+    /* 设置NVIC优先级分组为Group2：0-3抢占式优先级，0-3的响应式优先级 */
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+    
+    /* 中断优先级配置 最低优先级 这里一定要分开的设置中断，不能够合并到一个里面设置 */
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x03;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 }
 
 /*

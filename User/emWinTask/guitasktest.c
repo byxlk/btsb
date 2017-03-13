@@ -287,7 +287,9 @@ void GuiTaskTest(void)
 	//WM_SetCallback(WM_HBKWIN, _cbBkWindow);  
 	WM_SetCreateFlags(WM_CF_MEMDEV);   
 	hDlgFrame = 0;
-	
+
+        bsp_StartTimer(0, 1000);
+        
 	while(1) 
 	{
 		WM_HWIN hDlg;
@@ -336,7 +338,34 @@ void GuiTaskTest(void)
                 TempDate[17] = '0' + g_tRTC.Sec / 10;
                 TempDate[18] = '0' + g_tRTC.Sec % 10;
                 EDIT_SetText(hEdit, TempDate);
-                
+
+                if(bsp_CheckTimer(0))
+                {
+                    Mic_dB = bsp_GetMicdBValue();
+                    hEdit = WM_GetDialogItem(hDlg, ID_EDIT_2);
+                    //Mic_dB = Mic_dB /20;
+                    mem_set(acText, 0x00, 5);
+                    if (Mic_dB < 100 )
+                    {
+                        acText[0] = '0' + Mic_dB /10;
+                        acText[1] = '0' + Mic_dB %10;
+                    }
+                    else if(Mic_dB < 1000)
+                    {
+                        acText[0] = '0' + Mic_dB /100;
+                        acText[1] = '0' + Mic_dB /10 / 10;
+                        acText[2] = '0' + Mic_dB %10;
+                    }
+                    else
+                    {
+                        acText[0] = '0' + Mic_dB /1000;
+                        acText[1] = '0' + Mic_dB /100 % 10;
+                        acText[2] = '0' + Mic_dB /10 % 10;
+                        acText[4] = '0' + Mic_dB % 10;
+                    }
+                    EDIT_SetText(hEdit, acText);
+                }
+
                 if(iCount < 20) 
                 {
                     iCount++;
@@ -344,7 +373,7 @@ void GuiTaskTest(void)
                     IntTemp += getCurent_IntTempValue(); 
 
                     LightValue += getLightVLuxValue();
-                    Mic_dB += getMicAmp_dBValue();
+                    //Mic_dB += getMicAmp_dBValue();
                 }
                 else 
                 {
@@ -400,36 +429,13 @@ void GuiTaskTest(void)
                         acText[1] = '0' + LightValue /10 / 10;
                         acText[2] = '0' + LightValue %10;
                     }
-                    EDIT_SetText(hEdit, acText);
-
-                    hEdit = WM_GetDialogItem(hDlg, ID_EDIT_2);
-                    Mic_dB = Mic_dB /20;
-                    mem_set(acText, 0x00, 5);
-                    if (Mic_dB < 100 )
-                    {
-                        acText[0] = '0' + Mic_dB /10;
-                        acText[1] = '0' + Mic_dB %10;
-                    }
-                    else if(Mic_dB < 1000)
-                    {
-                        acText[0] = '0' + Mic_dB /100;
-                        acText[1] = '0' + Mic_dB /10 / 10;
-                        acText[2] = '0' + Mic_dB %10;
-                    }
-                    else
-                    {
-                        acText[0] = '0' + Mic_dB /1000;
-                        acText[1] = '0' + Mic_dB /100 % 10;
-                        acText[2] = '0' + Mic_dB /10 % 10;
-                        acText[4] = '0' + Mic_dB % 10;
-                    }
-                    EDIT_SetText(hEdit, acText);
+                    EDIT_SetText(hEdit, acText);                    
                     
                     iCount = 0; 
                     ExtTemp = 0;
                     IntTemp = 0;
                     LightValue = 0;
-                    Mic_dB = 0;
+                    //Mic_dB = 0;
                 }
 	}
 }

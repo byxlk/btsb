@@ -54,6 +54,12 @@
 	static uint8_t g_RxBuf5[UART5_RX_BUF_SIZE];		/* 接收缓冲区 */
 #endif
 
+#if UART6_FIFO_EN == 1
+	static UART_T g_tUart6;
+	static uint8_t g_TxBuf6[UART6_TX_BUF_SIZE];		/* 发送缓冲区 */
+	static uint8_t g_RxBuf6[UART6_RX_BUF_SIZE];		/* 接收缓冲区 */
+#endif
+
 static void UartVarInit(void);
 
 static void InitHardUart(void);
@@ -129,6 +135,14 @@ UART_T *ComToUart(COM_PORT_E _ucPort)
 	{
 		#if UART5_FIFO_EN == 1
 			return &g_tUart5;
+		#else
+			return 0;
+		#endif
+	}
+	else if (_ucPort == COM6)
+	{
+		#if UART5_FIFO_EN == 1
+			return &g_tUart6;
 		#else
 			return 0;
 		#endif
@@ -269,7 +283,7 @@ void bsp_SetUart1Baud(uint32_t _baud)
 	USART_InitStructure.USART_Parity = USART_Parity_No ;
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-	USART_Init(USART2, &USART_InitStructure);
+	USART_Init(USART1, &USART_InitStructure);
 }
 
 /*
@@ -769,6 +783,51 @@ static void InitHardUart(void)
 		如下语句解决第1个字节无法正确发送出去的问题 */
 	USART_ClearFlag(UART5, USART_FLAG_TC);     /* 清发送完成标志，Transmission Complete flag */
 #endif
+
+#if UART6_FIFO_EN == 1		/* 串口1 TX = PC6   RX = PC7 */
+
+	/* 第1步：打开GPIO和USART部件的时钟 */
+	RCC_APB2PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART6, ENABLE);
+
+	/* 第2步：将USART Tx的GPIO配置为推挽复用模式 */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+	/* 第3步：将USART Rx的GPIO配置为浮空输入模式
+		由于CPU复位后，GPIO缺省都是浮空输入模式，因此下面这个步骤不是必须的
+		但是，我还是建议加上便于阅读，并且防止其它地方修改了这个口线的设置参数
+	*/
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	
+	/* 第4步： 配置串口硬件参数 */
+	USART_InitStructure.USART_BaudRate = UART6_BAUD;	/* 波特率 */
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity = USART_Parity_No ;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	USART_Init(USART6, &USART_InitStructure);
+
+	USART_ITConfig(USART6, USART_IT_RXNE, ENABLE);	/* 使能接收中断 */
+	/*
+		USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+		注意: 不要在此处打开发送中断
+		发送中断使能在SendUart()函数打开
+	*/
+	USART_Cmd(USART6, ENABLE);		/* 使能串口 */
+
+	/* CPU的小缺陷：串口配置好，如果直接Send，则第1个字节发送不出去
+		如下语句解决第1个字节无法正确发送出去的问题 */
+	USART_ClearFlag(USART6, USART_FLAG_TC);     /* 清发送完成标志，Transmission Complete flag */
+#endif
+
+
 }
 
 /*
