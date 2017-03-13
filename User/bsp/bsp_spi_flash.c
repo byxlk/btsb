@@ -882,7 +882,7 @@ DRESULT SPI_disk_ioctl(
     	case GET_BLOCK_SIZE:   
     		return RES_OK;
     	
-    	case CTRL_TRIM:
+    	case CTRL_ERASE_SECTOR:
     		return RES_OK;       
     }
     return RES_OK;

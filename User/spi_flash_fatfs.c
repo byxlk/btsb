@@ -225,7 +225,7 @@ static void FileFormat(void)
 	}
 	
 	/* 第一次使用必须进行格式化 */
-	//result = f_mkfs("0:",0,0);
+	result = f_mkfs("0:",0,0);
 	if (result != FR_OK)
 	{
 		printf("格式化失败 (%s)\r\n", FR_Table[result]);
@@ -263,7 +263,7 @@ static void ViewRootDir(void)
 	DIR DirInf;
 	FILINFO FileInf;
 	uint32_t cnt = 0;
-	//char fname[256];
+	char lfname[256];
 
 	/* 挂载文件系统 */
 	result = f_mount(&fs, "0:", 0);	
@@ -285,8 +285,8 @@ static void ViewRootDir(void)
 	}
 
 	/* 读取当前文件夹下的文件和目录 */
-	//FileInf.fname = fname;
-	FileInf.fsize = 256;
+	FileInf.lfname = lfname;
+	FileInf.lfsize = 256;
 
 	printf("属性        |  文件大小 | 短文件名 | 长文件名\r\n");
 	for (cnt = 0; ;cnt++)
@@ -317,7 +317,7 @@ static void ViewRootDir(void)
 
 		printf("  %s |", FileInf.fname);	/* 短文件名 */
 
-		printf("  %s\r\n", (char *)FileInf.fname);	/* 长文件名 */
+		printf("  %s\r\n", (char *)FileInf.lfname);	/* 长文件名 */
 	}
 
 	/* 卸载文件系统 */

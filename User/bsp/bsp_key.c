@@ -127,7 +127,7 @@ void bsp_InitKey(void)
 	g_ucKey1IRQ = 0;
 	bsp_InitKeyVar();		/* 初始化按键变量 */
 	bsp_InitKeyHard();		/* 初始化按键硬件 */
-	//bsp_InitKeyEXTI(); /* 配置K1为外部中断触发 */
+	bsp_InitKeyEXTI();      /* 配置K1为外部中断触发 */
 }
 
 /*

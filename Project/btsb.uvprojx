@@ -620,29 +620,9 @@
               <FilePath>..\FatFS\src\diskio.c</FilePath>
             </File>
             <File>
-              <FileName>diskio.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\FatFS\src\diskio.h</FilePath>
-            </File>
-            <File>
               <FileName>ff.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FatFS\src\ff.c</FilePath>
-            </File>
-            <File>
-              <FileName>ff.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\FatFS\src\ff.h</FilePath>
-            </File>
-            <File>
-              <FileName>ffconf.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\FatFS\src\ffconf.h</FilePath>
-            </File>
-            <File>
-              <FileName>integer.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\FatFS\src\integer.h</FilePath>
             </File>
             <File>
               <FileName>cc936.c</FileName>
