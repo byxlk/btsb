@@ -79,7 +79,7 @@ void LCD_InitHard(void)
 	LCD_HardReset();	/* 硬件复位 （STM32-V5 无需），针对其他GPIO控制LCD复位的产品 */
 	
 	/* FSMC重置后必须加延迟才能访问总线设备  */
-	bsp_DelayMS(20);
+	//bsp_DelayMS(20);
 
 	g_ChipID = ST7789V_InitHard();
     if(g_ChipID == IC_7789)
@@ -112,21 +112,21 @@ void LCD_HardReset(void)
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* 使能 GPIO时钟 */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 	
 	/* 配置背光GPIO为推挽输出模式 */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-	GPIO_SetBits(GPIOA, GPIO_Pin_8);
+	GPIO_SetBits(GPIOC, GPIO_Pin_12);
 	bsp_DelayMS(1);
-	GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+	GPIO_ResetBits(GPIOC, GPIO_Pin_12);
 	bsp_DelayMS(10);
-	GPIO_SetBits(GPIOA, GPIO_Pin_8);
+	GPIO_SetBits(GPIOC, GPIO_Pin_12);
  	bsp_DelayMS(120);
 }
 
@@ -1617,7 +1617,7 @@ static void LCD_CtrlLinesConfig(void)
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* 使能 GPIOD */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 
 	/*  GPIO 配置为复用推挽输出 */
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
@@ -1626,20 +1626,24 @@ static void LCD_CtrlLinesConfig(void)
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 
 	/* LCD Data Bus */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0    /* Data0 */
+	                                            | GPIO_Pin_1    /* Data1 */
+	                                            | GPIO_Pin_2    /* Data2 */
+	                                            | GPIO_Pin_3    /* Data3 */
+	                                            | GPIO_Pin_4    /* Data4 */
+	                                            | GPIO_Pin_5    /* Data5 */
+	                                            | GPIO_Pin_6    /* Data6 */
+	                                            | GPIO_Pin_7    /* Data7 */
+	                                            | GPIO_Pin_8    /* CS */
+	                                            | GPIO_Pin_9    /* RS */
+	                                            | GPIO_Pin_10  /* RD */
+	                                            | GPIO_Pin_11;  /* WR */
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
-        GPIO_Write(GPIOB, 0XFF); //默认输出高电平
-
-        /* LCD CMD Bus */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6          /* RD */
-		                        | GPIO_Pin_7          /* WD */ 
-		                        | GPIO_Pin_8          /* RS */
-		                        | GPIO_Pin_9;         /* CS */
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-        GPIO_SetBits(GPIOC, GPIO_Pin_6);
-        GPIO_SetBits(GPIOC, GPIO_Pin_7);
-        GPIO_SetBits(GPIOC, GPIO_Pin_8);
-        GPIO_SetBits(GPIOC, GPIO_Pin_9);
+        //默认输出高电平
+        GPIO_SetBits(GPIOB, GPIO_Pin_8);
+        GPIO_SetBits(GPIOB, GPIO_Pin_9);
+        GPIO_SetBits(GPIOB, GPIO_Pin_10);
+        GPIO_SetBits(GPIOB, GPIO_Pin_11);
 }
 
 #if 0

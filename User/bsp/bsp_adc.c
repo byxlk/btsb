@@ -144,7 +144,7 @@ int8_t getCurent_IntTempValue(void)
     return Current_IntTemp;
 }
 
-#define UP_R_VALUE 20 //20K
+#define UP_R_VALUE 2200 // 2K2
 int8_t getCurent_ExtTempValue(void)
 {
     uint32_t Vtemp_ExtSeneor;
@@ -156,7 +156,7 @@ int8_t getCurent_ExtTempValue(void)
     Vtemp_ExtSeneor = ADC_ConvertedValue[1] * 3300 / 4095;
 
     /* 计算当前温度传感器的阻值 */
-    Rtemp_Value = Vtemp_ExtSeneor * UP_R_VALUE * 100 / (3300 - Vtemp_ExtSeneor);
+    Rtemp_Value = Vtemp_ExtSeneor * UP_R_VALUE  * 100 /1000 / (3300 - Vtemp_ExtSeneor);
 
     /* 根据温度传感器的阻值查表获得当前温度 */
     if(Rtemp_Value <= ExtTempValue[0] && Rtemp_Value > ExtTempValue[151])
@@ -178,7 +178,7 @@ int8_t getCurent_ExtTempValue(void)
     return Current_ExtTemp;
 }
 
-#define R19_VALUE 2 // 2K
+#define R19_VALUE 1 // 1K
 uint8_t getLightVLuxValue(void)
 {
     uint32_t VLight_Sensor; // mA

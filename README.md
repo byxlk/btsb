@@ -1,2 +1,0 @@
-# btsb
-Bluetooth Sound Box

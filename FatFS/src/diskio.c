@@ -125,8 +125,8 @@ DRESULT disk_ioctl (
 DWORD get_fattime (void)
 {
 	/* 如果有全局时钟，可按下面的格式进行时钟转换. 这个例子是2014-07-02 00:00:00 */
-#if 0
-	RTC_ReadClock();
+#if 1
+	bsp_RTC_GetClock();
 	return  ((DWORD)(g_tRTC.Year - 1980) << 25)		/* Year  */
 			| ((DWORD)g_tRTC.Mon << 21)				/* Month   */
 			| ((DWORD)g_tRTC.Day << 16)				/* Day_m  1*/

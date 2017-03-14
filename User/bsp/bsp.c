@@ -47,7 +47,7 @@ void bsp_Init(void)
 	bsp_InitUart(); 	 /* 初始化串口 */
 	bsp_InitRTC(); /* 初始化RTC模块，配置默认时间:2016-01-01 08:00:00 */
 	bsp_InitADC(); /* 初始化ADC模块，ADC1 - CH0 CH1 CH3 CH_Temp */	
-        bsp_InitTimCounter();
+    bsp_InitTimCounter();
 	
 	
 	//bsp_InitI2C();       /* 配置I2C总线 */
