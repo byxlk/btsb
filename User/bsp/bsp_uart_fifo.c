@@ -141,7 +141,7 @@ UART_T *ComToUart(COM_PORT_E _ucPort)
 	}
 	else if (_ucPort == COM6)
 	{
-		#if UART5_FIFO_EN == 1
+		#if UART6_FIFO_EN == 1
 			return &g_tUart6;
 		#else
 			return 0;
@@ -554,26 +554,62 @@ static void InitHardUart(void)
 
 #if UART1_FIFO_EN == 1		/* 串口1 TX = PA9   RX = PA10 或 TX = PB6   RX = PB7*/
 
-	/* 第1步：打开GPIO和USART部件的时钟 */
-	RCC_APB2PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+	/* 第1步： 配置GPIO */
+	#if 1	/* TX = PA9   RX = PA10 */
+		/* 打开 GPIO 时钟 */
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
-	/* 第2步：将USART Tx的GPIO配置为推挽复用模式 */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+		/* 打开 UART 时钟 */
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 
-	/* 第3步：将USART Rx的GPIO配置为浮空输入模式
-		由于CPU复位后，GPIO缺省都是浮空输入模式，因此下面这个步骤不是必须的
-		但是，我还是建议加上便于阅读，并且防止其它地方修改了这个口线的设置参数
-	*/
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	
-	/* 第4步： 配置串口硬件参数 */
+		/* 将 PA9 映射为 USART1_TX */
+		GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_USART1);
+
+		/* 将 PA10 映射为 USART1_RX */
+		GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_USART1);
+
+		/* 配置 USART Tx 为复用功能 */
+		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	/* 输出类型为推挽 */
+		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	/* 内部上拉电阻使能 */
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	/* 复用模式 */
+
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+		/* 配置 USART Rx 为复用功能 */
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+		GPIO_Init(GPIOA, &GPIO_InitStructure);
+	#else	/* TX = PB6   RX = PB7  */
+		/* 打开 GPIO 时钟 */
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+
+		/* 打开 UART 时钟 */
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+
+		/* 将 PB6 映射为 USART1_TX */
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_USART1);
+
+		/* 将 PB7 映射为 USART1_RX */
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_USART1);
+
+		/* 配置 USART Tx 为复用功能 */
+		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	/* 输出类型为推挽 */
+		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	/* 内部上拉电阻使能 */
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	/* 复用模式 */
+
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+		/* 配置 USART Rx 为复用功能 */
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
+	#endif
+
+	/* 第2步： 配置串口硬件参数 */
 	USART_InitStructure.USART_BaudRate = UART1_BAUD;	/* 波特率 */
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
@@ -595,37 +631,71 @@ static void InitHardUart(void)
 	USART_ClearFlag(USART1, USART_FLAG_TC);     /* 清发送完成标志，Transmission Complete flag */
 #endif
 
-#if UART2_FIFO_EN == 1		/* 串口2 TX = PA2， RX = PA3  */
-	/* 第1步：打开GPIO和USART部件的时钟 */
-	RCC_APB2PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+#if UART2_FIFO_EN == 1		/* 串口2 TX = PD5   RX = PD6 或  TX = PA2， RX = PA3  */
+	/* 第1步： 配置GPIO */
+	#if 0	/* 串口2 TX = PD5   RX = PD6 */
+		/* 打开 GPIO 时钟 */
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
-	/* 第2步：将USART Tx的GPIO配置为推挽复用模式 */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+		/* 打开 UART 时钟 */
+		RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
 
-	/* 第3步：将USART Rx的GPIO配置为浮空输入模式
-		由于CPU复位后，GPIO缺省都是浮空输入模式，因此下面这个步骤不是必须的
-		但是，我还是建议加上便于阅读，并且防止其它地方修改了这个口线的设置参数
-	*/
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	/*  第3步已经做了，因此这步可以不做
+		/* 将 PD5 映射为 USART2_TX */
+		GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
+
+		/* 将 PD6 映射为 USART2_RX */
+		GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
+
+		/* 配置 USART Tx 为复用功能 */
+		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	/* 输出类型为推挽 */
+		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	/* 内部上拉电阻使能 */
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	/* 复用模式 */
+
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
 		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	*/
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+		GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-	/* 第4步： 配置串口硬件参数 */
+		/* 配置 USART Rx 为复用功能 */
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+		GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+	#else	/* 串口2   TX = PA2， RX = PA3 */
+		/* 打开 GPIO 时钟 */
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+
+		/* 打开 UART 时钟 */
+		RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+
+		/* 将 PA2 映射为 USART2_TX. 在STM32-V5板中，PA2 管脚用于以太网 */
+		//GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_USART2);
+
+		/* 将 PA3 映射为 USART2_RX */
+		GPIO_PinAFConfig(GPIOA, GPIO_PinSource3, GPIO_AF_USART2);
+
+		/* 配置 USART Tx 为复用功能 */
+		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	/* 输出类型为推挽 */
+		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	/* 内部上拉电阻使能 */
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	/* 复用模式 */
+
+		//GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+		//GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		//GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+		/* 配置 USART Rx 为复用功能 */
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_Init(GPIOA, &GPIO_InitStructure);
+	#endif
+
+	/* 第2步： 配置串口硬件参数 */
 	USART_InitStructure.USART_BaudRate = UART2_BAUD;	/* 波特率 */
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No ;
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-	USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;		/* 仅选择接收模式 */
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;	
 	USART_Init(USART2, &USART_InitStructure);
 
 	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);	/* 使能接收中断 */
@@ -645,39 +715,44 @@ static void InitHardUart(void)
 
 	/* 配置 PB2为推挽输出，用于切换 RS485芯片的收发状态 */
 	{
-		RCC_APB2PeriphClockCmd(RCC_RS485_TXEN, ENABLE);
+		RCC_AHB1PeriphClockCmd(RCC_RS485_TXEN, ENABLE);
 
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-                GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;		/* 设为输出口 */
+		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;		/* 设为推挽模式 */
+		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;	/* 上下拉电阻不使能 */
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;	/* IO口最大速度 */
+
 		GPIO_InitStructure.GPIO_Pin = PIN_RS485_TXEN;
 		GPIO_Init(PORT_RS485_TXEN, &GPIO_InitStructure);
 	}
 
-	/* 第1步： 开启GPIO和UART时钟 */
-	RCC_APB2PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+	/* 打开 GPIO 时钟 */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+
+	/* 打开 UART 时钟 */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
 
-	/* 第2步：将USART Tx的GPIO配置为推挽复用模式 */
+	/* 将 PB10 映射为 USART3_TX */
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_USART3);
+
+	/* 将 PB11 映射为 USART3_RX */
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource11, GPIO_AF_USART3);
+
+	/* 配置 USART Tx 为复用功能 */
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	/* 输出类型为推挽 */
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	/* 内部上拉电阻使能 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	/* 复用模式 */
+
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-	/* 第3步：将USART Rx的GPIO配置为浮空输入模式
-		由于CPU复位后，GPIO缺省都是浮空输入模式，因此下面这个步骤不是必须的
-		但是，我还是建议加上便于阅读，并且防止其它地方修改了这个口线的设置参数
-	*/
+	/* 配置 USART Rx 为复用功能 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	/*  第3步已经做了，因此这步可以不做
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	*/
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-	/* 第4步： 配置串口硬件参数 */
+	/* 第2步： 配置串口硬件参数 */
 	USART_InitStructure.USART_BaudRate = UART3_BAUD;	/* 波特率 */
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
@@ -700,27 +775,36 @@ static void InitHardUart(void)
 #endif
 
 #if UART4_FIFO_EN == 1			/* 串口4 TX = PC10   RX = PC11 */
-	/* 第1步： 开启GPIO和UART时钟 */
-	RCC_APB2PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	/* 第1步： 配置GPIO */
+
+	/* 打开 GPIO 时钟 */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+
+	/* 打开 UART 时钟 */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, ENABLE);
 
-	/* 第2步：将USART Tx的GPIO配置为推挽复用模式 */
+	/* 将 PC10 映射为 UART4_TX */
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_USART1);
+
+	/* 将 PC11 映射为 UART4_RX */
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_USART1);
+
+	/* 配置 USART Tx 为复用功能 */
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	/* 输出类型为推挽 */
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	/* 内部上拉电阻使能 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	/* 复用模式 */
+
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-	/* 第3步：将USART Rx的GPIO配置为浮空输入模式
-		由于CPU复位后，GPIO缺省都是浮空输入模式，因此下面这个步骤不是必须的
-		但是，我还是建议加上便于阅读，并且防止其它地方修改了这个口线的设置参数
-	*/
+	/* 配置 USART Rx 为复用功能 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-	/* 第4步： 配置串口硬件参数 */
-	USART_InitStructure.USART_BaudRate = UART4_BAUD;	/* 波特率 */
+	/* 第2步： 配置串口硬件参数 */
+	USART_InitStructure.USART_BaudRate = UART1_BAUD;	/* 波特率 */
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No ;
@@ -742,27 +826,35 @@ static void InitHardUart(void)
 #endif
 
 #if UART5_FIFO_EN == 1			/* 串口5 TX = PC12   RX = PD2 */
-	/* 第1步： 开启GPIO和UART时钟 */
-	RCC_APB2PeriphClockCmd(RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD, ENABLE);
+	/* 第1步： 配置GPIO */
+
+	/* 打开 GPIO 时钟 */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC |RCC_AHB1Periph_GPIOD, ENABLE);
+
+	/* 打开 UART 时钟 */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, ENABLE);
 
-	/* 第2步：将USART Tx的GPIO配置为推挽复用模式 */
+	/* 将 PC12 映射为 UART5_TX */
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_UART5);
+
+	/* 将 PD2 映射为 UART5_RX */
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource2, GPIO_AF_UART5);
+
+	/* 配置 UART Tx 为复用功能 */
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	/* 输出类型为推挽 */
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	/* 内部上拉电阻使能 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	/* 复用模式 */
+
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-	/* 第3步：将USART Rx的GPIO配置为浮空输入模式
-		由于CPU复位后，GPIO缺省都是浮空输入模式，因此下面这个步骤不是必须的
-		但是，我还是建议加上便于阅读，并且防止其它地方修改了这个口线的设置参数
-	*/
+	/* 配置 UART Rx 为复用功能 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-
-	/* 第4步： 配置串口硬件参数 */
+	/* 第2步： 配置串口硬件参数 */
 	USART_InitStructure.USART_BaudRate = UART5_BAUD;	/* 波特率 */
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
@@ -787,22 +879,28 @@ static void InitHardUart(void)
 #if UART6_FIFO_EN == 1		/* 串口1 TX = PC6   RX = PC7 */
 
 	/* 第1步：打开GPIO和USART部件的时钟 */
-	RCC_APB2PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	/* 打开 UART 时钟 */
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART6, ENABLE);
 
-	/* 第2步：将USART Tx的GPIO配置为推挽复用模式 */
+	/* 将 PC6 映射为 USART6_TX */
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_USART6);
+
+	/* 将 PC7 映射为 USART6_RX */
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_USART6);
+
+	/* 配置 PG14/USART6_TX 为复用功能 */
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	/* 输出类型为推挽 */
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	/* 内部上拉电阻使能 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	/* 复用模式 */
+
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-	/* 第3步：将USART Rx的GPIO配置为浮空输入模式
-		由于CPU复位后，GPIO缺省都是浮空输入模式，因此下面这个步骤不是必须的
-		但是，我还是建议加上便于阅读，并且防止其它地方修改了这个口线的设置参数
-	*/
+	/* 配置 PC7/USART6_RX 为复用功能 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 	
 	/* 第4步： 配置串口硬件参数 */
@@ -826,8 +924,6 @@ static void InitHardUart(void)
 		如下语句解决第1个字节无法正确发送出去的问题 */
 	USART_ClearFlag(USART6, USART_FLAG_TC);     /* 清发送完成标志，Transmission Complete flag */
 #endif
-
-
 }
 
 /*
@@ -848,7 +944,6 @@ static void ConfigUartNVIC(void)
 #if UART1_FIFO_EN == 1
 	/* 使能串口1中断 */
 	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
@@ -857,8 +952,7 @@ static void ConfigUartNVIC(void)
 #if UART2_FIFO_EN == 1
 	/* 使能串口2中断 */
 	NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 #endif
@@ -866,8 +960,7 @@ static void ConfigUartNVIC(void)
 #if UART3_FIFO_EN == 1
 	/* 使能串口3中断t */
 	NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 #endif
@@ -875,8 +968,7 @@ static void ConfigUartNVIC(void)
 #if UART4_FIFO_EN == 1
 	/* 使能串口4中断t */
 	NVIC_InitStructure.NVIC_IRQChannel = UART4_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 #endif
@@ -884,8 +976,7 @@ static void ConfigUartNVIC(void)
 #if UART5_FIFO_EN == 1
 	/* 使能串口5中断t */
 	NVIC_InitStructure.NVIC_IRQChannel = UART5_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 4;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 #endif
@@ -893,8 +984,7 @@ static void ConfigUartNVIC(void)
 #if UART6_FIFO_EN == 1
 	/* 使能串口6中断t */
 	NVIC_InitStructure.NVIC_IRQChannel = USART6_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 5;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 #endif
@@ -1040,7 +1130,7 @@ static void UartIRQ(UART_T *_pUart)
 
 		/* 回调函数,通知应用程序收到新数据,一般是发送1个消息或者设置一个标记 */
 		//if (_pUart->usRxWrite == _pUart->usRxRead)
-		//if (_pUart->usRxCount == 1)
+		if (_pUart->usRxCount == 1)
 		{
 			if (_pUart->ReciveNew)
 			{
@@ -1163,7 +1253,7 @@ void USART6_IRQHandler(void)
 */
 int fputc(int ch, FILE *f)
 {
-#if 0	/* 将需要printf的字符通过串口中断FIFO发送出去，printf函数会立即返回 */
+#if 1	/* 将需要printf的字符通过串口中断FIFO发送出去，printf函数会立即返回 */
 	comSendChar(COM1, ch);
 
 	return ch;

@@ -56,12 +56,12 @@
 /* 定义端口号 */
 typedef enum
 {
-	COM1 = 0,	/* USART1  PA9, PA10 */
-	COM2 = 1,	/* USART2, PA2, PA3 */
+	COM1 = 0,	/* USART1  PA9, PA10 或  PB6, PB7*/
+	COM2 = 1,	/* USART2, PD5,PD6 或 PA2, PA3 */
 	COM3 = 2,	/* USART3, PB10, PB11 */
 	COM4 = 3,	/* UART4, PC10, PC11 */
 	COM5 = 4,	/* UART5, PC12, PD2 */
-	COM6 = 5,	/* UART5, PC12, PD2 */
+	COM6 = 5	/* USART6, PC6, PC7 */
 }COM_PORT_E;
 
 /* 定义串口波特率和FIFO缓冲区大小，分为发送缓冲区和接收缓冲区, 支持全双工 */
