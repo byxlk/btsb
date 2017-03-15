@@ -88,7 +88,7 @@ void LCD_InitHard(void)
 
         LCD_ClrScr(CL_BLACK);	/* 清屏，显示全黑 */
 
-        LCD_SetBackLight(BRIGHT_MAX);	 /* 打开背光，设置为缺省亮度 */
+        LCD_SetBackLight(BRIGHT_DEFAULT);	 /* 打开背光，设置为缺省亮度 */
 
 #ifdef LCD_DRIVER_TEST
         LCD_ClrScr(CL_RED);

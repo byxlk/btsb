@@ -78,7 +78,7 @@
 #include "bsp_tim_pwm.h"
 #include "bsp_cpu_rtc.h"
 #include "bsp_user_lib.h"
-//#include "bsp_spi_bus.h"
+#include "spi_flash_fatfs.h"
 #include "bsp_spi_flash.h"
 #include "bsp_adc.h"
 #include "bsp_timer.h"

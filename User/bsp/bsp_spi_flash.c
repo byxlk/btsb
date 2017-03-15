@@ -58,14 +58,14 @@
 #define SF_CS_GPIO			GPIOA
 #define SF_CS_PIN			GPIO_Pin_4
 
-/* 片选口线置高不选中 */
-/* Deselect sFLASH: Chip Select pin high */
-#define SF_CS_HIGH() GPIO_SetBits(SF_CS_GPIO, SF_CS_PIN)
 
 /* 片选口线置低选中  */
 /* Select Flash: Chip Select pin low */
 #define SF_CS_LOW() GPIO_ResetBits(SF_CS_GPIO, SF_CS_PIN)
 
+/* 片选口线置高不选中 */
+/* Deselect sFLASH: Chip Select pin high */
+#define SF_CS_HIGH() GPIO_SetBits(SF_CS_GPIO, SF_CS_PIN)
 
 #define CMD_AAI       0xAD  	/* AAI 连续编程指令(FOR SST25VF016B) */
 #define CMD_DISWR	  0x04		/* 禁止写, 退出AAI状态 */
@@ -123,9 +123,9 @@ void bsp_InitSFlash(void)
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
 	/* 配置 SCK, MISO 、 MOSI 为复用功能 */
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_SPI1);
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_SPI1);
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource5, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_SPI1);
 
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -133,7 +133,7 @@ void bsp_InitSFlash(void)
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
-	GPIO_Init(SF_CS_GPIO, &GPIO_InitStructure);
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 	/* 配置片选口线为推挽输出模式 */
 

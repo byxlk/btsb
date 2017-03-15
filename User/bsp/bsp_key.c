@@ -356,7 +356,7 @@ static void bsp_InitKeyEXTI(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     /* 连接 EXTI Line8 到 PI8 引脚 */
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOI, EXTI_PinSource1);
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC, EXTI_PinSource1);
     
     /* 配置 EXTI LineXXX */
     EXTI_InitStructure.EXTI_Line = EXTI_Line1;
@@ -485,6 +485,11 @@ void bsp_KeyScan(void)
 	{
 		bsp_DetectKey(i);
 	}
+}
+
+void bsp_SetLedLight(uint8_t LightValue)
+{
+        bsp_SetTIMOutPWM(GPIOC, GPIO_Pin_9, TIM8, 4, 2000, LightValue);	// TIM3_CH4N
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/
