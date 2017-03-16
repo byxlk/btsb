@@ -288,7 +288,7 @@ void GuiTaskTest(void)
 	WM_SetCreateFlags(WM_CF_MEMDEV);   
 	hDlgFrame = 0;
 
-        bsp_StartTimer(0, 1000);
+        //bsp_StartTimer(0, 1000);
         
 	while(1) 
 	{

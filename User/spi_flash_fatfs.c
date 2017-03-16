@@ -74,15 +74,15 @@ void DemoFatFS(void)
 	
 	/* 打印命令列表，用户可以通过串口操作指令 */
 	DispMenu();
-	bsp_StartAutoTimer(1, 100);
+	//bsp_StartAutoTimer(1, 100);
 	while(1)
 	{
 		bsp_Idle();		/* 这个函数在bsp.c文件。用户可以修改这个函数实现CPU休眠和喂狗 */
 		
-		if(bsp_CheckTimer(1))
-		{
-			bsp_LedToggle(1);
-		}
+		//if(bsp_CheckTimer(1))
+		//{
+		//	bsp_LedToggle(1);
+		//}
 
 		if (comGetChar(COM1, &cmd))	/* 从串口读入一个字符(非阻塞方式) */
 		{

@@ -770,11 +770,6 @@
               <FilePath>..\User\bsp\bsp_spi_flash.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\bsp\bsp_timer.c</FilePath>
-            </File>
-            <File>
               <FileName>bsp_key.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\bsp\bsp_key.c</FilePath>

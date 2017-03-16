@@ -81,7 +81,7 @@
 #include "spi_flash_fatfs.h"
 #include "bsp_spi_flash.h"
 #include "bsp_adc.h"
-#include "bsp_timer.h"
+//#include "bsp_timer.h"
 #include "bsp_key.h"
 
 //#include "bsp_led.h"
@@ -149,8 +149,9 @@
 /* 提供给其他C文件调用的函数 */
 void bsp_Init(void);
 void bsp_Idle(void);
-void BSP_Tick_Init (void);
-void bsp_LedToggle(uint8_t led_no);
+//void BSP_Tick_Init (void);
+//void bsp_LedToggle(uint8_t led_no);
+TickType_t bsp_GetRunTime(void);
 
 
 

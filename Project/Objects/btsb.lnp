@@ -61,7 +61,6 @@
 ".\objects\bsp_user_lib.o"
 ".\objects\bsp_adc.o"
 ".\objects\bsp_spi_flash.o"
-".\objects\bsp_timer.o"
 ".\objects\bsp_key.o"
 ".\objects\maintask.o"
 ".\objects\app_sysfunction.o"

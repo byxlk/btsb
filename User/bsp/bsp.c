@@ -12,9 +12,9 @@
 
 //}
 
-void bsp_LedToggle(uint8_t led_no)
+TickType_t bsp_GetRunTime(void)
 {
-
+    return xTaskGetTickCount();
 }
 
 
