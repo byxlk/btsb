@@ -96,6 +96,7 @@ typedef struct
 	uint8_t  State;			/* 按键当前状态（按下还是弹起） */
 	uint8_t  RepeatSpeed;	/* 连续按键周期 */
 	uint8_t  RepeatCount;	/* 连续按键计数器 */
+	uint16_t KeyCodeValue;  /* 记录按键的键码值*/
 }KEY_T;
 
 /*
@@ -170,7 +171,7 @@ uint8_t bsp_GetKey2(void);
 uint8_t bsp_GetKeyState(KEY_ID_E _ucKeyID);
 void bsp_SetKeyParam(uint8_t _ucKeyID, uint16_t _LongTime, uint8_t  _RepeatSpeed);
 void bsp_ClearKey(void);
-
+void bsp_KeyCodeValueProcess(void);
 void bsp_SetLedLight(uint8_t LightValue);
 
 #endif

@@ -23,6 +23,8 @@
 
 #include "bsp.h"
 
+#define USING_KEY_MANAGER_CHIP
+
 /**********************************************************************************************
 **	该程序适用于安富莱STM32-X3、STM32-V5开发板
 **
@@ -33,7 +35,7 @@
 ***********************************************************************************************/
 /* STM32_V5 */
 /*
-	安富莱STM32-V5 按键口线分配：
+	按键口线分配：
 		K1 键      : PI8   (低电平表示按下)
 		K2 键      : PC13  (低电平表示按下)
 		K3 键      : PI11  (低电平表示按下)
@@ -43,34 +45,7 @@
 		摇杆RIGHT键: PG7   (低电平表示按下)
 		摇杆OK键   : PH15  (低电平表示按下)
 */
-#if 0
-/* 按键口对应的RCC时钟 */
-#define RCC_ALL_KEY 	(RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOF | RCC_AHB1Periph_GPIOH | RCC_AHB1Periph_GPIOI | RCC_AHB1Periph_GPIOG)
 
-#define GPIO_PORT_K1    GPIOI
-#define GPIO_PIN_K1	    GPIO_Pin_8
-
-#define GPIO_PORT_K2    GPIOC
-#define GPIO_PIN_K2	    GPIO_Pin_13
-
-#define GPIO_PORT_K3    GPIOI
-#define GPIO_PIN_K3	    GPIO_Pin_11
-
-#define GPIO_PORT_K4    GPIOH
-#define GPIO_PIN_K4	    GPIO_Pin_2
-
-#define GPIO_PORT_K5    GPIOH
-#define GPIO_PIN_K5	    GPIO_Pin_3
-
-#define GPIO_PORT_K6    GPIOF
-#define GPIO_PIN_K6	    GPIO_Pin_11
-
-#define GPIO_PORT_K7    GPIOG
-#define GPIO_PIN_K7	    GPIO_Pin_7
-
-#define GPIO_PORT_K8    GPIOH
-#define GPIO_PIN_K8	    GPIO_Pin_15
-#else
 /* 按键口对应的RCC时钟 */
 #define RCC_ALL_KEY 	(RCC_AHB1Periph_GPIOC)
 
@@ -82,7 +57,6 @@
 
 #define GPIO_PORT_SCK    GPIOC
 #define GPIO_PIN_SCK	    GPIO_Pin_3
-#endif
 
 /////////////////////////////////////////////////////////////////
 static KEY_T s_tBtn[KEY_COUNT];
@@ -275,9 +249,11 @@ static void bsp_InitKeyHard(void)
 	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_INT;
 	GPIO_Init(GPIO_PORT_INT, &GPIO_InitStructure);
     
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;        /* 设为输入口 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;        /* 设为输出口 */
 	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_SCK;
 	GPIO_Init(GPIO_PORT_SCK, &GPIO_InitStructure);
+	
+	GPIO_SetBits(GPIO_PORT_SCK, GPIO_PIN_SCK);           /* SCK默认输出为高电平*/
 }
 
 /*
@@ -487,9 +463,55 @@ void bsp_KeyScan(void)
 	}
 }
 
+/*
+*********************************************************************************************************
+*	函 数 名: bsp_KeyCodeValueRead
+*	功能说明: 读取按键的键值并写入FIFO缓冲区
+*	形    参:  无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void bsp_KeyCodeValueProcess(void)
+{
+	uint8_t i = 0;
+	uint16_t _KeyCodeValue = 0x0;
+	
+	//if(GPIO_ReadInputDataBit(GPIO_PORT_SDA, GPIO_PIN_SDA))
+	//	return ;
+	
+	GPIO_SetBits(GPIO_PORT_SCK, GPIO_PIN_SCK);
+	
+	/* 读取按键的键值 */
+	for(i = 0; i < 11; i++)
+	{
+		GPIO_ResetBits(GPIO_PORT_SCK, GPIO_PIN_SCK);
+		bsp_DelayUS(50);
+		GPIO_SetBits(GPIO_PORT_SCK, GPIO_PIN_SCK);
+		
+		if( GPIO_ReadInputDataBit(GPIO_PORT_SDA, GPIO_PIN_SDA) )
+			_KeyCodeValue |= (0x1 << i);
+		else
+			_KeyCodeValue &= (~(0x1 << i));
+		bsp_DelayUS(50);
+	}
+
+	/* 解析按键值并写入FIFO缓冲区 */
+	
+	/* 按键Code写入FIFO缓冲区*/
+	//bsp_PutKey();
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: bsp_SetLedLight
+*	功能说明: 设置按键背光灯亮度
+*	形    参:  无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
 void bsp_SetLedLight(uint8_t LightValue)
 {
-        bsp_SetTIMOutPWM(GPIOC, GPIO_Pin_9, TIM8, 4, 2000, LightValue);	// TIM3_CH4N
+    bsp_SetTIMOutPWM(GPIOC, GPIO_Pin_9, TIM8, 4, 2000, LightValue);	// TIM8_CH4N
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

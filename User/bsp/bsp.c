@@ -2,16 +2,15 @@
 #include "stm32f2xx.h"
 #include "MainTask.h"
 
-
-//void SystemClockInit(void)
-//{
-//    RCC_DeInit();
-//    RCC_HSICmd(ENABLE);
-//    while(RCC_GetFlagStatus(RCC_FLAG_HSIRDY) == RESET);//等待HSI使能成功
-
-
-//}
-
+/*
+*********************************************************************************************************
+*	函 数 名: bsp_GetRunTime
+*	功能说明: 获取FreeRTOS的时钟Tick，单位为毫秒，注意只能在任务中使用，不能在中断中使用。
+*			 全局变量。
+*	形    参: 无
+*	返 回 值: Tick值
+*********************************************************************************************************
+*/
 TickType_t bsp_GetRunTime(void)
 {
     return xTaskGetTickCount();
@@ -30,10 +29,12 @@ TickType_t bsp_GetRunTime(void)
 void bsp_Init(void)
 {
 	/*
-	 * 由于ST固件库的启动文件已经执行了CPU系统时钟的初始化，所以不必再次重复配置系统时钟。
-	 * 启动文件配置了CPU主时钟频率、内部Flash访问速度和可选的外部SRAM FSMC初始化。
-      *
-	 * 系统时钟缺省配置为72MHz，如果需要更改，可以修改 system_stm32f10x.c 文件
+	*************************************************************************************************
+	** 由于ST固件库的启动文件已经执行了CPU系统时钟的初始化，所以不必再次重复配置系统时钟。
+	** 启动文件配置了CPU主时钟频率、内部Flash访问速度和可选的外部SRAM FSMC初始化。
+    **
+	** 系统时钟缺省配置为72MHz，如果需要更改，可以修改 system_stm32f10x.c 文件
+	*************************************************************************************************
 	*/
 
 	/* 使能CRC校验, 用于开启STemWin的使用 */
@@ -42,54 +43,20 @@ void bsp_Init(void)
 	/* 优先级分组设置为4，可配置0-15级抢占式优先级，0级子优先级，即不存在子优先级。*/
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
-	bsp_InitDWT();       /* 初始DWT */    
+	bsp_InitDWT();                       /* 初始DWT */    
 	bsp_SetLedLight(LIGHT_HIGH); 		 /* 初始LED指示灯端口 */
-	bsp_InitKey();		 /* 初始化按键 */
-	bsp_InitUart(); 	 /* 初始化串口 */
-	bsp_InitRTC(); /* 初始化RTC模块，配置默认时间:2016-01-01 08:00:00 */
-	bsp_InitADC(); /* 初始化ADC模块，ADC1 - CH0 CH1 CH3 CH_Temp */	
-	bsp_InitTimCounter();
-	
-	
-	//bsp_InitI2C();       /* 配置I2C总线 */
-	
-	//bsp_InitSPIBus();	 /* 配置SPI总线 */
-	
-	//bsp_InitExtSRAM();   /* 初始DWT */
-	LCD_InitHard();	     /* 初始化显示器硬件(配置GPIO和FSMC,给LCD发送初始化指令) */
-	//TOUCH_InitHard();    /* 初始化触摸 */
-	
-	/* 挂载文件系统 */
-	//result = f_mount(&fs, "0:/", 0);
-	//DemoFatFS();
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: bsp_RunPer10ms
-*	功能说明: 该函数每隔10ms被Systick中断调用1次。详见 bsp_timer.c的定时中断服务程序。一些需要周期性处理
-*			的事务可以放在此函数。比如：按键扫描、蜂鸣器鸣叫控制等。
-*	形    参：无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void bsp_RunPer10ms(void)
-{
-	bsp_KeyScan();		/* 按键扫描 */
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: bsp_RunPer1ms
-*	功能说明: 该函数每隔1ms被Systick中断调用1次。详见 bsp_timer.c的定时中断服务程序。一些需要周期性处理的
-*			事务可以放在此函数。比如：触摸坐标扫描。
-*	形    参：无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void bsp_RunPer1ms(void)
-{
-	//TOUCH_Scan();	/* 触摸扫描 */
+	bsp_InitKey();		                 /* 初始化按键 */
+	bsp_InitUart(); 	                 /* 初始化串口 */
+	bsp_InitRTC();                       /* 初始化RTC模块，配置默认时间:2016-01-01 08:00:00 */
+	bsp_InitADC();                       /* 初始化ADC模块，ADC1 - CH0 CH1 CH3 CH_Temp */	
+	//bsp_InitTimCounter();              /* 初始化外部计数器模块*/	
+	//bsp_InitI2C();                     /* 配置I2C总线 */	
+	//bsp_InitSPIBus();	                 /* 配置SPI总线 */	
+	//bsp_InitExtSRAM();                 /* 初始DWT */
+	LCD_InitHard();	                     /* 初始化显示器硬件(配置GPIO和FSMC,给LCD发送初始化指令) */
+	//TOUCH_InitHard();                  /* 初始化触摸 */
+		
+	//result = f_mount(&fs, "0:/", 0);   /* 挂载文件系统 */
 }
 
 /*
@@ -113,4 +80,104 @@ void bsp_Idle(void)
 	/* 对于 uIP 协议实现，可以插入uip轮询函数 */
 }
 
+/*
+*********************************************************************************************************
+*	函 数 名: EXTI2_IRQHandler
+*	功能说明: 外部中断服务程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+extern __IO uint8_t g_ucKey1IRQ; 
+void EXTI2_IRQHandler(void)
+{
 
+	if(EXTI_GetITStatus(EXTI_Line2) != RESET)
+	{	
+		EXTI->IMR&=~(1<<2);	                /* 关闭中断       */
+		EXTI_ClearITPendingBit(EXTI_Line2); /* 清除中断标志位 */
+		g_ucKey1IRQ = 2;
+		bsp_KeyCodeValueProcess();             /* 中断到来后读取按键的KeyCode值*/
+	}
+
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: EXTI3_IRQHandler
+*	功能说明: 外部中断服务程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void EXTI3_IRQHandler(void)
+{
+
+	if(EXTI_GetITStatus(EXTI_Line3) != RESET)
+	{	
+		EXTI->IMR&=~(1<<3);	             /* 关闭中断       */
+		EXTI_ClearITPendingBit(EXTI_Line3); /* 清除中断标志位 */
+		g_ucKey1IRQ = 3;
+	}
+
+}
+/*
+*********************************************************************************************************
+*	函 数 名: EXTI9_5_IRQHandler
+*	功能说明: 外部中断服务程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void EXTI9_5_IRQHandler(void)
+{
+
+	if(EXTI_GetITStatus(EXTI_Line7) != RESET)
+	{	
+		EXTI->IMR&=~(1<<7);	             /* 关闭中断       */
+		EXTI_ClearITPendingBit(EXTI_Line7); /* 清除中断标志位 */
+		g_ucKey1IRQ = 7;
+	}
+	
+	if(EXTI_GetITStatus(EXTI_Line8) != RESET)
+	{	
+		EXTI->IMR&=~(1<<8);	             /* 关闭中断       */
+		EXTI_ClearITPendingBit(EXTI_Line8); /* 清除中断标志位 */
+		g_ucKey1IRQ = 8;
+	}
+			   
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: EXTI15_10_IRQHandler
+*	功能说明: 外部中断服务程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void EXTI15_10_IRQHandler(void)
+{
+
+	if(EXTI_GetITStatus(EXTI_Line11) != RESET)
+	{	
+		EXTI->IMR&=~(1<<11);	             /* 关闭中断       */
+		EXTI_ClearITPendingBit(EXTI_Line11); /* 清除中断标志位 */
+		g_ucKey1IRQ = 11;
+	}
+	
+	if(EXTI_GetITStatus(EXTI_Line13) != RESET)
+	{	
+		EXTI->IMR&=~(1<<13);	             /* 关闭中断       */
+		EXTI_ClearITPendingBit(EXTI_Line13); /* 清除中断标志位 */
+		g_ucKey1IRQ = 13;
+	}
+	
+	if(EXTI_GetITStatus(EXTI_Line15) != RESET)
+	{	
+		EXTI->IMR&=~(1<<15);	             /* 关闭中断       */
+		EXTI_ClearITPendingBit(EXTI_Line15); /* 清除中断标志位 */
+		g_ucKey1IRQ = 15;
+	}
+			   
+}
