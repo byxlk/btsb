@@ -72,10 +72,10 @@
 											变量声明
 **********************************************************************************************************
 */
-//static TaskHandle_t xHandleTaskUserIF = NULL;
+static TaskHandle_t xHandleTaskUserKeyIF = NULL;
 //static TaskHandle_t xHandleTaskLED = NULL;
 //static TaskHandle_t xHandleTaskMsgPro = NULL;
-//static TaskHandle_t xHandleTaskStart = NULL;
+static TaskHandle_t xHandleTaskStart = NULL;
 static TaskHandle_t xHandleTaskAdcProc = NULL;
 
 static SemaphoreHandle_t  xMutex = NULL;
@@ -128,6 +128,86 @@ static void vTaskAdcProc(void *pvParameters)
 
 /*
 *********************************************************************************************************
+*	函 数 名: vTaskTaskUserIF
+*	功能说明: 按键消息处理		
+*	形    参: pvParameters 是在创建该任务时传递的形参
+*	返 回 值: 无
+*   优 先 级: 2 
+*********************************************************************************************************
+*/
+static void vTaskTaskUserKeyIF(void *pvParameters)
+{
+	uint8_t ucKeyCode;
+	uint8_t pcWriteBuffer[500];
+	
+
+    while(1)
+    {
+		ucKeyCode = bsp_GetKey();
+		
+		if (ucKeyCode != KEY_NONE)
+		{
+			switch (ucKeyCode)
+			{
+				/* K1键按下 打印任务执行情况 */
+				case KEY_DOWN_K1:			 
+					printf("=================================================\r\n");
+					printf("任务名      任务状态 优先级   剩余栈 任务序号\r\n");
+					vTaskList((char *)&pcWriteBuffer);
+					printf("%s\r\n", pcWriteBuffer);
+				
+					printf("\r\n任务名       运行计数         使用率\r\n");
+					vTaskGetRunTimeStats((char *)&pcWriteBuffer);
+					printf("%s\r\n", pcWriteBuffer);
+					printf("当前动态内存剩余大小 = %d字节\r\n", xPortGetFreeHeapSize());
+					break;
+				
+				/* K2键按下，实现截图功能，将图片以BMP格式保存到SD卡中 */
+				case KEY_DOWN_K2:
+					//xTaskNotifyGive(xHandleTaskMsgPro);
+					break;
+				
+				/* 其他的键值不处理 */
+				default:                     
+					break;
+			}
+		}
+		
+		vTaskDelay(20);
+	}
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: vTaskStart
+*	功能说明: 启动任务，也就是最高优先级任务。主要实现按键检测和触摸检测。
+*	形    参: pvParameters 是在创建该任务时传递的形参
+*	返 回 值: 无
+*   优 先 级: 5  
+*********************************************************************************************************
+*/
+static void vTaskStart(void *pvParameters)
+{
+	uint8_t  ucCount = 0;
+	//uint8_t  ucCountGT811 = 0;
+	//uint8_t  ucCountFT = 0;
+    
+    while(1)
+    {		
+		/* 10ms一次按键检测 */
+		ucCount++;
+		if(ucCount == 10)
+		{
+			ucCount = 0;
+			bsp_KeyScan();
+		}
+		
+		vTaskDelay(1);	
+	}
+}
+
+/*
+*********************************************************************************************************
 *	函 数 名: vTaskAdcProc
 *	功能说明: AD转换处理		
 *	形    参: pvParameters 是在创建该任务时传递的形参
@@ -169,12 +249,12 @@ static void AppTaskCreate (void)
                   NULL );               /* 任务句柄  */
 
     /* 按键事件处理 */
-    //xTaskCreate( vTaskTaskUserIF,   	/* 任务函数  */
-    //             "vTaskUserIF",     	/* 任务名    */
-    //             512,               	/* 任务栈大小，单位word，也就是4字节 */
-    //             NULL,              	/* 任务参数  */
-    //             2,                 	/* 任务优先级*/
-    //             &xHandleTaskUserIF );  /* 任务句柄  */
+    xTaskCreate( vTaskTaskUserKeyIF,   	/* 任务函数  */
+                 "vTaskUserKeyIF",     	/* 任务名    */
+                 512,               	/* 任务栈大小，单位word，也就是4字节 */
+                 NULL,              	/* 任务参数  */
+                 2,                 	/* 任务优先级*/
+                 &xHandleTaskUserKeyIF );  /* 任务句柄  */
 	
 	
 	//xTaskCreate( vTaskLED,    		/* 任务函数  */
@@ -193,12 +273,12 @@ static void AppTaskCreate (void)
         //         &xHandleTaskMsgPro );  /* 任务句柄  */
 	
 	/* 触摸和按键检测 */
-	//xTaskCreate( vTaskStart,     		/* 任务函数  */
-        //         "vTaskStart",   		/* 任务名    */
-        //         512,            		/* 任务栈大小，单位word，也就是4字节 */
-        //         NULL,           		/* 任务参数  */
-        //         5,              		/* 任务优先级*/
-        //         &xHandleTaskStart );   /* 任务句柄  */
+	xTaskCreate( vTaskStart,     		/* 任务函数  */
+                 "vTaskStart",   		/* 任务名    */
+                 512,            		/* 任务栈大小，单位word，也就是4字节 */
+                 NULL,           		/* 任务参数  */
+                 5,              		/* 任务优先级*/
+                 &xHandleTaskStart );   /* 任务句柄  */
 
     /* ADC 处理函数 */
 	xTaskCreate( vTaskAdcProc,     		/* 任务函数  */

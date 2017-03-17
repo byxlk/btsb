@@ -55,7 +55,7 @@ void bsp_Init(void)
 	//bsp_InitExtSRAM();                 /* 初始DWT */
 	LCD_InitHard();	                     /* 初始化显示器硬件(配置GPIO和FSMC,给LCD发送初始化指令) */
 	//TOUCH_InitHard();                  /* 初始化触摸 */
-		
+ 
 	//result = f_mount(&fs, "0:/", 0);   /* 挂载文件系统 */
 }
 
