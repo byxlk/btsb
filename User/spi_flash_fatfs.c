@@ -129,51 +129,6 @@ void DemoFatFS(void)
 					break;
 			}
 		}
-
-		/* 按键滤波和检测由后台systick中断服务程序实现，我们只需要调用bsp_GetKey读取键值即可。 */
-		switch (bsp_GetKey())	/* bsp_GetKey()读取键值, 无键按下时返回 KEY_NONE = 0 */
-		{
-			case KEY_DOWN_K1:			/* K1键按下 */
-				break;
-
-			case KEY_UP_K1:				/* K1键弹起 */
-				break;
-
-			case KEY_DOWN_K2:			/* K2键按下 */
-				break;
-
-			case KEY_UP_K2:				/* K2键弹起 */
-				break;
-
-			case KEY_DOWN_K3:			/* K3键按下 */
-				break;
-
-			case KEY_UP_K3:				/* K3键弹起 */
-				break;
-
-			case JOY_DOWN_U:			/* 摇杆UP键按下 */
-				break;
-
-			case JOY_DOWN_D:			/* 摇杆DOWN键按下 */
-				break;
-
-			case JOY_DOWN_L:			/* 摇杆LEFT键按下 */
-				break;
-
-			case JOY_DOWN_R:			/* 摇杆RIGHT键按下 */
-				break;
-
-			case JOY_DOWN_OK:			/* 摇杆OK键按下 */
-				break;
-
-			case JOY_UP_OK:				/* 摇杆OK键弹起 */
-				break;
-
-			case KEY_NONE:				/* 无键按下 */
-			default:
-				/* 其它的键值不处理 */
-				break;
-		}
 	}
 }
 

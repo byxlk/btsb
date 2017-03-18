@@ -18,60 +18,80 @@
 #define LIGHT_WEAK 30
 #define LIGHT_HIGH  70
 
-#define KEY_COUNT    10	   					/* 按键个数, 8个独立建 + 2个组合键 */
+#define KEY_COUNT    11	   					/* 按键个数, 10个独立建 + 1个组合键 */
+
+/* 按键口对应的RCC时钟 */
+#define RCC_ALL_KEY 	(RCC_AHB1Periph_GPIOC)
+
+#define GPIO_PORT_INT    GPIOC
+#define GPIO_PIN_INT	    GPIO_Pin_1
+
+#define GPIO_PORT_SDA    GPIOC
+#define GPIO_PIN_SDA	    GPIO_Pin_2
+
+#define GPIO_PORT_SCK    GPIOC
+#define GPIO_PIN_SCK	    GPIO_Pin_3
+
 
 /* 根据应用程序的功能重命名按键宏 */
-#define KEY_DOWN_K1		KEY_1_DOWN
-#define KEY_UP_K1		KEY_1_UP
-#define KEY_LONG_K1		KEY_1_LONG
+#define KEY_DOWN_VOL0		KEY_0_DOWN
+#define KEY_UP_VOL0		KEY_0_UP
+#define KEY_LONG_VOL0		KEY_0_LONG
 
-#define KEY_DOWN_K2		KEY_2_DOWN
-#define KEY_UP_K2		KEY_2_UP
-#define KEY_LONG_K2		KEY_2_LONG
+#define KEY_DOWN_VOL1		KEY_1_DOWN
+#define KEY_UP_VOL1		KEY_1_UP
+#define KEY_LONG_VOL1		KEY_1_LONG
 
-#define KEY_DOWN_K3		KEY_3_DOWN
-#define KEY_UP_K3		KEY_3_UP
-#define KEY_LONG_K3		KEY_3_LONG
+#define KEY_DOWN_VOL2		KEY_2_DOWN
+#define KEY_UP_VOL2		KEY_2_UP
+#define KEY_LONG_VOL2		KEY_2_LONG
 
-#define JOY_DOWN_U		KEY_4_DOWN		/* 上 */
-#define JOY_UP_U		KEY_4_UP
-#define JOY_LONG_U		KEY_4_LONG
+#define KEY_DOWN_VOL3		KEY_3_DOWN
+#define KEY_UP_VOL3		KEY_3_UP
+#define KEY_LONG_VOL3		KEY_3_LONG
 
-#define JOY_DOWN_D		KEY_5_DOWN		/* 下 */
-#define JOY_UP_D		KEY_5_UP
-#define JOY_LONG_D		KEY_5_LONG
+#define JOY_DOWN_VOL4		KEY_4_DOWN		/* 上 */
+#define JOY_UP_VOL4		KEY_4_UP
+#define JOY_LONG_VOL4		KEY_4_LONG
 
-#define JOY_DOWN_L		KEY_6_DOWN		/* 左 */
-#define JOY_UP_L		KEY_6_UP
-#define JOY_LONG_L		KEY_6_LONG
+#define JOY_DOWN_VOL5		KEY_5_DOWN		/* 下 */
+#define JOY_UP_VOL5		KEY_5_UP
+#define JOY_LONG_VOL5		KEY_5_LONG
 
-#define JOY_DOWN_R		KEY_7_DOWN		/* 右 */
-#define JOY_UP_R		KEY_7_UP
-#define JOY_LONG_R		KEY_7_LONG
+#define JOY_DOWN_PLAY_PAUSE		KEY_6_DOWN		/* 左 */
+#define JOY_UP_PLAY_PAUSE		KEY_6_UP
+#define JOY_LONG_PLAY_PAUSE		KEY_6_LONG
 
-#define JOY_DOWN_OK		KEY_8_DOWN		/* ok */
-#define JOY_UP_OK		KEY_8_UP
-#define JOY_LONG_OK		KEY_8_LONG
+#define JOY_DOWN_MENU		KEY_7_DOWN		/* 右 */
+#define JOY_UP_MENU		KEY_7_UP
+#define JOY_LONG_MENU		KEY_7_LONG
 
-#define SYS_DOWN_K1K2	KEY_9_DOWN		/* K1 K2 组合键 */
-#define SYS_UP_K1K2	    KEY_9_UP
-#define SYS_LONG_K1K2	KEY_9_LONG
+#define JOY_DOWN_KEY_UP		KEY_8_DOWN		/* ok */
+#define JOY_UP_KEY_UP		KEY_8_UP
+#define JOY_LONG_KEY_UP		KEY_8_LONG
 
-#define SYS_DOWN_K2K3	KEY_10_DOWN		/* K2 K3 组合键 */
-#define SYS_UP_K2K3  	KEY_10_UP
-#define SYS_LONG_K2K3	KEY_10_LONG
+#define SYS_DOWN_KEY_DOWN	KEY_9_DOWN		/* K1 K2 组合键 */
+#define SYS_UP_KEY_DOWN	    KEY_9_UP
+#define SYS_LONG_KEY_DOWN	KEY_9_LONG
+
+#define SYS_DOWN_KEY_MUX	KEY_10_DOWN		/* K2 K3 组合键 */
+#define SYS_UP_KEY_MUX  	KEY_10_UP
+#define SYS_LONG_KEY_MUX	KEY_10_LONG
 
 /* 按键ID, 主要用于bsp_KeyState()函数的入口参数 */
 typedef enum
 {
-	KID_K1 = 0,
-	KID_K2,
-	KID_K3,
-	KID_JOY_U,
-	KID_JOY_D,
-	KID_JOY_L,
-	KID_JOY_R,
-	KID_JOY_OK
+	KID_VOL0 = 0,
+	KID_VOL1,
+	KID_VOL2,
+	KID_VOL3,
+	KID_VOL4,
+	KID_VOL5,
+	KID_PLAY_PAUSE,
+	KID_KEY_MENU,
+	KID_KEY_UP,
+	KID_KEY_DOWN,
+	KID_KEY_MUX
 }KEY_ID_E;
 
 /*
@@ -79,8 +99,8 @@ typedef enum
 	只有连续检测到50ms状态不变才认为有效，包括弹起和按下两种事件
 	即使按键电路不做硬件滤波，该滤波机制也可以保证可靠地检测到按键事件
 */
-#define KEY_FILTER_TIME   5
-#define KEY_LONG_TIME     100			/* 单位10ms， 持续1秒，认为长按事件 */
+#define KEY_SHORT_TIME   1000           /* 1 秒内认为是短按  */
+#define KEY_LONG_TIME     3000			/* 3000ms， 持续3秒，认为长按事件 */
 
 /*
 	每个按键对应1个全局的结构体变量。
@@ -90,13 +110,13 @@ typedef struct
 	/* 下面是一个函数指针，指向判断按键手否按下的函数 */
 	uint8_t (*IsKeyDownFunc)(void); /* 按键按下的判断函数,1表示按下 */
 
-	uint8_t  Count;			/* 滤波器计数器 */
-	uint16_t LongCount;		/* 长按计数器 */
+	TickType_t  KeyDownTick;			/* 按键按下时的系统tick值 */
+    TickType_t  KeyUpTick;     /* 按键松开下时的系统tick值 */
+	uint16_t ShortTime;		/* 按键按下持续时间, 0表示不检测短按 */
 	uint16_t LongTime;		/* 按键按下持续时间, 0表示不检测长按 */
 	uint8_t  State;			/* 按键当前状态（按下还是弹起） */
-	uint8_t  RepeatSpeed;	/* 连续按键周期 */
+	uint16_t  RepeatTime;	/* 连续按键发送周期 */
 	uint8_t  RepeatCount;	/* 连续按键计数器 */
-	uint16_t KeyCodeValue;  /* 记录按键的键码值*/
 }KEY_T;
 
 /*
@@ -109,6 +129,10 @@ typedef struct
 typedef enum
 {
 	KEY_NONE = 0,			/* 0 表示按键事件 */
+
+	KEY_0_DOWN,				/* 1键按下 */
+	KEY_0_UP,				/* 1键弹起 */
+	KEY_0_LONG,				/* 1键长按 */
 
 	KEY_1_DOWN,				/* 1键按下 */
 	KEY_1_UP,				/* 1键弹起 */
@@ -142,11 +166,11 @@ typedef enum
 	KEY_8_UP,				/* 8键弹起 */
 	KEY_8_LONG,				/* 8键长按 */
 
-	/* 组合键 */
 	KEY_9_DOWN,				/* 9键按下 */
 	KEY_9_UP,				/* 9键弹起 */
 	KEY_9_LONG,				/* 9键长按 */
 
+	/* 组合键 */
 	KEY_10_DOWN,			/* 10键按下 */
 	KEY_10_UP,				/* 10键弹起 */
 	KEY_10_LONG,			/* 10键长按 */
@@ -165,13 +189,14 @@ typedef struct
 /* 供外部调用的函数声明 */
 void bsp_InitKey(void);
 void bsp_KeyScan(void);
+void bsp_TouchKeyScan(void);
 void bsp_PutKey(uint8_t _KeyCode);
 uint8_t bsp_GetKey(void);
 uint8_t bsp_GetKey2(void);
 uint8_t bsp_GetKeyState(KEY_ID_E _ucKeyID);
 void bsp_SetKeyParam(uint8_t _ucKeyID, uint16_t _LongTime, uint8_t  _RepeatSpeed);
 void bsp_ClearKey(void);
-void bsp_KeyCodeValueProcess(void);
+void bsp_TouchKeyCodeValueProcess(void);
 void bsp_SetLedLight(uint8_t LightValue);
 
 #endif

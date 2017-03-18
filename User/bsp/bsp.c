@@ -88,7 +88,6 @@ void bsp_Idle(void)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-extern __IO uint8_t g_ucKey1IRQ; 
 void EXTI2_IRQHandler(void)
 {
 
@@ -96,8 +95,7 @@ void EXTI2_IRQHandler(void)
 	{	
 		EXTI->IMR&=~(1<<2);	                /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line2); /* 清除中断标志位 */
-		g_ucKey1IRQ = 2;
-		bsp_KeyCodeValueProcess();             /* 中断到来后读取按键的KeyCode值*/
+		bsp_TouchKeyCodeValueProcess();             /* 中断到来后读取按键的KeyCode值*/
 	}
 
 }
@@ -117,7 +115,6 @@ void EXTI3_IRQHandler(void)
 	{	
 		EXTI->IMR&=~(1<<3);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line3); /* 清除中断标志位 */
-		g_ucKey1IRQ = 3;
 	}
 
 }
@@ -136,14 +133,12 @@ void EXTI9_5_IRQHandler(void)
 	{	
 		EXTI->IMR&=~(1<<7);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line7); /* 清除中断标志位 */
-		g_ucKey1IRQ = 7;
 	}
 	
 	if(EXTI_GetITStatus(EXTI_Line8) != RESET)
 	{	
 		EXTI->IMR&=~(1<<8);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line8); /* 清除中断标志位 */
-		g_ucKey1IRQ = 8;
 	}
 			   
 }
@@ -163,21 +158,18 @@ void EXTI15_10_IRQHandler(void)
 	{	
 		EXTI->IMR&=~(1<<11);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line11); /* 清除中断标志位 */
-		g_ucKey1IRQ = 11;
 	}
 	
 	if(EXTI_GetITStatus(EXTI_Line13) != RESET)
 	{	
 		EXTI->IMR&=~(1<<13);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line13); /* 清除中断标志位 */
-		g_ucKey1IRQ = 13;
 	}
 	
 	if(EXTI_GetITStatus(EXTI_Line15) != RESET)
 	{	
 		EXTI->IMR&=~(1<<15);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line15); /* 清除中断标志位 */
-		g_ucKey1IRQ = 15;
 	}
 			   
 }

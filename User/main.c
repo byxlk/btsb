@@ -143,14 +143,15 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 
     while(1)
     {
-		ucKeyCode = bsp_GetKey();
+        /* 按键滤波和检测由后台systick中断服务程序实现，我们只需要调用bsp_GetKey读取键值即可。 */
+		ucKeyCode = bsp_GetKey();  /* bsp_GetKey()读取键值, 无键按下时返回 KEY_NONE = 0 */
 		
 		if (ucKeyCode != KEY_NONE)
 		{
 			switch (ucKeyCode)
 			{
 				/* K1键按下 打印任务执行情况 */
-				case KEY_DOWN_K1:			 
+				case KEY_DOWN_VOL0:			 
 					printf("=================================================\r\n");
 					printf("任务名      任务状态 优先级   剩余栈 任务序号\r\n");
 					vTaskList((char *)&pcWriteBuffer);
@@ -163,7 +164,7 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 					break;
 				
 				/* K2键按下，实现截图功能，将图片以BMP格式保存到SD卡中 */
-				case KEY_DOWN_K2:
+				case KEY_DOWN_VOL1:
 					//xTaskNotifyGive(xHandleTaskMsgPro);
 					break;
 				
@@ -188,21 +189,22 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 */
 static void vTaskStart(void *pvParameters)
 {
-	uint8_t  ucCount = 0;
-	//uint8_t  ucCountGT811 = 0;
-	//uint8_t  ucCountFT = 0;
-    
+    TickType_t tick_current = 0;
+    TickType_t tick_backup = 0;
+
+    tick_backup = xTaskGetTickCount();
     while(1)
     {		
+        tick_current = xTaskGetTickCount();
 		/* 10ms一次按键检测 */
-		ucCount++;
-		if(ucCount == 10)
+
+		if(tick_current - tick_backup >= 10)
 		{
-			ucCount = 0;
-			bsp_KeyScan();
+		    tick_backup = tick_current;
+			bsp_TouchKeyScan();
 		}
-		
-		vTaskDelay(1);	
+
+		vTaskDelay(5);	
 	}
 }
 

@@ -1236,7 +1236,7 @@ F (..\FreeRTOS\portable\RVDS\ARM_CM3\portmacro.h)(0x58CAB797)()
 F (..\FatFS\src\diskio.c)(0x58CAB7F1)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\diskio.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\diskio.crf --depend .\objects\diskio.d)
 I (..\FatFS\src\diskio.h)(0x58CAB796)
 I (..\FatFS\src\integer.h)(0x58CAB796)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -1339,7 +1339,7 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\FatFS\src\ff.c)(0x58CAB796)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\ff.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\ff.crf --depend .\objects\ff.d)
 I (..\FatFS\src\ff.h)(0x58CAB796)
 I (..\FatFS\src\integer.h)(0x58CAB796)
@@ -1442,7 +1442,7 @@ I (..\STemWin\inc\LCD.h)(0x58CAB797)
 I (..\STemWin\inc\Global.h)(0x58CAB797)
 I (..\STemWin\inc\GUI_Version.h)(0x58CAB797)
 I (..\STemWin\Config\GUIDRV_Template.h)(0x58CAB797)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -1540,10 +1540,10 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\STemWin\Config\LCDConf.h)(0x58CAB797)()
 F (..\STemWin\Lib\STemWin532_CM3_OS_Keil.lib)(0x58CAB797)()
-F (..\User\main.c)(0x58CC06C8)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\main.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\main.crf --depend .\objects\main.d)
+F (..\User\main.c)(0x58CD6564)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\main.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\main.crf --depend .\objects\main.d)
 I (..\User\includes.h)(0x58CAB798)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdarg.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdio.h)(0x574E3E26)
@@ -1566,7 +1566,7 @@ I (..\FreeRTOS\include\croutine.h)(0x58CAB797)
 I (..\FreeRTOS\include\semphr.h)(0x58CAB797)
 I (..\FreeRTOS\include\event_groups.h)(0x58CAB797)
 I (..\FreeRTOS\include\timers.h)(0x58CAB797)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\Libraries\CMSIS\Device\ST\STM32F2xx\Include\stm32f2xx.h)(0x58CAB797)
 I (..\Libraries\CMSIS\Include\core_cm3.h)(0x58CAB797)
 I (..\Libraries\CMSIS\Include\core_cmInstr.h)(0x58CAB797)
@@ -1657,7 +1657,7 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 I (..\User\emWinTask\guitasktest.h)(0x58CAB798)
 F (..\User\SysInfoTest.c)(0x58CAB798)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\sysinfotest.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\sysinfotest.crf --depend .\objects\sysinfotest.d)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -1682,7 +1682,7 @@ I (..\FreeRTOS\include\croutine.h)(0x58CAB797)
 I (..\FreeRTOS\include\semphr.h)(0x58CAB797)
 I (..\FreeRTOS\include\event_groups.h)(0x58CAB797)
 I (..\FreeRTOS\include\timers.h)(0x58CAB797)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\Libraries\CMSIS\Device\ST\STM32F2xx\Include\stm32f2xx.h)(0x58CAB797)
 I (..\Libraries\CMSIS\Include\core_cm3.h)(0x58CAB797)
 I (..\Libraries\CMSIS\Include\core_cmInstr.h)(0x58CAB797)
@@ -1773,11 +1773,11 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\FreeRTOSConfig.h)(0x58CAC30C)()
 F (..\User\includes.h)(0x58CAB798)()
-F (..\User\spi_flash_fatfs.c)(0x58CAC173)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\spi_flash_fatfs.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\spi_flash_fatfs.crf --depend .\objects\spi_flash_fatfs.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+F (..\User\spi_flash_fatfs.c)(0x58CD6575)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\spi_flash_fatfs.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\spi_flash_fatfs.crf --depend .\objects\spi_flash_fatfs.d)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -1882,9 +1882,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
-F (..\User\bsp\bsp.c)(0x58CC020C)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp.crf --depend .\objects\bsp.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
+F (..\User\bsp\bsp.c)(0x58CD5A46)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp.crf --depend .\objects\bsp.d)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -1989,9 +1989,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\bsp\bsp_dwt.c)(0x58CAB798)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_dwt.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_dwt.crf --depend .\objects\bsp_dwt.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -2096,9 +2096,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\bsp\bsp_uart_fifo.c)(0x58CAB7F2)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_uart_fifo.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_uart_fifo.crf --depend .\objects\bsp_uart_fifo.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -2203,9 +2203,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\bsp\bsp_tft_lcd.c)(0x58CAB7F2)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_tft_lcd.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_tft_lcd.crf --depend .\objects\bsp_tft_lcd.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -2310,9 +2310,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\bsp\bsp_lcd_st7789v.c)(0x58CAB7F2)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_lcd_st7789v.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_lcd_st7789v.crf --depend .\objects\bsp_lcd_st7789v.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -2417,9 +2417,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\bsp\bsp_tim_pwm.c)(0x58CAB7F2)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_tim_pwm.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_tim_pwm.crf --depend .\objects\bsp_tim_pwm.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -2524,9 +2524,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\bsp\bsp_cpu_rtc.c)(0x58CAB798)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_cpu_rtc.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_cpu_rtc.crf --depend .\objects\bsp_cpu_rtc.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -2631,9 +2631,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\bsp\bsp_user_lib.c)(0x58CAB798)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_user_lib.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_user_lib.crf --depend .\objects\bsp_user_lib.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -2738,9 +2738,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\bsp\bsp_adc.c)(0x58CAB7F2)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_adc.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_adc.crf --depend .\objects\bsp_adc.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -2845,9 +2845,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\bsp\bsp_spi_flash.c)(0x58CAB7F2)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_spi_flash.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_spi_flash.crf --depend .\objects\bsp_spi_flash.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -2952,9 +2952,9 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
-F (..\User\bsp\bsp_key.c)(0x58CBFDF8)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_key.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_key.crf --depend .\objects\bsp_key.d)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
+F (..\User\bsp\bsp_key.c)(0x58CD619E)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\bsp_key.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\bsp_key.crf --depend .\objects\bsp_key.d)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stddef.h)(0x574E3E26)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
@@ -3059,7 +3059,7 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\emWinTask\MainTask.c)(0x58CAB798)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\maintask.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\maintask.crf --depend .\objects\maintask.d)
 I (..\User\emWinTask\MainTask.h)(0x58CAB798)
 I (..\STemWin\inc\GUI.h)(0x58CAB797)
@@ -3133,7 +3133,7 @@ I (..\FreeRTOS\include\croutine.h)(0x58CAB797)
 I (..\FreeRTOS\include\semphr.h)(0x58CAB797)
 I (..\FreeRTOS\include\event_groups.h)(0x58CAB797)
 I (..\FreeRTOS\include\timers.h)(0x58CAB797)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\Libraries\CMSIS\Device\ST\STM32F2xx\Include\stm32f2xx.h)(0x58CAB797)
 I (..\Libraries\CMSIS\Include\core_cm3.h)(0x58CAB797)
 I (..\Libraries\CMSIS\Include\core_cmInstr.h)(0x58CAB797)
@@ -3224,7 +3224,7 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\User\emWinTask\guitasktest.c)(0x58CAC19B)(-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections --asm --interleave --asm_dir ".\\Listings\\" -I ..\Libraries\CMSIS\Include -I ..\Libraries\CMSIS\RTOS\Template -I ..\Libraries\STM32F2xx_StdPeriph_Driver\inc -I ..\Libraries\CMSIS\Device\ST\STM32F2xx\Include -I ..\FatFS\src -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM3 -I ..\User -I ..\User\bsp -I ..\User\emWinTask -I ..\STemWin\Config -I ..\STemWin\DisplayDriver -I ..\STemWin\inc -I ..\STemWin\OS-IH:\BluetoothSoundBox\Project_BtSB\SZ_VIPIN_BTSB_Project\Project\RTE-IC:\Keil_v521a\ARM\PACK\Keil\STM32F2xx_DFP\2.6.0\Drivers\CMSIS\Device\ST\STM32F2xx\Include-IC:\Keil_v521a\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F205xx -DUSE_STDPERIPH_DRIVER-o .\objects\guitasktest.o --list_dir ".\\Listings\\" --list --omf_browse .\objects\guitasktest.crf --depend .\objects\guitasktest.d)
 I (..\STemWin\inc\DIALOG.h)(0x58CAB797)
 I (..\STemWin\inc\WM.h)(0x58CAB798)
@@ -3270,7 +3270,7 @@ I (..\STemWin\inc\TEXT.h)(0x58CAB798)
 I (..\STemWin\inc\TREEVIEW.h)(0x58CAB798)
 I (..\STemWin\inc\KNOB.h)(0x58CAB797)
 I (..\User\emWinTask\guitasktest.h)(0x58CAB798)
-I (..\User\bsp\bsp.h)(0x58CAC625)
+I (..\User\bsp\bsp.h)(0x58CAC71A)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x58CAB797)
 I (C:\Keil_v521a\ARM\ARMCC\include\stdint.h)(0x574E3E26)
 I (..\User\FreeRTOSConfig.h)(0x58CAC30C)
@@ -3332,7 +3332,7 @@ I (..\User\bsp\bsp_user_lib.h)(0x58CAB798)
 I (..\User\spi_flash_fatfs.h)(0x58CAB798)
 I (..\User\bsp\bsp_spi_flash.h)(0x58CAB798)
 I (..\User\bsp\bsp_adc.h)(0x58CAB798)
-I (..\User\bsp\bsp_key.h)(0x58CAB7F2)
+I (..\User\bsp\bsp_key.h)(0x58CD6481)
 F (..\Doc\03.开发环境说明.txt)(0x58CAB796)()
 F (..\Doc\01.例程功能说明.txt)(0x58CAB796)()
 F (..\Doc\02.例程修改记录.txt)(0x58CAB796)()
