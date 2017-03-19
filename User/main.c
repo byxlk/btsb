@@ -151,7 +151,7 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 			switch (ucKeyCode)
 			{
 				/* K1键按下 打印任务执行情况 */
-				case KEY_DOWN_VOL0:			 
+				case KEY_DOWN_DEBUG:			 
 					printf("=================================================\r\n");
 					printf("任务名      任务状态 优先级   剩余栈 任务序号\r\n");
 					vTaskList((char *)&pcWriteBuffer);
@@ -162,12 +162,32 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 					printf("%s\r\n", pcWriteBuffer);
 					printf("当前动态内存剩余大小 = %d字节\r\n", xPortGetFreeHeapSize());
 					break;
-				
+
+				case KEY_DOWN_MUX:
+                    break;
+
 				/* K2键按下，实现截图功能，将图片以BMP格式保存到SD卡中 */
-				case KEY_DOWN_VOL1:
+				case KEY_DOWN_VOL0:
+                case KEY_DOWN_VOL1:
+                case KEY_DOWN_VOL2:
+                case KEY_DOWN_VOL3:
+                case KEY_DOWN_VOL4:
+                case KEY_DOWN_VOL5:
 					//xTaskNotifyGive(xHandleTaskMsgPro);
 					break;
-				
+                
+                case KEY_DOWN_PLAY_PAUSE:
+                    break; 
+
+                case KEY_DOWN_MENU:
+                    break;
+
+                case KEY_DOWN_UP:
+                    break;
+
+                case KEY_DOWN_DOWN:
+                    break;
+
 				/* 其他的键值不处理 */
 				default:                     
 					break;

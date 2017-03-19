@@ -56,6 +56,7 @@ static uint8_t IsKeyDown8(void) {if (RTC_ReadBackupRegister(RTC_BKP_DR0) & (0x1 
 static uint8_t IsKeyDown9(void) {if (RTC_ReadBackupRegister(RTC_BKP_DR0) & (0x1 << 9)) return 1;else return 0;}
 
 static uint8_t IsKeyDown10(void) {if (IsKeyDown8() && IsKeyDown9()) return 1;else return 0;}
+static uint8_t IsKeyDown11(void) {if (IsKeyDown6() && IsKeyDown7()) return 1;else return 0;}
 
 /*
 *********************************************************************************************************
@@ -147,6 +148,7 @@ static void bsp_InitKeyVar(void)
 
 	/* ×éºÏ¼ü */
 	s_tBtn[10].IsKeyDownFunc = IsKeyDown10;
+    s_tBtn[11].IsKeyDownFunc = IsKeyDown11;
 }
 
 /*
@@ -436,6 +438,17 @@ void bsp_TouchKeyCodeValueProcess(void)
     {
         s_tBtn[10].State = 1;
         s_tBtn[10].KeyUpTick = Tick_Current;
+    }
+    
+    if(s_tBtn[6].State && s_tBtn[7].State)
+    {
+        s_tBtn[11].State = 1;
+        s_tBtn[11].KeyDownTick = Tick_Current;
+    }
+    else
+    {
+        s_tBtn[11].State = 1;
+        s_tBtn[11].KeyUpTick = Tick_Current;
     }
 
 	RTC_WriteBackupRegister(RTC_BKP_DR0, _KeyCodeValue);

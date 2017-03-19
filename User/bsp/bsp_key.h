@@ -18,7 +18,7 @@
 #define LIGHT_WEAK 30
 #define LIGHT_HIGH  70
 
-#define KEY_COUNT    11	   					/* 按键个数, 10个独立建 + 1个组合键 */
+#define KEY_COUNT    12	   					/* 按键个数, 10个独立建 + 2个组合键 */
 
 /* 按键口对应的RCC时钟 */
 #define RCC_ALL_KEY 	(RCC_AHB1Periph_GPIOC)
@@ -50,33 +50,38 @@
 #define KEY_UP_VOL3		KEY_3_UP
 #define KEY_LONG_VOL3		KEY_3_LONG
 
-#define JOY_DOWN_VOL4		KEY_4_DOWN		/* 上 */
-#define JOY_UP_VOL4		KEY_4_UP
-#define JOY_LONG_VOL4		KEY_4_LONG
+#define KEY_DOWN_VOL4		KEY_4_DOWN		/* 上 */
+#define KEY_UP_VOL4		KEY_4_UP
+#define KEY_LONG_VOL4		KEY_4_LONG
 
-#define JOY_DOWN_VOL5		KEY_5_DOWN		/* 下 */
-#define JOY_UP_VOL5		KEY_5_UP
-#define JOY_LONG_VOL5		KEY_5_LONG
+#define KEY_DOWN_VOL5		KEY_5_DOWN		/* 下 */
+#define KEY_UP_VOL5		KEY_5_UP
+#define KEY_LONG_VOL5		KEY_5_LONG
 
-#define JOY_DOWN_PLAY_PAUSE		KEY_6_DOWN		/* 左 */
-#define JOY_UP_PLAY_PAUSE		KEY_6_UP
-#define JOY_LONG_PLAY_PAUSE		KEY_6_LONG
+#define KEY_DOWN_PLAY_PAUSE		KEY_6_DOWN		/* 左 */
+#define KEY_UP_PLAY_PAUSE		KEY_6_UP
+#define KEY_LONG_PLAY_PAUSE		KEY_6_LONG
 
-#define JOY_DOWN_MENU		KEY_7_DOWN		/* 右 */
-#define JOY_UP_MENU		KEY_7_UP
-#define JOY_LONG_MENU		KEY_7_LONG
+#define KEY_DOWN_MENU		KEY_7_DOWN		/* 右 */
+#define KEY_UP_MENU		KEY_7_UP
+#define KEY_LONG_MENU		KEY_7_LONG
 
-#define JOY_DOWN_KEY_UP		KEY_8_DOWN		/* ok */
-#define JOY_UP_KEY_UP		KEY_8_UP
-#define JOY_LONG_KEY_UP		KEY_8_LONG
+#define KEY_DOWN_UP		KEY_8_DOWN		/* ok */
+#define KEY_UP_UP		KEY_8_UP
+#define KEY_LONG_UP		KEY_8_LONG
 
-#define SYS_DOWN_KEY_DOWN	KEY_9_DOWN		/* K1 K2 组合键 */
-#define SYS_UP_KEY_DOWN	    KEY_9_UP
-#define SYS_LONG_KEY_DOWN	KEY_9_LONG
+#define KEY_DOWN_DOWN	KEY_9_DOWN		
+#define KEY_UP_DOWN	    KEY_9_UP
+#define KEY_LONG_DOWN	KEY_9_LONG
 
-#define SYS_DOWN_KEY_MUX	KEY_10_DOWN		/* K2 K3 组合键 */
-#define SYS_UP_KEY_MUX  	KEY_10_UP
-#define SYS_LONG_KEY_MUX	KEY_10_LONG
+#define KEY_DOWN_MUX	KEY_10_DOWN		/* K2 K3 组合键 */
+#define KEY_UP_MUX  	KEY_10_UP
+#define KEY_LONG_MUX	KEY_10_LONG
+
+#define KEY_DOWN_DEBUG	KEY_11_DOWN		/* K2 K3 组合键 */
+#define KEY_UP_DEBUG  	KEY_11_UP
+#define KEY_LONG_DEBUG	KEY_11_LONG
+
 
 /* 按键ID, 主要用于bsp_KeyState()函数的入口参数 */
 typedef enum
@@ -91,7 +96,8 @@ typedef enum
 	KID_KEY_MENU,
 	KID_KEY_UP,
 	KID_KEY_DOWN,
-	KID_KEY_MUX
+	KID_KEY_MUX,
+	KID_KEY_DEBUG
 }KEY_ID_E;
 
 /*
@@ -174,6 +180,10 @@ typedef enum
 	KEY_10_DOWN,			/* 10键按下 */
 	KEY_10_UP,				/* 10键弹起 */
 	KEY_10_LONG,			/* 10键长按 */
+
+    KEY_11_DOWN,			/* 10键按下 */
+	KEY_11_UP,				/* 10键弹起 */
+	KEY_11_LONG,			/* 10键长按 */
 }KEY_ENUM;
 
 /* 按键FIFO用到变量 */
