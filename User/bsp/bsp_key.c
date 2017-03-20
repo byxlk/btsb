@@ -35,7 +35,7 @@
 /////////////////////////////////////////////////////////////////
 static KEY_T s_tBtn[KEY_COUNT];
 static KEY_FIFO_T s_tKey;		/* 按键FIFO变量,结构体 */
-
+static uint8_t gTest = 0;
 /*
 *********************************************************************************************************
 *	函 数 名: IsKeyDownX
@@ -75,7 +75,6 @@ static void bsp_InitKeyHard(void)
 
 	/* 第2步：配置所有的按键GPIO为浮动输入模式(实际上CPU复位后就是输入状态) */
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;		/* 设为输入口 */
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;		/* 设为推挽模式 */
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;	/* 无需上下拉电阻 */
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	/* IO口最大速度 */
 
@@ -86,6 +85,7 @@ static void bsp_InitKeyHard(void)
 	GPIO_Init(GPIO_PORT_INT, &GPIO_InitStructure);
     
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;        /* 设为输出口 */
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 	GPIO_InitStructure.GPIO_Pin = GPIO_PIN_SCK;
 	GPIO_Init(GPIO_PORT_SCK, &GPIO_InitStructure);
 	
@@ -168,10 +168,10 @@ static void bsp_InitKeyEXTI(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     /* 连接 EXTI Line8 到 PI8 引脚 */
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC, EXTI_PinSource2);
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC, EXTI_PinSource1);
     
     /* 配置 EXTI LineXXX */
-    EXTI_InitStructure.EXTI_Line = EXTI_Line2;
+    EXTI_InitStructure.EXTI_Line = EXTI_Line1;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
@@ -181,7 +181,7 @@ static void bsp_InitKeyEXTI(void)
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
     
     /* 中断优先级配置 最低优先级 这里一定要分开的设置中断，不能够合并到一个里面设置 */
-    NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x03;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
@@ -232,7 +232,7 @@ void bsp_PutKey(uint8_t _KeyCode)
 */
 uint8_t bsp_GetKey(void)
 {
-	uint8_t ret;
+	uint8_t ret = KEY_NONE;
 
 	if (s_tKey.Read == s_tKey.Write)
 	{
@@ -241,6 +241,7 @@ uint8_t bsp_GetKey(void)
 	else
 	{
 		ret = s_tKey.Buf[s_tKey.Read];
+        //s_tKey.Buf[s_tKey.Read] = KEY_NONE;
 
 		if (++s_tKey.Read >= KEY_FIFO_SIZE)
 		{
@@ -336,7 +337,11 @@ void bsp_TouchKeyScan(void)
 	uint8_t i;
     KEY_T *pBtn;
     TickType_t Tick_Current = 0;
-
+    if(gTest)
+    {
+        printf("Key code value: %x\r\n",RTC_ReadBackupRegister(RTC_BKP_DR0));
+        gTest = 0;
+    }
     Tick_Current = xTaskGetTickCount();
 	for (i = 0; i < KEY_COUNT; i++)
 	{
@@ -373,12 +378,11 @@ void bsp_TouchKeyScan(void)
             }
             else
             {
-                bsp_PutKey((uint8_t)(3 * i + 2));
+                bsp_PutKey((uint8_t)(KEY_NONE));
             }
         }
 	}
 }
-
 
 /*
 *********************************************************************************************************
@@ -397,6 +401,7 @@ void bsp_TouchKeyCodeValueProcess(void)
 	
 	//if(GPIO_ReadInputDataBit(GPIO_PORT_SDA, GPIO_PIN_SDA))
 	//	return ;
+    gTest = 1;
 
     Tick_Current = xTaskGetTickCountFromISR();
     
@@ -415,16 +420,17 @@ void bsp_TouchKeyCodeValueProcess(void)
 		
 		if( GPIO_ReadInputDataBit(GPIO_PORT_SDA, GPIO_PIN_SDA) )
 		{
-			_KeyCodeValue |= (0x1 << i);
-            pBtn->State = 1;
-            pBtn->KeyDownTick = Tick_Current;
-		}
-		else
-		{
 			_KeyCodeValue &= (~(0x1 << i));
             pBtn->State = 0;
             pBtn->KeyUpTick = Tick_Current;
+		}
+		else
+		{
+			_KeyCodeValue |= (0x1 << i);
+            pBtn->State = 1;
+            pBtn->KeyDownTick = Tick_Current;
 		}        
+        
 		bsp_DelayUS(50);
 	}
 

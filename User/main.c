@@ -148,6 +148,7 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 		
 		if (ucKeyCode != KEY_NONE)
 		{
+		    //printf("Press Key %d\r\n",ucKeyCode);
 			switch (ucKeyCode)
 			{
 				/* K1键按下 打印任务执行情况 */

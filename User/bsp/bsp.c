@@ -88,14 +88,14 @@ void bsp_Idle(void)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void EXTI2_IRQHandler(void)
+void EXTI1_IRQHandler(void)
 {
 
-	if(EXTI_GetITStatus(EXTI_Line2) != RESET)
-	{	
-		EXTI->IMR&=~(1<<2);	                /* 关闭中断       */
-		EXTI_ClearITPendingBit(EXTI_Line2); /* 清除中断标志位 */
+	if(EXTI_GetITStatus(EXTI_Line1) != RESET)
+	{
 		bsp_TouchKeyCodeValueProcess();             /* 中断到来后读取按键的KeyCode值*/
+		//EXTI->IMR&=~(1<<1);	                /* 关闭中断       */
+		EXTI_ClearITPendingBit(EXTI_Line1); /* 清除中断标志位 */
 	}
 
 }
