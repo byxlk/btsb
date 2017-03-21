@@ -35,6 +35,9 @@
 /////////////////////////////////////////////////////////////////
 static KEY_T s_tBtn[KEY_COUNT];
 static KEY_FIFO_T s_tKey;		/* 按键FIFO变量,结构体 */
+static uint16_t gLastRingKeyValue = 0;
+static uint16_t gLastPressKeyValue = 0;
+//static uint16_t gMuxKeyValue = 0;
 static uint8_t gTest = 0;
 /*
 *********************************************************************************************************
@@ -241,7 +244,6 @@ uint8_t bsp_GetKey(void)
 	else
 	{
 		ret = s_tKey.Buf[s_tKey.Read];
-        //s_tKey.Buf[s_tKey.Read] = KEY_NONE;
 
 		if (++s_tKey.Read >= KEY_FIFO_SIZE)
 		{
@@ -384,6 +386,64 @@ void bsp_TouchKeyScan(void)
 	}
 }
 
+
+/*
+*********************************************************************************************************
+*	函 数 名: bsp_TouchKeyScan
+*	功能说明: 扫描所有按键。非阻塞，被systick中断周期性的调用
+*	形    参:  无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+
+void bsp_TouchKeyScan_new(void)
+{
+	uint8_t i;
+    KEY_T *pBtn;
+    TickType_t Tick_Current = 0;
+
+    Tick_Current = xTaskGetTickCount();
+	for (i = 0; i < KEY_COUNT; i++)
+	{
+	    pBtn = &s_tBtn[i];
+        if (pBtn->State) //有按键按下
+	    {
+	        if(Tick_Current - pBtn->KeyDownTick > pBtn->LongTime) //连续按键
+	        {
+	            if (pBtn->RepeatTime > 0)
+				{
+					if((Tick_Current - pBtn->KeyDownTick - pBtn->LongTime)
+                        / pBtn->RepeatTime == 0)
+					{
+						pBtn->RepeatCount++;
+						/* 常按键后，每隔10ms发送1个按键 */
+						bsp_PutKey((uint8_t)(3 * i + 1));
+					}
+				}
+	        }
+        }
+        else //按键已经松开
+        {
+            if(pBtn->KeyUpTick > pBtn->KeyDownTick)
+            {
+                pBtn->KeyDownTick = pBtn->KeyUpTick;
+                if(pBtn->KeyUpTick - pBtn->KeyDownTick < 1000)
+                    bsp_PutKey((uint8_t)(3 * i + 1));
+                else if(pBtn->KeyUpTick - pBtn->KeyDownTick < 3000)
+                    bsp_PutKey((uint8_t)(3 * i + 3));
+                else
+                {
+                    pBtn->RepeatCount = 0;
+                }
+            }
+            else
+            {
+                bsp_PutKey((uint8_t)(KEY_NONE));
+            }
+        }
+	}
+}
+
 /*
 *********************************************************************************************************
 *	函 数 名: bsp_KeyCodeValueRead
@@ -434,29 +494,66 @@ void bsp_TouchKeyCodeValueProcess(void)
 		bsp_DelayUS(50);
 	}
 
-    /* 处理组合按键 */
-    if(s_tBtn[8].State && s_tBtn[9].State)
+
+    if(_KeyCodeValue == 0)//单个 松开案件后才处理
     {
-        s_tBtn[10].State = 1;
-        s_tBtn[10].KeyDownTick = Tick_Current;
+        gLastRingKeyValue = 0;
+        if(gLastPressKeyValue != 0)
+        {
+            switch(gLastPressKeyValue)
+            {
+                case KEY6_VAL:bsp_PutKey(KEY_6_DOWN);break;
+                case KEY7_VAL:bsp_PutKey(KEY_7_DOWN);break;
+                case KEY8_VAL:bsp_PutKey(KEY_8_DOWN);break;
+                case KEY9_VAL:bsp_PutKey(KEY_9_DOWN);break;
+            }
+
+            gLastPressKeyValue = 0;
+        }
     }
-    else
+    else if(_KeyCodeValue > KEY_NONE && _KeyCodeValue < KEY6_VAL)//0-5
     {
-        s_tBtn[10].State = 1;
-        s_tBtn[10].KeyUpTick = Tick_Current;
+        if(gLastRingKeyValue == 0) 
+            gLastRingKeyValue = _KeyCodeValue; 
+        
+        if(((gLastRingKeyValue < _KeyCodeValue) && (gLastRingKeyValue != KEY5_VAL))
+                || gLastRingKeyValue == KEY5_VAL && _KeyCodeValue == KEY0_VAL)
+        {
+             
+             if(gLastRingKeyValue == KEY0_VAL && _KeyCodeValue == KEY5_VAL)
+                bsp_PutKey(KEY_VOL_UP);
+             else
+                bsp_PutKey(KEY_VOL_DOWN);
+             gLastRingKeyValue = _KeyCodeValue;
+        }
+        else if(((gLastRingKeyValue > _KeyCodeValue) && (gLastRingKeyValue != KEY0_VAL))
+                || gLastRingKeyValue == KEY0_VAL && _KeyCodeValue == KEY5_VAL)
+        {
+             gLastRingKeyValue = _KeyCodeValue;
+             bsp_PutKey(KEY_VOL_UP);
+        }
+    }
+    else// 6789
+    {
+        if(gLastPressKeyValue == 0)
+            gLastPressKeyValue = _KeyCodeValue;
+        else
+        {
+            if((gLastPressKeyValue == KEY6_VAL && _KeyCodeValue == KEY7_VAL)
+                || gLastPressKeyValue == KEY7_VAL && _KeyCodeValue == KEY6_VAL)
+            {
+                bsp_PutKey(KEY_11_DOWN);
+                gLastPressKeyValue = 0;
+            }
+            else if((gLastPressKeyValue == KEY8_VAL && _KeyCodeValue == KEY9_VAL)
+                || (gLastPressKeyValue == KEY9_VAL && _KeyCodeValue == KEY8_VAL))
+            {
+                bsp_PutKey(KEY_10_DOWN);
+                gLastPressKeyValue = 0;
+            }
+        }
     }
     
-    if(s_tBtn[6].State && s_tBtn[7].State)
-    {
-        s_tBtn[11].State = 1;
-        s_tBtn[11].KeyDownTick = Tick_Current;
-    }
-    else
-    {
-        s_tBtn[11].State = 1;
-        s_tBtn[11].KeyUpTick = Tick_Current;
-    }
-
 	RTC_WriteBackupRegister(RTC_BKP_DR0, _KeyCodeValue);
 }
 

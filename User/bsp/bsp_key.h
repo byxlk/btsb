@@ -34,54 +34,28 @@
 
 
 /* 根据应用程序的功能重命名按键宏 */
-#define KEY_DOWN_VOL0		KEY_0_DOWN
-#define KEY_UP_VOL0		KEY_0_UP
-#define KEY_LONG_VOL0		KEY_0_LONG
-
-#define KEY_DOWN_VOL1		KEY_1_DOWN
-#define KEY_UP_VOL1		KEY_1_UP
-#define KEY_LONG_VOL1		KEY_1_LONG
-
-#define KEY_DOWN_VOL2		KEY_2_DOWN
-#define KEY_UP_VOL2		KEY_2_UP
-#define KEY_LONG_VOL2		KEY_2_LONG
-
-#define KEY_DOWN_VOL3		KEY_3_DOWN
-#define KEY_UP_VOL3		KEY_3_UP
-#define KEY_LONG_VOL3		KEY_3_LONG
-
-#define KEY_DOWN_VOL4		KEY_4_DOWN		/* 上 */
-#define KEY_UP_VOL4		KEY_4_UP
-#define KEY_LONG_VOL4		KEY_4_LONG
-
-#define KEY_DOWN_VOL5		KEY_5_DOWN		/* 下 */
-#define KEY_UP_VOL5		KEY_5_UP
-#define KEY_LONG_VOL5		KEY_5_LONG
+#define KEY_DOWN_VOL_DOWN		KEY_VOL_DOWN
+#define KEY_DOWN_VOL_UP		KEY_VOL_UP
 
 #define KEY_DOWN_PLAY_PAUSE		KEY_6_DOWN		/* 左 */
-#define KEY_UP_PLAY_PAUSE		KEY_6_UP
-#define KEY_LONG_PLAY_PAUSE		KEY_6_LONG
-
 #define KEY_DOWN_MENU		KEY_7_DOWN		/* 右 */
-#define KEY_UP_MENU		KEY_7_UP
-#define KEY_LONG_MENU		KEY_7_LONG
-
 #define KEY_DOWN_UP		KEY_8_DOWN		/* ok */
-#define KEY_UP_UP		KEY_8_UP
-#define KEY_LONG_UP		KEY_8_LONG
-
 #define KEY_DOWN_DOWN	KEY_9_DOWN		
-#define KEY_UP_DOWN	    KEY_9_UP
-#define KEY_LONG_DOWN	KEY_9_LONG
 
 #define KEY_DOWN_MUX	KEY_10_DOWN		/* K2 K3 组合键 */
-#define KEY_UP_MUX  	KEY_10_UP
-#define KEY_LONG_MUX	KEY_10_LONG
-
 #define KEY_DOWN_DEBUG	KEY_11_DOWN		/* K2 K3 组合键 */
-#define KEY_UP_DEBUG  	KEY_11_UP
-#define KEY_LONG_DEBUG	KEY_11_LONG
 
+//定义按键码值
+#define KEY0_VAL 0X1
+#define KEY1_VAL (0X1 << 1)
+#define KEY2_VAL (0X1 << 2)
+#define KEY3_VAL (0X1 << 3)
+#define KEY4_VAL (0X1 << 4)
+#define KEY5_VAL (0X1 << 5)
+#define KEY6_VAL (0X1 << 6)
+#define KEY7_VAL (0X1 << 7)
+#define KEY8_VAL (0X1 << 8)
+#define KEY9_VAL (0X1 << 9)
 
 /* 按键ID, 主要用于bsp_KeyState()函数的入口参数 */
 typedef enum
@@ -136,58 +110,21 @@ typedef enum
 {
 	KEY_NONE = 0,			/* 0 表示按键事件 */
 
-	KEY_0_DOWN,				/* 1键按下 */
-	KEY_0_UP,				/* 1键弹起 */
-	KEY_0_LONG,				/* 1键长按 */
-
-	KEY_1_DOWN,				/* 1键按下 */
-	KEY_1_UP,				/* 1键弹起 */
-	KEY_1_LONG,				/* 1键长按 */
-
-	KEY_2_DOWN,				/* 2键按下 */
-	KEY_2_UP,				/* 2键弹起 */
-	KEY_2_LONG,				/* 2键长按 */
-
-	KEY_3_DOWN,				/* 3键按下 */
-	KEY_3_UP,				/* 3键弹起 */
-	KEY_3_LONG,				/* 3键长按 */
-
-	KEY_4_DOWN,				/* 4键按下 */
-	KEY_4_UP,				/* 4键弹起 */
-	KEY_4_LONG,				/* 4键长按 */
-
-	KEY_5_DOWN,				/* 5键按下 */
-	KEY_5_UP,				/* 5键弹起 */
-	KEY_5_LONG,				/* 5键长按 */
-
+	KEY_VOL_DOWN,				/* 1键按下 */
+	KEY_VOL_UP,				/* 5键长按 */
 	KEY_6_DOWN,				/* 6键按下 */
-	KEY_6_UP,				/* 6键弹起 */
-	KEY_6_LONG,				/* 6键长按 */
-
 	KEY_7_DOWN,				/* 7键按下 */
-	KEY_7_UP,				/* 7键弹起 */
-	KEY_7_LONG,				/* 7键长按 */
-
 	KEY_8_DOWN,				/* 8键按下 */
-	KEY_8_UP,				/* 8键弹起 */
-	KEY_8_LONG,				/* 8键长按 */
-
 	KEY_9_DOWN,				/* 9键按下 */
-	KEY_9_UP,				/* 9键弹起 */
-	KEY_9_LONG,				/* 9键长按 */
 
 	/* 组合键 */
 	KEY_10_DOWN,			/* 10键按下 */
-	KEY_10_UP,				/* 10键弹起 */
-	KEY_10_LONG,			/* 10键长按 */
-
     KEY_11_DOWN,			/* 10键按下 */
-	KEY_11_UP,				/* 10键弹起 */
-	KEY_11_LONG,			/* 10键长按 */
+
 }KEY_ENUM;
 
 /* 按键FIFO用到变量 */
-#define KEY_FIFO_SIZE	KEY_COUNT
+#define KEY_FIFO_SIZE	16
 typedef struct
 {
 	uint8_t Buf[KEY_FIFO_SIZE];		/* 键值缓冲区 */
