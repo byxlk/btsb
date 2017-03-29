@@ -166,34 +166,18 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>453</LineNumber>
+          <LineNumber>819</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134275398</Address>
+          <Address>134247598</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\User\bsp\bsp_key.c</Filename>
+          <Filename>..\User\bsp\bsp_spi_flash.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\btsb\../User/bsp/bsp_key.c\453</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>513</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134275604</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\User\bsp\bsp_key.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\btsb\../User/bsp/bsp_key.c\513</Expression>
+          <Expression>\\btsb\../User/bsp/bsp_spi_flash.c\819</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>

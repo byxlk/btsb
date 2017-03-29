@@ -76,7 +76,7 @@
 #define CMD_RDSR      0x05		/* 读状态寄存器命令 */
 #define CMD_RDID      0x9F		/* 读器件ID命令 */
 #define CMD_SE        0x20		/* 擦除扇区命令 */
-#define CMD_BE        0xC7		/* 批量擦除命令 */
+#define CMD_BE        0xD8		/* 批量擦除命令 */
 #define DUMMY_BYTE    0xA5		/* 哑命令，可以为任意值，用于读操作 */
 
 #define WIP_FLAG      0x01		/* 状态寄存器中的正在编程标志（WIP) */
@@ -706,6 +706,12 @@ void sf_ReadInfo(void)
 			case W25Q64BV_ID:
 				strcpy(g_tSF.ChipName, "W25Q64BV");
 				g_tSF.TotalSize = 8 * 1024 * 1024;	/* 总容量 = 8M */
+				g_tSF.PageSize = 4 * 1024;			/* 页面大小 = 4K */
+				break;
+
+            case MX25L25645G_ID:
+                strcpy(g_tSF.ChipName, "MX25L25645G");
+				g_tSF.TotalSize = 32 * 1024 * 1024;	/* 总容量 = 8M */
 				g_tSF.PageSize = 4 * 1024;			/* 页面大小 = 4K */
 				break;
 

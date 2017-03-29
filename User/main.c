@@ -74,7 +74,7 @@
 */
 static TaskHandle_t xHandleTaskUserKeyIF = NULL;
 //static TaskHandle_t xHandleTaskLED = NULL;
-//static TaskHandle_t xHandleTaskMsgPro = NULL;
+static TaskHandle_t xHandleTaskMsgPro = NULL;
 static TaskHandle_t xHandleTaskStart = NULL;
 static TaskHandle_t xHandleTaskAdcProc = NULL;
 
@@ -95,7 +95,7 @@ static void vTaskGUI(void *pvParameters)
 {
 	while (1) 
 	{
-		//MainTask();
+		MainTask();
 		vTaskDelay(1000);
 	}
 }
@@ -255,9 +255,9 @@ static void vTaskTest(void *pvParameters)
         vTaskDelay(1000);
         LCD_Fill_Rect(0, 0, 320, 240, CL_YELLOW);
    #endif
-        GuiTaskTest();
+        //GuiTaskTest();
         //bsp_RTC_Test();
-        //DemoFatFS();
+        DemoFatFS();
     }  
 }
 /*
