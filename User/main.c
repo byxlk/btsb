@@ -148,7 +148,7 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 		
 		if (ucKeyCode != KEY_NONE)
 		{
-		    printf("\r\nPress Key Value %04x   ",ucKeyCode);
+		    //printf("\r\nPress Key Value %04x   ",ucKeyCode);
 			switch (ucKeyCode)
 			{
 				/* K1键按下 打印任务执行情况 */
@@ -164,9 +164,17 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 					printf("%s\r\n", pcWriteBuffer);
 					printf("当前动态内存剩余大小 = %d字节\r\n", xPortGetFreeHeapSize());
 					break;
+                    
+                case KEY_DOWN_DEBUG_LONG:
+                    printf("Press Key: DEBUG LONG \r\n");
+                    break;
 
 				case KEY_DOWN_MUX:
                     printf("Press Key: MUX \r\n");
+                    break;
+
+                case KEY_DOWN_MUX_LONG:
+                    printf("Press Key: MUX LONG\r\n");
                     break;
 
 				/* K2键按下，实现截图功能，将图片以BMP格式保存到SD卡中 */
@@ -183,16 +191,32 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
                     printf("Press Key: PLAY/PAUSE \r\n");
                     break; 
 
+                case KEY_DOWN_PLAY_PAUSE_LONG:
+                    printf("Press Key: PLAY/PAUSE LONG\r\n");
+                    break; 
+
                 case KEY_DOWN_MENU:
                     printf("Press Key: MENU \r\n");
+                    break;
+
+                case KEY_DOWN_MENU_LONG:
+                    printf("Press Key: MENU LONG\r\n");
                     break;
 
                 case KEY_DOWN_UP:
                     printf("Press Key: UP \r\n");
                     break;
 
+                case KEY_DOWN_UP_LONG:
+                    printf("Press Key: UP LONG\r\n");
+                    break;
+
                 case KEY_DOWN_DOWN:
                     printf("Press Key: DOWN \r\n");
+                    break;
+
+                case KEY_DOWN_DOWN_LONG:
+                    printf("Press Key: DOWN LONG\r\n");
                     break;
 
 				/* 其他的键值不处理 */
@@ -257,7 +281,7 @@ static void vTaskTest(void *pvParameters)
    #endif
         //GuiTaskTest();
         //bsp_RTC_Test();
-        DemoFatFS();
+        //DemoFatFS();
     }  
 }
 /*

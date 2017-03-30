@@ -38,12 +38,23 @@
 #define KEY_DOWN_VOL_UP		KEY_VOL_UP
 
 #define KEY_DOWN_PLAY_PAUSE		KEY_6_DOWN		/* 左 */
+#define KEY_DOWN_PLAY_PAUSE_LONG KEY_6_DOWN_LONG
 #define KEY_DOWN_MENU		KEY_7_DOWN		/* 右 */
+#define KEY_DOWN_MENU_LONG		KEY_7_DOWN_LONG
+
 #define KEY_DOWN_UP		KEY_8_DOWN		/* ok */
+#define KEY_DOWN_UP_LONG		KEY_8_DOWN_LONG
+
 #define KEY_DOWN_DOWN	KEY_9_DOWN		
+#define KEY_DOWN_DOWN_LONG	KEY_9_DOWN_LONG	
+
 
 #define KEY_DOWN_MUX	KEY_10_DOWN		/* K2 K3 组合键 */
+#define KEY_DOWN_MUX_LONG	KEY_10_DOWN_LONG	
+
 #define KEY_DOWN_DEBUG	KEY_11_DOWN		/* K2 K3 组合键 */
+#define KEY_DOWN_DEBUG_LONG	KEY_11_DOWN_LONG
+
 
 //定义按键码值
 #define KEY0_VAL 0X1
@@ -67,11 +78,17 @@ typedef enum
 	KID_VOL4,
 	KID_VOL5,
 	KID_PLAY_PAUSE,
+	KID_PLAY_PAUSE_LONG,
 	KID_KEY_MENU,
+	KID_KEY_MENU_LONG,
 	KID_KEY_UP,
+	KID_KEY_UP_LONG,
 	KID_KEY_DOWN,
+	KID_KEY_DOWN_LONG,
 	KID_KEY_MUX,
-	KID_KEY_DEBUG
+	KID_KEY_MUX_LONG,
+	KID_KEY_DEBUG,
+	KID_KEY_DEBUG_LONG
 }KEY_ID_E;
 
 /*
@@ -113,13 +130,19 @@ typedef enum
 	KEY_VOL_DOWN,				/* 1键按下 */
 	KEY_VOL_UP,				/* 5键长按 */
 	KEY_6_DOWN,				/* 6键按下 */
+	KEY_6_DOWN_LONG,
 	KEY_7_DOWN,				/* 7键按下 */
+	KEY_7_DOWN_LONG,
 	KEY_8_DOWN,				/* 8键按下 */
+	KEY_8_DOWN_LONG,
 	KEY_9_DOWN,				/* 9键按下 */
+	KEY_9_DOWN_LONG,
 
 	/* 组合键 */
 	KEY_10_DOWN,			/* 10键按下 */
+	KEY_10_DOWN_LONG,
     KEY_11_DOWN,			/* 10键按下 */
+    KEY_11_DOWN_LONG
 
 }KEY_ENUM;
 

@@ -502,10 +502,22 @@ void bsp_TouchKeyCodeValueProcess(void)
         {
             switch(gLastPressKeyValue)
             {
-                case KEY6_VAL:bsp_PutKey(KEY_6_DOWN);break;
-                case KEY7_VAL:bsp_PutKey(KEY_7_DOWN);break;
-                case KEY8_VAL:bsp_PutKey(KEY_8_DOWN);break;
-                case KEY9_VAL:bsp_PutKey(KEY_9_DOWN);break;
+                case KEY6_VAL:
+                    if(s_tBtn[6].KeyUpTick - s_tBtn[6].KeyDownTick < 3000) bsp_PutKey(KEY_6_DOWN);
+                    else bsp_PutKey(KEY_6_DOWN_LONG);
+                    break;
+                case KEY7_VAL:
+                    if(s_tBtn[7].KeyUpTick - s_tBtn[7].KeyDownTick < 3000) bsp_PutKey(KEY_7_DOWN);
+                    else bsp_PutKey(KEY_7_DOWN_LONG);
+                    break;
+                case KEY8_VAL:
+                    if(s_tBtn[8].KeyUpTick - s_tBtn[8].KeyDownTick < 3000) bsp_PutKey(KEY_8_DOWN);
+                    else bsp_PutKey(KEY_8_DOWN_LONG);
+                    break;
+                case KEY9_VAL:
+                    if(s_tBtn[9].KeyUpTick - s_tBtn[9].KeyDownTick < 3000) bsp_PutKey(KEY_9_DOWN);
+                    else bsp_PutKey(KEY_9_DOWN_LONG);
+                    break;
             }
 
             gLastPressKeyValue = 0;
