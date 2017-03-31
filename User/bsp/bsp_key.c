@@ -554,15 +554,30 @@ void bsp_TouchKeyCodeValueProcess(void)
             if((gLastPressKeyValue == KEY6_VAL && _KeyCodeValue == KEY7_VAL)
                 || gLastPressKeyValue == KEY7_VAL && _KeyCodeValue == KEY6_VAL)
             {
-                bsp_PutKey(KEY_11_DOWN);
-                gLastPressKeyValue = 0;
+                if(((s_tBtn[7].KeyUpTick > s_tBtn[7].KeyDownTick) 
+                    && ((s_tBtn[7].KeyUpTick - s_tBtn[7].KeyDownTick) < 3000))
+                    ||((s_tBtn[6].KeyUpTick > s_tBtn[6].KeyDownTick) 
+                    && ((s_tBtn[6].KeyUpTick - s_tBtn[6].KeyDownTick) < 3000)))
+                {
+                    bsp_PutKey(KEY_11_DOWN);
+                }    
+                else
+                    bsp_PutKey(KEY_11_DOWN_LONG);
             }
             else if((gLastPressKeyValue == KEY8_VAL && _KeyCodeValue == KEY9_VAL)
                 || (gLastPressKeyValue == KEY9_VAL && _KeyCodeValue == KEY8_VAL))
             {
-                bsp_PutKey(KEY_10_DOWN);
-                gLastPressKeyValue = 0;
+                if(((s_tBtn[9].KeyUpTick > s_tBtn[9].KeyDownTick) 
+                    && ((s_tBtn[9].KeyUpTick - s_tBtn[9].KeyDownTick) < 3000))
+                    ||((s_tBtn[8].KeyUpTick > s_tBtn[8].KeyDownTick) 
+                    && ((s_tBtn[8].KeyUpTick - s_tBtn[8].KeyDownTick) < 3000)))
+                {
+                    bsp_PutKey(KEY_10_DOWN);
+                }
+                else
+                    bsp_PutKey(KEY_10_DOWN_LONG);
             }
+            gLastPressKeyValue = 0;
         }
     }
     
