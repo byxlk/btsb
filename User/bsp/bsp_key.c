@@ -525,25 +525,25 @@ void bsp_TouchKeyCodeValueProcess(void)
     }
     else if(_KeyCodeValue > KEY_NONE && _KeyCodeValue < KEY6_VAL)//0-5
     {
-        if(gLastRingKeyValue == 0) 
-            gLastRingKeyValue = _KeyCodeValue; 
-        
-        if(((gLastRingKeyValue < _KeyCodeValue) && (gLastRingKeyValue != KEY5_VAL))
-                || gLastRingKeyValue == KEY5_VAL && _KeyCodeValue == KEY0_VAL)
+        if((gLastRingKeyValue == KEY0_VAL && _KeyCodeValue == KEY1_VAL)
+           || (gLastRingKeyValue == KEY1_VAL && _KeyCodeValue == KEY2_VAL)
+           || (gLastRingKeyValue == KEY2_VAL && _KeyCodeValue == KEY3_VAL)
+           || (gLastRingKeyValue == KEY3_VAL && _KeyCodeValue == KEY4_VAL)
+           || (gLastRingKeyValue == KEY4_VAL && _KeyCodeValue == KEY5_VAL)
+           || (gLastRingKeyValue == KEY5_VAL && _KeyCodeValue == KEY0_VAL) )
         {
-             
-             if(gLastRingKeyValue == KEY0_VAL && _KeyCodeValue == KEY5_VAL)
-                bsp_PutKey(KEY_VOL_UP);
-             else
-                bsp_PutKey(KEY_VOL_DOWN);
-             gLastRingKeyValue = _KeyCodeValue;
+            bsp_PutKey(KEY_VOL_DOWN);
         }
-        else if(((gLastRingKeyValue > _KeyCodeValue) && (gLastRingKeyValue != KEY0_VAL))
-                || gLastRingKeyValue == KEY0_VAL && _KeyCodeValue == KEY5_VAL)
+        else if((gLastRingKeyValue == KEY0_VAL && _KeyCodeValue == KEY5_VAL)
+           || (gLastRingKeyValue == KEY1_VAL && _KeyCodeValue == KEY0_VAL)
+           || (gLastRingKeyValue == KEY2_VAL && _KeyCodeValue == KEY1_VAL)
+           || (gLastRingKeyValue == KEY3_VAL && _KeyCodeValue == KEY2_VAL)
+           || (gLastRingKeyValue == KEY4_VAL && _KeyCodeValue == KEY3_VAL)
+           || (gLastRingKeyValue == KEY5_VAL && _KeyCodeValue == KEY4_VAL) )
         {
-             gLastRingKeyValue = _KeyCodeValue;
-             bsp_PutKey(KEY_VOL_UP);
+            bsp_PutKey(KEY_VOL_UP);
         }
+        gLastRingKeyValue = _KeyCodeValue; 
     }
     else// 6789
     {
