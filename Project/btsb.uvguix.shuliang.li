@@ -3433,9 +3433,9 @@
       </Doc>
       <Doc>
         <Name>..\Libraries\STM32F2xx_StdPeriph_Driver\src\stm32f2xx_spi.c</Name>
-        <ColumnNumber>6</ColumnNumber>
+        <ColumnNumber>3</ColumnNumber>
         <TopLine>1158</TopLine>
-        <CurrentLine>1168</CurrentLine>
+        <CurrentLine>1167</CurrentLine>
         <Folding>1</Folding>
         <ContractedFolders></ContractedFolders>
         <PaneID>0</PaneID>

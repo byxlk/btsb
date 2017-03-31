@@ -248,8 +248,8 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
 *
 *       CreateWindow
 */
-WM_HWIN CreateWindow(void);
-WM_HWIN CreateWindow(void) {
+WM_HWIN CreateWindowTest(void);
+WM_HWIN CreateWindowTest(void) {
   WM_HWIN hWin;
 
   hWin = GUI_CreateDialogBox(_aDialogCreate, GUI_COUNTOF(_aDialogCreate), _cbDialog, WM_HBKWIN, 0, 0);
@@ -301,7 +301,7 @@ void GuiTaskTest(void)
 		if (!WM_IsWindow(hDlgFrame)) 
 		{
 			Value = 0;
-			hDlgFrame = CreateWindow();
+			hDlgFrame = CreateWindowTest();
 		}
 		
 		hDlg = WM_GetClientWindow(hDlgFrame);
