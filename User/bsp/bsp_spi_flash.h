@@ -31,6 +31,7 @@ typedef struct
 	char ChipName[16];		/* 芯片型号字符串，主要用于显示 */
 	uint32_t TotalSize;		/* 总容量 */
 	uint16_t PageSize;		/* 页面大小 */
+    uint8_t  DiskInitFlag;  /* 1: 已经初始化过， 0: 还没有初始化 */
 }SFLASH_T;
 
 void bsp_InitSFlash(void);

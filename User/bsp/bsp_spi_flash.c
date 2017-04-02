@@ -865,6 +865,8 @@ DSTATUS SPI_disk_status(void)
 
 DSTATUS SPI_disk_initialize(void)
 {
+    if(g_tSF.DiskInitFlag)
+        return RES_OK;
 
     bsp_InitSFlash();
 
@@ -881,6 +883,7 @@ DSTATUS SPI_disk_initialize(void)
 
     sf_WriteStatus(0);			/* 解除所有BLOCK的写保护 */
 
+    g_tSF.DiskInitFlag = 1;
     return RES_OK;
 }
 
@@ -925,7 +928,7 @@ DRESULT SPI_disk_ioctl(
     	
     	/* 返回SPI Flash扇区数 */
     	case GET_SECTOR_COUNT:
-    		*((DWORD *)buff) = 2048;    
+    		*((DWORD *)buff) = 8192;    
     		return RES_OK;
     	
     	/* 下面这两项暂时未用 */
