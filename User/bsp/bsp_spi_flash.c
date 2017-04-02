@@ -806,7 +806,7 @@ void sf_ReadInfo(void)
 
             case MX25L25645G_ID:
                 strcpy(g_tSF.ChipName, "MX25L25645G");
-				g_tSF.TotalSize = 32 * 1024 * 1024;	/* 总容量 = 8M */
+				g_tSF.TotalSize = 28 * 1024 * 1024;	/* 总容量 = 28M */
 				g_tSF.PageSize = 4 * 1024;			/* 页面大小 = 4K */
 				break;
 
@@ -852,7 +852,98 @@ static void sf_WriteStatus(uint8_t _ucValue)
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+// 字库存储位置说明
+// 0x01FB F000 - 0x01FD F000(SECTOR = 8127 - 8159) 存放 UtoG 128kb
+// 0x01FD F000 - 0x01FF FFFF(SECTOR = 8159 - 8191) 存放 GtoU 128kb
 
+// 0x18000 ~  0xd3800 存放  12x12.ttf 750kb
+// 0xd3c00 ~  0x18f400 存放  16x16.ttf 750kb
+
+//各文件基址,最后的256KB空间存储CC936转码数组
+#define CODE_UtoG_BASE (0x01FBF000) //unicode转GBK码表
+#define CODE_GtoU_BASE (0x01FDF000) //GBK转unicode码表
+
+//#define FONT_12X12_BASE (0x18000) //12x12GBK字库
+//#define FONT_16X16_BASE (0xd3c00) //16x16GBK字库
+
+/*
+************************************************************************************************************************
+* 函数 :  u16 GBKtoUNICODE(u16 GBKCode)
+* 功能 :  将GBK编码转换为unicode编码
+* 参数 :  GBK 
+* 返回 :  unicode
+* 依赖 :  底层读写函数
+* 作者 :  
+* 时间 :  20120602
+* 最后修改时间 : 20120602
+* 说明 : 需要flash中的码表支持
+* GBK码范围,高8位:0x81~0xfe;低8位:0x40~0xfe
+************************************************************************************************************************
+*/
+uint16_t GBKtoUNICODE(uint16_t GBKCode)
+{
+    uint16_t unicode_offset;
+    uint8_t buff[2];
+    uint16_t *p;
+    uint8_t ch,cl;
+
+
+    ch = GBKCode >> 8;
+    cl = GBKCode & 0x00ff;
+
+
+    //计算偏移
+    if(cl < 0x7f)
+        unicode_offset = (ch - 0x81) * 190 + cl - 0x40;
+    if(cl > 0x80)
+        unicode_offset = (ch - 0x81) * 190 + cl - 0x41;
+    unicode_offset *= 2;
+
+    sf_ReadBuffer(buff, CODE_GtoU_BASE + unicode_offset, 2); //读取码表
+
+    p = (u16 *)buff;
+
+    return *p;
+}
+
+/*
+************************************************************************************************************************
+* 函数 :  u16 UNICODEtoGBK(u16 unicode)
+* 功能 :  将unicode编码转换为GBK编码
+* 参数 :  unicode
+* 返回 :  GBK 
+* 依赖 :  底层读写函数
+* 作者 :  
+* 时间 :  20120602
+* 最后修改时间 : 20120602
+* 说明 : 需要flash中的码表支持
+* GBK码范围,高8位:0x81~0xfe;低8位:0x40~0xfe
+************************************************************************************************************************
+*/
+uint16_t UNICODEtoGBK(uint16_t unicode) //用二分查找算法
+{
+    uint32_t offset;
+    uint8_t temp[2];
+    uint16_t res;
+
+    if(unicode <= 0X9FA5) 
+        offset = unicode - 0X4E00;
+    else if(unicode > 0X9FA5)//是标点符号
+    {
+        if(unicode < 0XFF01 || unicode > 0XFF61)
+            return 0;//没有对应编码
+        offset = unicode - 0XFF01 + 0X9FA6 - 0X4E00;
+    } 
+    
+    sf_ReadBuffer(temp, offset * 2 + CODE_UtoG_BASE, 2);//得到GBK码 
+    
+    res = temp[0];
+    res <<= 8;
+    res += temp[1];  
+    
+    return res ; //返回找到的编码
+}
 
 
 
@@ -905,7 +996,7 @@ DRESULT SPI_disk_write(
 				
     for(i = 0; i < count; i++)
     {
-    	sf_WriteBuffer((uint8_t *)buff, sector << 12, 4096);	
+    	sf_WriteBuffer((uint8_t *)buff, sector << 12, g_tSF.PageSize);	
     }
 
     return RES_OK;
@@ -923,12 +1014,12 @@ DRESULT SPI_disk_ioctl(
     	
     	/* 返回SPI Flash扇区大小 */
     	case GET_SECTOR_SIZE:
-    		*((WORD *)buff) = 4096;  
+    		*((WORD *)buff) = g_tSF.PageSize;  
     		return RES_OK;
     	
     	/* 返回SPI Flash扇区数 */
     	case GET_SECTOR_COUNT:
-    		*((DWORD *)buff) = 8192;    
+    		*((DWORD *)buff) = g_tSF.TotalSize / g_tSF.PageSize;    
     		return RES_OK;
     	
     	/* 下面这两项暂时未用 */

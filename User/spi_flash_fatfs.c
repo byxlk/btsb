@@ -34,6 +34,7 @@ static void ReadFileData(void);
 static void CreateDir(void);
 static void DeleteDirFile(void);
 static void WriteFileTest(void);
+static void GetDiskInfo(void);
 
 /* FatFs API的返回值 */
 static const char * FR_Table[]= 
@@ -124,6 +125,11 @@ void DemoFatFS(void)
 					WriteFileTest();	/* 速度测试 */
 					break;
 
+                case '7':
+                    printf("【7 - DiskInfo】\r\n");
+                    GetDiskInfo();
+                    break;
+
 				default:
 					DispMenu();
 					break;
@@ -152,6 +158,7 @@ static void DispMenu(void)
 	printf("4 - 创建目录\r\n");
 	printf("5 - 删除文件和目录\r\n");
 	printf("6 - 读写文件速度测试\r\n");
+    printf("7 - 获取磁盘信息");
 }
 
 /*
@@ -742,4 +749,48 @@ static void WriteFileTest(void)
 	result  = f_mount(NULL, "0:", 0);
 }
 
+void GetDiskInfo(void)
+{
+	/* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
+	FRESULT result;
+	FATFS *fs;
+    DWORD fre_clust, fre_sect, tot_sect;
+
+	/* 挂载文件系统 */
+	result = f_mount(fs, "0:", 0);	
+	if (result != FR_OK)
+	{
+		printf("挂载文件系统失败 (%s)\r\n", FR_Table[result]);
+	}
+	else
+	{
+		printf("挂载文件系统成功 (%s)\r\n", FR_Table[result]);
+	}
+
+    /* Get volume information and free clusters of drive 1 */
+    result = f_getfree("0:", &fre_clust, &fs);
+    if (result != FR_OK)
+	{
+		printf("获取磁盘信息失败(%s)\r\n",  FR_Table[result]);
+	}
+
+    /* Get total sectors and free sectors */
+    tot_sect = (fs->n_fatent - 2) * fs->csize;
+    fre_sect = fre_clust * fs->csize;
+
+    /* Print the free space (assuming 512 bytes/sector) */
+    printf("%10lu KiB total drive space.\r\n%10lu KiB available.\r\n",
+           tot_sect / 2, fre_sect / 2);
+
+    /* 卸载文件系统 */
+	result  = f_mount(NULL, "0:", 0);
+	if (result != FR_OK)
+	{
+		printf("卸载文件系统失败 (%s)\r\n", FR_Table[result]);
+	}
+	else
+	{
+		printf("卸载文件系统成功 (%s)\r\n", FR_Table[result]);
+	}
+}
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/
