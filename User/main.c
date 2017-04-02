@@ -95,7 +95,7 @@ static void vTaskGUI(void *pvParameters)
 {
 	while (1) 
 	{
-		MainTask();
+		//MainTask();
 		vTaskDelay(1000);
 	}
 }
@@ -281,7 +281,7 @@ static void vTaskTest(void *pvParameters)
    #endif
         //GuiTaskTest();
         //bsp_RTC_Test();
-        //DemoFatFS();
+        DemoFatFS();
     }  
 }
 /*

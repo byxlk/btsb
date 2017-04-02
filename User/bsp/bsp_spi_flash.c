@@ -72,6 +72,7 @@
 #define CMD_EWRSR	  0x50		/* 允许写状态寄存器的命令 */
 #define CMD_WRSR      0x01  	/* 写状态寄存器命令 */
 #define CMD_WREN      0x06		/* 写使能命令 */
+#define CMD_WRAAI      0x02		/* 写page命令 */
 #define CMD_READ      0x03  	/* 读数据区命令 */
 #define CMD_RDSR      0x05		/* 读状态寄存器命令 */
 #define CMD_RDID      0x9F		/* 读器件ID命令 */
@@ -83,18 +84,63 @@
 
 SFLASH_T g_tSF;
 
-void sf_ReadInfo(void);
-static uint8_t sf_SendByte(uint8_t _ucValue);
-static void sf_WriteEnable(void);
-static void sf_WriteStatus(uint8_t _ucValue);
-static void sf_WaitForWriteEnd(void);
-static uint8_t sf_NeedErase(uint8_t * _ucpOldBuf, uint8_t *_ucpNewBuf, uint16_t _uiLen);
-static uint8_t sf_CmpData(uint32_t _uiSrcAddr, uint8_t *_ucpTar, uint32_t _uiSize);
-static uint8_t sf_AutoWritePage(uint8_t *_ucpSrc, uint32_t _uiWrAddr, uint16_t _usWrLen);
-
-static void bsp_CfgSPIForSFlash(void);
 
 static uint8_t s_spiBuf[4*1024];	/* 用于写函数，先读出整个page，修改缓冲区后，再整个page回写 */
+
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_SendByte
+*	功能说明: 向器件发送一个字节，同时从MISO口线采样器件返回的数据
+*	形    参:  _ucByte : 发送的字节值
+*	返 回 值: 从MISO口线采样器件返回的数据
+*********************************************************************************************************
+*/
+static uint8_t sf_SendByte(uint8_t _ucValue)
+{
+	/* 等待上个数据未发送完毕 */
+	while (SPI_I2S_GetFlagStatus(SPI_FLASH, SPI_I2S_FLAG_TXE) == RESET);
+
+	/* 通过SPI硬件发送1个字节 */
+	SPI_I2S_SendData(SPI_FLASH, _ucValue);
+
+	/* 等待接收一个字节任务完成 */
+	while (SPI_I2S_GetFlagStatus(SPI_FLASH, SPI_I2S_FLAG_RXNE) == RESET);
+
+	/* 返回从SPI总线读到的数据 */
+	return SPI_I2S_ReceiveData(SPI_FLASH);
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_WriteEnable
+*	功能说明: 向器件发送写使能命令
+*	形    参:  无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+static void sf_WriteEnable(void)
+{
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_WREN);								/* 发送命令 */
+	SF_CS_HIGH();									/* 禁能片选 */
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_WaitForWriteEnd
+*	功能说明: 采用循环查询的方式等待器件内部写操作完成
+*	形    参:  无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+static void sf_WaitForWriteEnd(void)
+{
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_RDSR);							/* 发送命令， 读状态寄存器 */
+	while((sf_SendByte(DUMMY_BYTE) & WIP_FLAG) == SET);	/* 判断状态寄存器的忙标志位 */
+	SF_CS_HIGH();									/* 禁能片选 */
+}
 
 /*
 *********************************************************************************************************
@@ -290,7 +336,7 @@ void sf_PageWrite(uint8_t * _pBuf, uint32_t _uiWriteAddr, uint16_t _usSize)
 			sf_WriteEnable();								/* 发送写使能命令 */
 
 			SF_CS_LOW();									/* 使能片选 */
-			sf_SendByte(0x02);								/* 发送AAI命令(地址自动增加编程) */
+			sf_SendByte(CMD_WRAAI);								/* 发送AAI命令(地址自动增加编程) */
 			sf_SendByte((_uiWriteAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
 			sf_SendByte((_uiWriteAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
 			sf_SendByte(_uiWriteAddr & 0xFF);				/* 发送扇区地址低8bit */
@@ -726,44 +772,6 @@ void sf_ReadInfo(void)
 
 /*
 *********************************************************************************************************
-*	函 数 名: sf_SendByte
-*	功能说明: 向器件发送一个字节，同时从MISO口线采样器件返回的数据
-*	形    参:  _ucByte : 发送的字节值
-*	返 回 值: 从MISO口线采样器件返回的数据
-*********************************************************************************************************
-*/
-static uint8_t sf_SendByte(uint8_t _ucValue)
-{
-	/* 等待上个数据未发送完毕 */
-	while (SPI_I2S_GetFlagStatus(SPI_FLASH, SPI_I2S_FLAG_TXE) == RESET);
-
-	/* 通过SPI硬件发送1个字节 */
-	SPI_I2S_SendData(SPI_FLASH, _ucValue);
-
-	/* 等待接收一个字节任务完成 */
-	while (SPI_I2S_GetFlagStatus(SPI_FLASH, SPI_I2S_FLAG_RXNE) == RESET);
-
-	/* 返回从SPI总线读到的数据 */
-	return SPI_I2S_ReceiveData(SPI_FLASH);
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: sf_WriteEnable
-*	功能说明: 向器件发送写使能命令
-*	形    参:  无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-static void sf_WriteEnable(void)
-{
-	SF_CS_LOW();									/* 使能片选 */
-	sf_SendByte(CMD_WREN);								/* 发送命令 */
-	SF_CS_HIGH();									/* 禁能片选 */
-}
-
-/*
-*********************************************************************************************************
 *	函 数 名: sf_WriteStatus
 *	功能说明: 写状态寄存器
 *	形    参:  _ucValue : 状态寄存器的值
@@ -795,21 +803,8 @@ static void sf_WriteStatus(uint8_t _ucValue)
 	}
 }
 
-/*
-*********************************************************************************************************
-*	函 数 名: sf_WaitForWriteEnd
-*	功能说明: 采用循环查询的方式等待器件内部写操作完成
-*	形    参:  无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-static void sf_WaitForWriteEnd(void)
-{
-	SF_CS_LOW();									/* 使能片选 */
-	sf_SendByte(CMD_RDSR);							/* 发送命令， 读状态寄存器 */
-	while((sf_SendByte(DUMMY_BYTE) & WIP_FLAG) == SET);	/* 判断状态寄存器的忙标志位 */
-	SF_CS_HIGH();									/* 禁能片选 */
-}
+
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////

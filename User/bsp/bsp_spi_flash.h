@@ -37,6 +37,8 @@ void bsp_InitSFlash(void);
 uint32_t sf_ReadID(void);
 void sf_EraseChip(void);
 void sf_EraseSector(uint32_t _uiSectorAddr);
+void sf_Erase32KBlock(uint32_t _uiSectorAddr);
+void sf_Erase64KBlock(uint32_t _uiSectorAddr);
 void sf_PageWrite(uint8_t * _pBuf, uint32_t _uiWriteAddr, uint16_t _usSize);
 uint8_t sf_WriteBuffer(uint8_t* _pBuf, uint32_t _uiWriteAddr, uint16_t _usWriteSize);
 void sf_ReadBuffer(uint8_t * _pBuf, uint32_t _uiReadAddr, uint32_t _uiSize);
