@@ -77,7 +77,9 @@
 #define CMD_RDSR      0x05		/* 读状态寄存器命令 */
 #define CMD_RDID      0x9F		/* 读器件ID命令 */
 #define CMD_SE        0x20		/* 擦除扇区命令 */
-#define CMD_BE        0xD8		/* 批量擦除命令 */
+#define CMD_CE        0x60		/* 擦除整个芯片 */
+#define CMD_32KBE        0x52		/* 32K批量擦除命令 */
+#define CMD_64KBE        0xD8		/* 64K批量擦除命令 */
 #define DUMMY_BYTE    0xA5		/* 哑命令，可以为任意值，用于读操作 */
 
 #define WIP_FLAG      0x01		/* 状态寄存器中的正在编程标志（WIP) */
@@ -255,6 +257,53 @@ void sf_EraseSector(uint32_t _uiSectorAddr)
 	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
 }
 
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_Erase32KBlock
+*	功能说明: 擦除32K BLOCK
+*	形    参:  _uiSectorAddr : 扇区地址
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void sf_Erase32KBlock(uint32_t _uiSectorAddr)
+{
+	sf_WriteEnable();								/* 发送写使能命令 */
+
+	/* 擦除扇区操作 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_32KBE);								/* 发送擦除命令 */
+	sf_SendByte((_uiSectorAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiSectorAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+	sf_SendByte(_uiSectorAddr & 0xFF);				/* 发送扇区地址低8bit */
+	SF_CS_HIGH();									/* 禁能片选 */
+
+	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_Erase64KBlock
+*	功能说明: 擦除64K BLOCK
+*	形    参:  _uiSectorAddr : 扇区地址
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void sf_Erase64KBlock(uint32_t _uiSectorAddr)
+{
+	sf_WriteEnable();								/* 发送写使能命令 */
+
+	/* 擦除扇区操作 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_64KBE);								/* 发送擦除命令 */
+	sf_SendByte((_uiSectorAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiSectorAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+	sf_SendByte(_uiSectorAddr & 0xFF);				/* 发送扇区地址低8bit */
+	SF_CS_HIGH();									/* 禁能片选 */
+
+	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
+}
+
 /*
 *********************************************************************************************************
 *	函 数 名: sf_EraseChip
@@ -269,7 +318,7 @@ void sf_EraseChip(void)
 
 	/* 擦除扇区操作 */
 	SF_CS_LOW();									/* 使能片选 */
-	sf_SendByte(CMD_BE);							/* 发送整片擦除命令 */
+	sf_SendByte(CMD_CE);							/* 发送整片擦除命令 */
 	SF_CS_HIGH();									/* 禁能片选 */
 
 	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
