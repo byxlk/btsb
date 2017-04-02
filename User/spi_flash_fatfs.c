@@ -25,17 +25,6 @@
 #define BUF_SIZE				(4*1024)		/* 每次读写SD卡的最大数据长度 */
 uint8_t g_TestBuf[BUF_SIZE];
 
-/* 仅允许本文件内调用的函数声明 */
-static void FileFormat(void);
-static void DispMenu(void);
-static void ViewRootDir(void);
-static void CreateNewFile(void);
-static void ReadFileData(void);
-static void CreateDir(void);
-static void DeleteDirFile(void);
-static void WriteFileTest(void);
-static void GetDiskInfo(void);
-
 /* FatFs API的返回值 */
 static const char * FR_Table[]= 
 {
@@ -63,83 +52,6 @@ static const char * FR_Table[]=
 
 /*
 *********************************************************************************************************
-*	函 数 名: DemoFatFS
-*	功能说明: FatFS文件系统演示主程序
-*	形    参：无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void DemoFatFS(void)
-{
-	uint8_t cmd;
-	
-	/* 打印命令列表，用户可以通过串口操作指令 */
-	DispMenu();
-	//bsp_StartAutoTimer(1, 100);
-	while(1)
-	{
-		bsp_Idle();		/* 这个函数在bsp.c文件。用户可以修改这个函数实现CPU休眠和喂狗 */
-		
-		//if(bsp_CheckTimer(1))
-		//{
-		//	bsp_LedToggle(1);
-		//}
-
-		if (comGetChar(COM1, &cmd))	/* 从串口读入一个字符(非阻塞方式) */
-		{
-			printf("\r\n");
-			switch (cmd)
-			{
-				case '0':
-					printf("【0 - FileFormat】\r\n");
-					FileFormat();		/* 显示SD卡根目录下的文件名 */
-					break;
-				
-				case '1':
-					printf("【1 - ViewRootDir】\r\n");
-					ViewRootDir();		/* 显示SD卡根目录下的文件名 */
-					break;
-
-				case '2':
-					printf("【2 - CreateNewFile】\r\n");
-					CreateNewFile();		/* 创建一个新文件,写入一个字符串 */
-					break;
-
-				case '3':
-					printf("【3 - ReadFileData】\r\n");
-					ReadFileData();		/* 读取根目录下armfly.txt的内容 */
-					break;
-
-				case '4':
-					printf("【4 - CreateDir】\r\n");
-					CreateDir();		/* 创建目录 */
-					break;
-
-				case '5':
-					printf("【5 - DeleteDirFile】\r\n");
-					DeleteDirFile();	/* 删除目录和文件 */
-					break;
-
-				case '6':
-					printf("【6 - TestSpeed】\r\n");
-					WriteFileTest();	/* 速度测试 */
-					break;
-
-                case '7':
-                    printf("【7 - DiskInfo】\r\n");
-                    GetDiskInfo();
-                    break;
-
-				default:
-					DispMenu();
-					break;
-			}
-		}
-	}
-}
-
-/*
-*********************************************************************************************************
 *	函 数 名: DispMenu
 *	功能说明: 显示操作提示菜单
 *	形    参：无
@@ -163,6 +75,32 @@ static void DispMenu(void)
 
 /*
 *********************************************************************************************************
+*	函 数 名: MountFS
+*	功能说明: 文件系统格式化
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void MountFS(FATFS *fs, uint8_t opt)
+{
+    /* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
+	FRESULT result;
+
+	/* 挂载文件系统 */
+	result = f_mount(fs, "0:", opt);	
+	if (result != FR_OK)
+	{
+		printf("%s文件系统失败 (%s)\r\n",(fs)? "挂载" : "卸载"  ,FR_Table[result]);
+	}
+	//else
+	//{
+	//	printf("%s文件系统成功 (%s)\r\n",(fs)? "挂载" : "卸载" ,FR_Table[result]);
+	//}
+}
+
+
+/*
+*********************************************************************************************************
 *	函 数 名: FileFormat
 *	功能说明: 文件系统格式化
 *	形    参：无
@@ -176,16 +114,8 @@ static void FileFormat(void)
 	FATFS fs;
 
 	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);	
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n", FR_Table[result]);
-	}
-	else
-	{
-		printf("挂载文件系统成功 (%s)\r\n", FR_Table[result]);
-	}
-	
+    MountFS(&fs, 0);
+		
 	/* 第一次使用必须进行格式化 */
 	result = f_mkfs("0:",0,0);
 	if (result != FR_OK)
@@ -198,15 +128,7 @@ static void FileFormat(void)
 	}
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
-	if (result != FR_OK)
-	{
-		printf("卸载文件系统失败 (%s)\r\n", FR_Table[result]);
-	}
-	else
-	{
-		printf("卸载文件系统成功 (%s)\r\n", FR_Table[result]);
-	}
+	MountFS(NULL, 0);
 }
 
 /*
@@ -228,15 +150,7 @@ static void ViewRootDir(void)
 	char lfname[256];
 
 	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);	
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n", FR_Table[result]);
-	}
-	else
-	{
-		printf("挂载文件系统成功 (%s)\r\n", FR_Table[result]);
-	}
+	MountFS(&fs, 0);
 	
 	/* 打开根文件夹 */
 	result = f_opendir(&DirInf, "0:/"); /* 如果不带参数，则从当前目录开始 */
@@ -283,15 +197,7 @@ static void ViewRootDir(void)
 	}
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
-	if (result != FR_OK)
-	{
-		printf("卸载文件系统失败 (%s)\r\n", FR_Table[result]);
-	}
-	else
-	{
-		printf("卸载文件系统成功 (%s)\r\n", FR_Table[result]);
-	}
+	MountFS(NULL, 0);
 }
 
 /*
@@ -312,11 +218,7 @@ static void CreateNewFile(void)
 	uint32_t bw;
 
  	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n",  FR_Table[result]);
-	}
+	MountFS(&fs, 0);
 
 	/* 打开根文件夹 */
 	result = f_opendir(&DirInf, "0:/"); /* 如果不带参数，则从当前目录开始 */
@@ -344,7 +246,7 @@ static void CreateNewFile(void)
 	f_close(&file);
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
+	MountFS(NULL, 0);
 }
 
 /*
@@ -366,11 +268,7 @@ static void ReadFileData(void)
 	char buf[128];
 
  	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败(%s)\r\n",  FR_Table[result]);
-	}
+	MountFS(&fs, 0);
 
 	/* 打开根文件夹 */
 	result = f_opendir(&DirInf, "/"); /* 如果不带参数，则从当前目录开始 */
@@ -404,7 +302,7 @@ static void ReadFileData(void)
 	f_close(&file);
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
+	MountFS(NULL, 0);
 }
 
 /*
@@ -421,12 +319,7 @@ static void CreateDir(void)
 	FRESULT result;
 	FATFS fs;
 
- 	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n",  FR_Table[result]);
-	}
+ 	MountFS(&fs, 0);
 
 	/* 创建目录/Dir1 */
 	result = f_mkdir("/Dir1");
@@ -477,7 +370,7 @@ static void CreateDir(void)
 	}
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
+	MountFS(NULL, 0);
 }
 
 /*
@@ -497,11 +390,7 @@ static void DeleteDirFile(void)
 	uint8_t i;
 
  	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n",  FR_Table[result]);
-	}
+	MountFS(&fs, 0);
 
 	#if 0
 	/* 打开根文件夹 */
@@ -608,7 +497,7 @@ static void DeleteDirFile(void)
 	}
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
+	MountFS(NULL, 0);
 }
 
 /*
@@ -639,11 +528,7 @@ static void WriteFileTest(void)
 	}
 
   	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n",  FR_Table[result]);
-	}
+	MountFS(&fs, 0);
 
 	/* 打开根文件夹 */
 	result = f_opendir(&DirInf, "/"); /* 如果不带参数，则从当前目录开始 */
@@ -746,7 +631,7 @@ static void WriteFileTest(void)
 	f_close(&file);
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
+	MountFS(NULL, 0);
 }
 
 void GetDiskInfo(void)
@@ -757,15 +642,7 @@ void GetDiskInfo(void)
     DWORD fre_clust, fre_sect, tot_sect;
 
 	/* 挂载文件系统 */
-	result = f_mount(fs, "0:", 0);	
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n", FR_Table[result]);
-	}
-	else
-	{
-		printf("挂载文件系统成功 (%s)\r\n", FR_Table[result]);
-	}
+	MountFS(fs, 0);
 
     /* Get volume information and free clusters of drive 1 */
     result = f_getfree("0:", &fre_clust, &fs);
@@ -779,18 +656,105 @@ void GetDiskInfo(void)
     fre_sect = fre_clust * fs->csize;
 
     /* Print the free space (assuming 512 bytes/sector) */
-    printf("%10lu KiB total drive space.\r\n%10lu KiB available.\r\n",
+    printf("fs_type:%d drv:%d csize:%d n_fats:%d id:%d\r\n\
+            ssize:%d last_clust:%d free_clust:%d fsize:%d\r\n\
+            volbase:%d fatbase:%d dirbase:%d datbase:%d\r\n",
+        fs->fs_type,		/* FAT sub-type (0:Not mounted) */
+	    fs->drv,			/* Physical drive number */
+	    fs->csize,			/* Sectors per cluster (1,2,4...128) */
+	    fs->n_fats,			/* Number of FAT copies (1 or 2) */
+	    fs->id,				/* File system mount ID */
+	    fs->ssize,			/* Bytes per sector (512, 1024, 2048 or 4096) */
+	    fs->last_clust,		/* Last allocated cluster */
+	    fs->free_clust,		/* Number of free clusters */
+	    fs->fsize,			/* Sectors per FAT */
+	    fs->volbase,		/* Volume start sector */
+	    fs->fatbase,		/* FAT start sector */
+	    fs->dirbase,		/* Root directory start sector (FAT32:Cluster#) */
+	    fs->database		/* Data start sector */
+    );
+    printf("%10lu KiB Total.\r\n%10lu KiB Available.\r\n",
            tot_sect / 2, fre_sect / 2);
 
     /* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
-	if (result != FR_OK)
+	MountFS(NULL, 0);
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: DemoFatFS
+*	功能说明: FatFS文件系统演示主程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void DemoFatFS(void)
+{
+	uint8_t cmd;
+	
+	/* 打印命令列表，用户可以通过串口操作指令 */
+	DispMenu();
+	//bsp_StartAutoTimer(1, 100);
+	while(1)
 	{
-		printf("卸载文件系统失败 (%s)\r\n", FR_Table[result]);
-	}
-	else
-	{
-		printf("卸载文件系统成功 (%s)\r\n", FR_Table[result]);
+		bsp_Idle();		/* 这个函数在bsp.c文件。用户可以修改这个函数实现CPU休眠和喂狗 */
+		
+		//if(bsp_CheckTimer(1))
+		//{
+		//	bsp_LedToggle(1);
+		//}
+
+		if (comGetChar(COM1, &cmd))	/* 从串口读入一个字符(非阻塞方式) */
+		{
+			printf("\r\n");
+			switch (cmd)
+			{
+				case '0':
+					printf("【0 - FileFormat】\r\n");
+					FileFormat();		/* 显示SD卡根目录下的文件名 */
+					break;
+				
+				case '1':
+					printf("【1 - ViewRootDir】\r\n");
+					ViewRootDir();		/* 显示SD卡根目录下的文件名 */
+					break;
+
+				case '2':
+					printf("【2 - CreateNewFile】\r\n");
+					CreateNewFile();		/* 创建一个新文件,写入一个字符串 */
+					break;
+
+				case '3':
+					printf("【3 - ReadFileData】\r\n");
+					ReadFileData();		/* 读取根目录下armfly.txt的内容 */
+					break;
+
+				case '4':
+					printf("【4 - CreateDir】\r\n");
+					CreateDir();		/* 创建目录 */
+					break;
+
+				case '5':
+					printf("【5 - DeleteDirFile】\r\n");
+					DeleteDirFile();	/* 删除目录和文件 */
+					break;
+
+				case '6':
+					printf("【6 - TestSpeed】\r\n");
+					WriteFileTest();	/* 速度测试 */
+					break;
+
+                case '7':
+                    printf("【7 - DiskInfo】\r\n");
+                    GetDiskInfo();
+                    break;
+
+				default:
+					DispMenu();
+					break;
+			}
+		}
 	}
 }
+
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

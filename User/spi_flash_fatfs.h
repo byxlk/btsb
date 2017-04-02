@@ -16,6 +16,8 @@
 
 /* 供外部调用的函数声明 */
 void DemoFatFS(void);
+void MountFS(FATFS *fs, uint8_t opt);
+
 
 #endif
 
