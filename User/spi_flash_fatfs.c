@@ -26,7 +26,7 @@
 uint8_t g_TestBuf[BUF_SIZE];
 
 /* FatFs API的返回值 */
-static const char * FR_Table[]= 
+static const char * FR_Table[]=
 {
 	"FR_OK：成功",				                             /* (0) Succeeded */
 	"FR_DISK_ERR：底层硬件错误",			                 /* (1) A hard error occurred in the low level disk I/O layer */
@@ -65,12 +65,14 @@ static void DispMenu(void)
 	printf("请选择操作命令:\r\n");
 	printf("0 - 对SPI_Flash进行文件系统格式化\r\n");
 	printf("1 - 显示根目录下的文件列表\r\n");
-	printf("2 - 创建一个新文件armfly.txt\r\n");
-	printf("3 - 读armfly.txt文件的内容\r\n");
-	printf("4 - 创建目录\r\n");
-	printf("5 - 删除文件和目录\r\n");
-	printf("6 - 读写文件速度测试\r\n");
-    printf("7 - 获取磁盘信息");
+	printf("2 - 创建armfly.txt,并读出文件的内容\r\n");
+	printf("3 - 创建目录\r\n");
+	printf("4 - 删除文件和目录\r\n");
+	printf("5 - 读写文件速度测试\r\n");
+    printf("6 - 获取磁盘信息\r\n");
+    printf("7 - 使用Ymodem协议下载文件\r\n");
+    printf("8 - 使用Ymodem协议上传文件\r\n");
+    printf("9 - 升级Firmware到指定的地址\r\n");
 }
 
 /*
@@ -87,7 +89,7 @@ void MountFS(FATFS *fs, uint8_t opt)
 	FRESULT result;
 
 	/* 挂载文件系统 */
-	result = f_mount(fs, "0:", opt);	
+	result = f_mount(fs, "0:", opt);
 	if (result != FR_OK)
 	{
 		printf("%s文件系统失败 (%s)\r\n",(fs)? "挂载" : "卸载"  ,FR_Table[result]);
@@ -115,7 +117,7 @@ static void FileFormat(void)
 
 	/* 挂载文件系统 */
     MountFS(&fs, 0);
-		
+
 	/* 第一次使用必须进行格式化 */
 	result = f_mkfs("0:",0,0);
 	if (result != FR_OK)
@@ -151,7 +153,7 @@ static void ViewRootDir(void)
 
 	/* 挂载文件系统 */
 	MountFS(&fs, 0);
-	
+
 	/* 打开根文件夹 */
 	result = f_opendir(&DirInf, "0:/"); /* 如果不带参数，则从当前目录开始 */
 	if (result != FR_OK)
@@ -682,6 +684,162 @@ void GetDiskInfo(void)
 
 /*
 *********************************************************************************************************
+*	函 数 名: DownloadFile
+*	功能说明: FatFS文件系统演示主程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void DownloadFile(void)
+{
+    /* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
+	FRESULT result;
+	FATFS fs;
+	FIL file;
+	DIR DirInf;
+	uint32_t bw;
+    uint8_t i = 0;
+    uint8_t transfer_end_flag = 0;
+    int8_t target_path[128]="0:/";
+    int8_t target_filename[128] = "armfly.txt";
+    uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD] = {0};
+
+	/* 挂载文件系统 */
+	MountFS(&fs, 0);
+    //Send_Byte(COM1, MODEM_C);
+    //Recv_Byte(COM1, &i, NAK_TIMEOUT);
+    //printf("recv data:%c \r\n",i);
+#if 1
+    /* 打开根文件夹 */
+    //printf("Please input the path:");
+    //scanf("%s",target_path);
+    //printf("Open director: %s\r\n",target_path);
+	result = f_opendir(&DirInf, target_path); /* 如果不带参数，则从当前目录开始 */
+	if (result != FR_OK)
+	{
+		printf("打开根目录失败 (%s)\r\n",  FR_Table[result]);
+		return;
+	}
+
+    while(1)
+    {
+        if(transfer_end_flag == 2)// Terminna transfer data
+            break;
+
+        switch(Ymodem_Receive(COM1,packet_data))
+        {
+            case RECV_STATUS_SOH_DAT_OK:
+                if(transfer_end_flag == 1)
+                {
+                    for(i = 0; i < PACKET_SIZE; i++)
+                    {
+                        if(packet_data[i] != 0)
+                        {
+                            transfer_end_flag = 0;
+                            break;
+                        }
+                        else
+                            transfer_end_flag = 2;
+                    }
+                }
+                if(transfer_end_flag == 2)
+                    break;
+                /* 获取传输文件的名称 */
+                if (packet_data[PACKET_HEADER] != 0)
+                {
+                    for(i = 0; i < PACKET_SIZE; i++)
+                    {
+                        if(packet_data[i] != ' ')
+                            target_filename[i] = packet_data[i];
+                        else
+                        {
+                            printf("Recive file name: %s \r\n",target_filename);
+                            break;
+                        }
+                    }
+                }
+    	        /* 打开文件 */
+    	        result = f_open(&file, target_filename, FA_CREATE_ALWAYS | FA_WRITE);
+                if (result != FR_OK)
+    	        {
+    		        printf("(%s)文件打开失败(%s)\r\n",target_filename, FR_Table[result]);
+    	        }
+                break;
+            case RECV_STATUS_STX_DAT_OK:
+                /* 写一串数据 */
+    	        result = f_write(&file, packet_data, 34, &bw);
+    	        if (result != FR_OK)
+    	        {
+    		        printf("(%s)文件写入失败(%s)\r\n",target_filename, FR_Table[result]);
+    	        }
+                break;
+            case RECV_STATUS_TRANSFER_END:
+                transfer_end_flag = 1;
+                /* 关闭文件*/
+                if(transfer_end_flag == 1)
+                {
+	                f_close(&file);
+                    transfer_end_flag = 0;
+                }
+                break;
+        }
+
+    }
+#endif
+    /* 卸载文件系统 */
+	MountFS(NULL, 0);
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: UploadFile
+*	功能说明: FatFS文件系统演示主程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void UploadFile(void)
+{
+    /* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
+	//FRESULT result;
+	FATFS fs;
+
+	/* 挂载文件系统 */
+	MountFS(&fs, 0);
+
+    printf("\r\nWaiting for the file to be sent ... (press 'a' to abort)\n\r");
+
+
+    /* 卸载文件系统 */
+	MountFS(NULL, 0);
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: DownloadFile
+*	功能说明: FatFS文件系统演示主程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void UpdateFirmware(void)
+{
+    /* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
+	//FRESULT result;
+	FATFS fs;
+
+	/* 挂载文件系统 */
+	MountFS(&fs, 0);
+
+    printf("\r\nWaiting for the file to be sent ... (press 'a' to abort)\n\r");
+
+
+    /* 卸载文件系统 */
+	MountFS(NULL, 0);
+}
+
+/*
+*********************************************************************************************************
 *	函 数 名: DemoFatFS
 *	功能说明: FatFS文件系统演示主程序
 *	形    参：无
@@ -691,14 +849,14 @@ void GetDiskInfo(void)
 void DemoFatFS(void)
 {
 	uint8_t cmd;
-	
+
 	/* 打印命令列表，用户可以通过串口操作指令 */
 	DispMenu();
 	//bsp_StartAutoTimer(1, 100);
 	while(1)
 	{
 		bsp_Idle();		/* 这个函数在bsp.c文件。用户可以修改这个函数实现CPU休眠和喂狗 */
-		
+
 		//if(bsp_CheckTimer(1))
 		//{
 		//	bsp_LedToggle(1);
@@ -713,7 +871,7 @@ void DemoFatFS(void)
 					printf("【0 - FileFormat】\r\n");
 					FileFormat();		/* 显示SD卡根目录下的文件名 */
 					break;
-				
+
 				case '1':
 					printf("【1 - ViewRootDir】\r\n");
 					ViewRootDir();		/* 显示SD卡根目录下的文件名 */
@@ -722,31 +880,43 @@ void DemoFatFS(void)
 				case '2':
 					printf("【2 - CreateNewFile】\r\n");
 					CreateNewFile();		/* 创建一个新文件,写入一个字符串 */
-					break;
+					printf("【2 - ReadFileData】\r\n");
+					ReadFileData();		/* 读取根目录下armfly.txt的内容 */
+                    break;
 
 				case '3':
-					printf("【3 - ReadFileData】\r\n");
-					ReadFileData();		/* 读取根目录下armfly.txt的内容 */
-					break;
-
-				case '4':
-					printf("【4 - CreateDir】\r\n");
+					printf("【3 - CreateDir】\r\n");
 					CreateDir();		/* 创建目录 */
 					break;
 
-				case '5':
-					printf("【5 - DeleteDirFile】\r\n");
+				case '4':
+					printf("【4 - DeleteDirFile】\r\n");
 					DeleteDirFile();	/* 删除目录和文件 */
 					break;
 
-				case '6':
-					printf("【6 - TestSpeed】\r\n");
+				case '5':
+					printf("【5 - TestSpeed】\r\n");
 					WriteFileTest();	/* 速度测试 */
 					break;
 
-                case '7':
-                    printf("【7 - DiskInfo】\r\n");
+                case '6':
+                    printf("【6 - DiskInfo】\r\n");
                     GetDiskInfo();
+                    break;
+
+                case '7':
+                    printf("【7 - Download File】\r\n");
+                    DownloadFile();
+                    break;
+
+                case '8':
+                    printf("【8 - Upoad File】\r\n");
+                    UploadFile();
+                    break;
+
+                case '9':
+                    printf("【9 - Update Firmware】\r\n");
+                    UpdateFirmware();
                     break;
 
 				default:
