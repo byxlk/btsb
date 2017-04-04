@@ -93,6 +93,7 @@ SLEEP_DATA_T gSleep_Data;
 */
 static void vTaskGUI(void *pvParameters)
 {
+    printf("Main GUI Thread start.\r\n");
 	while (1)
 	{
 		//MainTask();
@@ -115,7 +116,7 @@ static void vTaskAdcProc(void *pvParameters)
     //float uwVBATVoltage;    /* 板载电子电压 */
     //float ufVoltage_PA0;    /* PA0引脚电压  */
     //float ufVoltage_PC0;    /* PC0引脚电压  */
-
+    printf("ADC capture Thread start.\r\n");
     while(1)
     {
         vTaskDelay(1000);
@@ -140,6 +141,7 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 	uint8_t ucKeyCode;
 	uint8_t pcWriteBuffer[500];
 
+    printf("User Key Process Thread start.\r\n");
 
     while(1)
     {
@@ -244,6 +246,8 @@ static void vTaskStart(void *pvParameters)
     TickType_t tick_current = 0;
     TickType_t tick_backup = 0;
 
+    printf("vTaskStart Thread start.\r\n");
+
     tick_backup = xTaskGetTickCount();
     while(1)
     {
@@ -271,6 +275,8 @@ static void vTaskStart(void *pvParameters)
 */
 static void vTaskTest(void *pvParameters)
 {
+    printf("vTaskTest Thread start.\r\n");
+
     while(1)
     {
         vTaskDelay(100);

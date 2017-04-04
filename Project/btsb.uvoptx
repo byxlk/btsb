@@ -168,7 +168,7 @@
           <Type>0</Type>
           <LineNumber>708</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134223402</Address>
+          <Address>134222174</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -184,7 +184,7 @@
           <Type>0</Type>
           <LineNumber>285</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134228216</Address>
+          <Address>134226944</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -194,22 +194,6 @@
           <Filename>..\User\spi_flash_fatfs.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression>\\btsb\../User/spi_flash_fatfs.c\285</Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
-          <Type>0</Type>
-          <LineNumber>787</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134223688</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\User\spi_flash_fatfs.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\btsb\../User/spi_flash_fatfs.c\787</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>

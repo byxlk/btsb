@@ -861,7 +861,7 @@ void DemoFatFS(void)
 		//{
 		//	bsp_LedToggle(1);
 		//}
-
+        vTaskDelay(100);
 		if (comGetChar(COM1, &cmd))	/* 从串口读入一个字符(非阻塞方式) */
 		{
 			printf("\r\n");
