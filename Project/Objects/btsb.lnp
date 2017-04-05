@@ -51,7 +51,6 @@
 ".\objects\main.o"
 ".\objects\sysinfotest.o"
 ".\objects\spi_flash_fatfs.o"
-".\objects\ymodem.o"
 ".\objects\bsp.o"
 ".\objects\bsp_dwt.o"
 ".\objects\bsp_uart_fifo.o"

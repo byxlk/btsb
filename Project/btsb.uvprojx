@@ -714,11 +714,6 @@
               <FileType>1</FileType>
               <FilePath>..\User\spi_flash_fatfs.c</FilePath>
             </File>
-            <File>
-              <FileName>ymodem.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\UartIAP\ymodem.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>

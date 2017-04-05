@@ -364,4 +364,198 @@ int32_t  CaculTwoPoint(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t x
 	return y1 + ((int64_t)(y2 - y1) * (x - x1)) / (x2 - x1);
 }
 
+
+/**
+  * @brief  Convert a string to an integer
+  * @param  inputstr: The string to be converted
+  * @param  intnum: The integer value
+  * @retval 1: Correct
+  *         0: Error
+  */
+uint32_t Str2Int(uint8_t *inputstr, int32_t *intnum)
+{
+  uint32_t i = 0, res = 0;
+  uint32_t val = 0;
+
+  if (inputstr[0] == '0' && (inputstr[1] == 'x' || inputstr[1] == 'X'))
+  {
+    if (inputstr[2] == '\0')
+    {
+      return 0;
+    }
+    for (i = 2; i < 11; i++)
+    {
+      if (inputstr[i] == '\0')
+      {
+        *intnum = val;
+        /* return 1; */
+        res = 1;
+        break;
+      }
+      if (ISVALIDHEX(inputstr[i]))
+      {
+        val = (val << 4) + CONVERTHEX(inputstr[i]);
+      }
+      else
+      {
+        /* Return 0, Invalid input */
+        res = 0;
+        break;
+      }
+    }
+    /* Over 8 digit hex --invalid */
+    if (i >= 11)
+    {
+      res = 0;
+    }
+  }
+  else /* max 10-digit decimal input */
+  {
+    for (i = 0;i < 11;i++)
+    {
+      if (inputstr[i] == '\0')
+      {
+        *intnum = val;
+        /* return 1 */
+        res = 1;
+        break;
+      }
+      else if ((inputstr[i] == 'k' || inputstr[i] == 'K') && (i > 0))
+      {
+        val = val << 10;
+        *intnum = val;
+        res = 1;
+        break;
+      }
+      else if ((inputstr[i] == 'm' || inputstr[i] == 'M') && (i > 0))
+      {
+        val = val << 20;
+        *intnum = val;
+        res = 1;
+        break;
+      }
+      else if (ISVALIDDEC(inputstr[i]))
+      {
+        val = val * 10 + CONVERTDEC(inputstr[i]);
+      }
+      else
+      {
+        /* return 0, Invalid input */
+        res = 0;
+        break;
+      }
+    }
+    /* Over 10 digit decimal --invalid */
+    if (i >= 11)
+    {
+      res = 0;
+    }
+  }
+
+  return res;
+}
+
+/**
+  * @brief  Convert an Integer to a string
+  * @param  str: The string
+  * @param  intnum: The integer to be converted
+  * @retval None
+  */
+void Int2Str(uint8_t* str, int32_t intnum)
+{
+  uint32_t i, Div = 1000000000, j = 0, Status = 0;
+
+  for (i = 0; i < 10; i++)
+  {
+    str[j++] = (intnum / Div) + 48;
+
+    intnum = intnum % Div;
+    Div /= 10;
+    if ((str[j-1] == '0') & (Status == 0))
+    {
+      j = 0;
+    }
+    else
+    {
+      Status++;
+    }
+  }
+}
+
+/**
+********************************************************************************
+  * @函数名称    UpdateCRC16
+  * @函数说明   更新输入数据的CRC校验
+  * @输入参数   crcIn
+                byte
+  * @输出参数   无
+  * @返回参数   CRC校验值
+********************************************************************************
+**/
+uint16_t UpdateCRC16(uint16_t crcIn, uint8_t byte)
+{
+    uint32_t crc = crcIn;
+    uint32_t in = byte | 0x100;
+
+    do
+    {
+        crc <<= 1;
+        in <<= 1;
+        if(in & 0x100)
+            ++crc;
+        if(crc & 0x10000)
+            crc ^= 0x1021;
+    }
+
+    while(!(in & 0x10000));
+
+    return crc & 0xffffu;
+}
+
+
+/*
+********************************************************************************
+  * @函数名称    UpdateCRC16
+  * @函数说明   更新输入数据的CRC校验
+  * @输入参数   data ：数据
+                size ：长度
+  * @输出参数   无
+  * @返回参数   CRC校验值
+********************************************************************************
+*/
+uint16_t Cal_CRC16(const uint8_t* data, uint32_t size)
+{
+    uint32_t crc = 0;
+    const uint8_t* dataEnd = data + size;
+
+    while(data < dataEnd)
+    crc = UpdateCRC16(crc, *data++);
+
+    crc = UpdateCRC16(crc, 0);
+    crc = UpdateCRC16(crc, 0);
+
+    return crc & 0xffffu;
+}
+
+/*
+********************************************************************************
+  * @函数名称    CalChecksum
+  * @函数说明   计算YModem数据包的总大小
+  * @输入参数   data ：数据
+                size ：长度
+  * @输出参数   无
+  * @返回参数   数据包的总大小
+********************************************************************************
+*/
+uint8_t CalChecksum(const uint8_t* data, uint32_t size)
+{
+    uint32_t sum = 0;
+    const uint8_t* dataEnd = data + size;
+
+    while(data < dataEnd )
+        sum += *data++;
+
+    return (sum & 0xffu);
+}
+
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/
