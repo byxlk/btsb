@@ -87,7 +87,7 @@
 #include "bsp_adc.h"
 //#include "bsp_timer.h"
 #include "bsp_key.h"
-#include "ymodem.h"
+//#include "ymodem.h"
 //#include "bsp_led.h"
 
 
