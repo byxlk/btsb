@@ -61,6 +61,7 @@ static const char * FR_Table[]=
 */
 int32_t Recv_Byte (COM_PORT_E _ucPort, uint8_t *_pByte, uint32_t timeout)
 {
+#if USING_FIFO_EN == 1
     while (timeout-- > 0)
     {
         if(comGetChar(_ucPort, _pByte) == 1)
@@ -68,6 +69,20 @@ int32_t Recv_Byte (COM_PORT_E _ucPort, uint8_t *_pByte, uint32_t timeout)
             return 0;
         }
     }
+#else
+#if 1
+    while (timeout-- > 0)
+    {
+        if (SerialKeyPressed(_ucPort, _pByte) == 1)
+        {
+            return 0;
+        }
+    }
+#else
+    while(!SerialKeyPressed(_ucPort, _pByte)) {};
+    return 0;
+#endif
+#endif
 
     return -1;
 }
@@ -81,7 +96,11 @@ int32_t Recv_Byte (COM_PORT_E _ucPort, uint8_t *_pByte, uint32_t timeout)
 */
 uint32_t Send_Byte (COM_PORT_E _ucPort, uint8_t _pByte)
 {
+#if USING_FIFO_EN == 1
     comSendChar(_ucPort, _pByte);
+#else
+    SerialPutChar(_ucPort, _pByte);
+#endif
 
     return 0;
 }
@@ -203,7 +222,7 @@ static void ViewRootDir(void)
 	FileInf.lfname = lfname;
 	FileInf.lfsize = 256;
 
-	printf("属性        |  文件大小 | 短文件名 | 长文件名\r\n");
+	printf("属性        |  文件大小 | 文件名\r\n");
 	for (cnt = 0; ;cnt++)
 	{
 		result = f_readdir(&DirInf,&FileInf); 		/* 读取目录项，索引会自动下移 */
@@ -230,7 +249,7 @@ static void ViewRootDir(void)
 		/* 打印文件大小, 最大4G */
 		printf(" %10d", FileInf.fsize);
 
-		printf("  %s |", FileInf.fname);	/* 短文件名 */
+		//printf("  %s |", FileInf.fname);	/* 短文件名 */
 
 		printf("  %s\r\n", (char *)FileInf.lfname);	/* 长文件名 */
 	}
@@ -732,27 +751,30 @@ void DownloadFile(void)
     /* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
 	FRESULT result;
 	FATFS fs;
-	FIL file;
+	FIL RecvFile;
 	DIR DirInf;
-	uint32_t bw;
+	uint32_t ByteWrite;
     uint16_t i = 0;
 
     char ErrorNum=0;            //错误计数
     char YmodemState=0;
+    //uint8_t Timeout_TryCount = 0;
+    uint16_t NextPackNum = 0;
     unsigned char TempChar=0;   //接收数据
-    int crcvalue=0;
-    int len=0;
-    int count=0;
-    COM_PORT_E _ucPort=COM1;
-    char file_name[128] = {'\0'};
+    int CrcValue=0;
+    int PacketLen=0;
 
-    uint32_t FileSize = 0;
-    uint8_t transfer_end_flag = 0;
-    int8_t target_path[32]="0:/";
+    //int count=0;
+    COM_PORT_E _ucPort=COM1;
+    char FileName[128] = {'\0'};
+
+    int32_t FileSize = 0;
+    uint8_t Transfer_End = 0;
+    char target_path[32]="0:/";
     uint8_t UserBuf[PACKET_1K_SIZE + PACKET_OVERHEAD] = {0};
 
 	/* 挂载文件系统 */
-	//MountFS(&fs, 0);
+	MountFS(&fs, 0);
     //Send_Byte(COM1, MODEM_C);
     //Recv_Byte(COM1, &i, NAK_TIMEOUT);
     //printf("recv data:%c \r\n",i);
@@ -761,28 +783,37 @@ void DownloadFile(void)
     //printf("Please input the path:");
     //scanf("%s",target_path);
     //printf("Open director: %s\r\n",target_path);
-	//result = f_opendir(&DirInf, target_path); /* 如果不带参数，则从当前目录开始 */
+	result = f_opendir(&DirInf, target_path); /* 如果不带参数，则从当前目录开始 */
 	if (result != FR_OK)
 	{
-		//printf("打开根目录失败 (%s)\r\n",  FR_Table[result]);
-		//return;
+		printf("打开根目录失败 (%s)\r\n",  FR_Table[result]);
+		return;
 	}
 
-    while(1)
-    {
-        switch(YmodemState)
-        {
-            case 0: //通信起始阶段
+#if 1
+
+    while(1) {
+        //vTaskDelay(50);
+        bsp_DelayMS(50);
+        if(Transfer_End != 0) break;
+        switch(YmodemState) {
+            case YMODEM_START: //通信起始阶段
+                printf("YMODEM_START\r\n");
                 Send_Byte(_ucPort, MODEM_C);                //发起始信号
                 //每次等待0.2s钟，发生超时重发“C”
-                if(Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT) == 0)
-                {
+                if(Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT) == 0) {
                     if(TempChar==MODEM_SOH )
                     {
                         Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
-                        if(TempChar!=0x00) return ;          //不是00序号。
+                        if(TempChar != 0x00) { //不是00序号。
+                            Transfer_End = 0x03 ;
+                            continue;
+                        }
                         Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
-                        if ( TempChar != 0xFF )return ;     //不是00序号补码。
+                        if ( TempChar != 0xFF ) {     //不是00序号补码。
+                            Transfer_End = 0x03 ;
+                            continue;
+                        }
                         for ( i=0; i<128; i++ )
                         {                                //接收数据包0，共128字节
                             Recv_Byte(_ucPort, (UserBuf+i), NAK_TIMEOUT);
@@ -791,111 +822,149 @@ void DownloadFile(void)
                         Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);  //丢弃CRC校验，暂时不想实现。
 
                         Send_Byte(_ucPort, MODEM_ACK);             //发送确认信号。
-                        YmodemState=1;  //状态切换到数据传输状态
+                        YmodemState = YMODEM_DATATRANS;  //状态切换到数据传输状态
                         for ( i=0; i<128; i++ )
                         {                        //接收数据包0，共128字节
-                            file_name[i]=0;
+                            FileName[i]=0;
                         }
                         for ( i=0; (i<128)&&(UserBuf[i]); i++ )
                         {                          //接收数据包0，共128字节
-                            file_name[i]=UserBuf[i];
+                            FileName[i]=UserBuf[i];
                         }
                         Str2Int((UserBuf+i+1), &FileSize);
-                        printf("FileName:%s FileSize:%d \r\n",file_name, FileSize);
-
+                        //Serial_PutString(_ucPort, FileName);
+                        //Serial_PutString(_ucPort, &FileSize);
+                        result = f_open( &RecvFile, (const char *)FileName,
+                                        FA_READ | FA_WRITE| FA_CREATE_NEW );
+                        NextPackNum = 1;
+                        //printf("FileName: %s FileSize:%d \r\n",FileName, FileSize);
+                        //printf("YMODEM_DATATRANS\r\n");
                         Send_Byte(_ucPort, MODEM_C);   //再发一个C，正式启动数据传输
                     }
                 }
                 break;
-            case 1:        //数据传输阶段
+            case YMODEM_DATATRANS:        //数据传输阶段
                 Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
                 switch(TempChar)
                 {
                     case MODEM_EOT:
-                        YmodemState = MODEM_EOT;
+                        YmodemState = YMODEM_ENDOFTRANS;
                         Send_Byte(_ucPort, MODEM_ACK);
                         continue;
                     case MODEM_SOH:
-                        len = 128;
+                        PacketLen = 128;
                         break;
                     case MODEM_STX:
-                        len = 1024;
+                        PacketLen = 1024;
                         break;
                     case USER_ABORT1:
-                        //Serial_PutString("用户取消文件传输!\r\n");
-                        return ;
                     case USER_ABORT2:
-                        //Serial_PutString("用户取消文件传输!\r\n");
-                        return ;
-                        break;
-                    default :
-                        return ;
+                    case MODEM_CAN:
+                        Send_Byte(_ucPort, MODEM_CAN);
+                        Send_Byte(_ucPort, MODEM_CAN);
+                        f_unlink(FileName);
+                        printf("User cancel transfer data \r\n");
+                        Transfer_End = 0x02 ;
+                        continue;
+                    default:
+                        printf("Unknow StartCode: %d packSeq: %d\r\n",TempChar,NextPackNum);
+                        continue;
                 }  //end of switch (StartChar)
                 Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                //if(NextPackNum != TempChar) {
+                  //  Transfer_End = 0x03 ;
+                    //ErrorNum++;
+                    //printf("NextPackNum: %d TempChar:%d\r\n",NextPackNum,TempChar);
+                    //continue;
+                //}
                 Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
-                for(i=0;i<len;i++)
+                for(i = 0; i < PacketLen; i++)
                 {      //接收整个数据包
                     Recv_Byte(_ucPort, (UserBuf+i), NAK_TIMEOUT);
                 }
                 //CRC桥验
                 Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
-                crcvalue=TempChar;
-                crcvalue<<=8;
+                CrcValue = TempChar;
+                CrcValue <<= 8;
                 Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
-                crcvalue|=TempChar;
+                CrcValue |= TempChar;
 
-                if(Cal_CRC16(UserBuf,len)!=crcvalue)
+                if(Cal_CRC16(UserBuf, PacketLen) != CrcValue)
                 {
-                    ErrorNum+=1;
+                    ErrorNum++;;
+                    printf("CrcValue: %d CRC:%d packsize: %d\r\n",
+                        CrcValue,Cal_CRC16(UserBuf,PacketLen),PacketLen);
                 }
 
                 if(ErrorNum==0)
                 {
+                    result = f_write ( &RecvFile, (void *)UserBuf,
+                        PacketLen, &ByteWrite );//将接收到得数据写入文件
+                    NextPackNum++;
                     Send_Byte(_ucPort, MODEM_ACK);
-                    count+=len;
+                    //printf("%c",(PacketLen == 128)? '#' : '@');
                 }
-                else Send_Byte(_ucPort, MODEM_NAK);//接收发现错误，要求重发。
-                    break;
-            case MODEM_EOT:   //结束传输阶段
+                else
+                {
+                    Send_Byte(_ucPort, MODEM_NAK);//接收发现错误，要求重发。
+                    printf("Err(%d)\r\n",ErrorNum);
+                    ErrorNum--;
+                }
+                break;
+            case YMODEM_ENDOFTRANS:   //结束传输阶段
+                printf("YMODEM_ENDOFTRANS\r\n");
                 Send_Byte(_ucPort, MODEM_C);
                 Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);//接收起始字符。
                 if(TempChar==MODEM_SOH)
                 {
                     Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
-                    if(TempChar!=0x00)return ;            //不是00序号。
+                    if(TempChar != 0x00) { //不是00序号。
+                        Transfer_End = 0x03 ;
+                        continue;
+                    }
                     Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
-                    if(TempChar!=0xFF)return ;    //不是00序号补码。
+                    if ( TempChar != 0xFF ) {     //不是00序号补码。
+                        Transfer_End = 0x03 ;
+                        continue;
+                    }
                     for(i=0;i<128;i++)
                     {
                         Recv_Byte(_ucPort, (UserBuf+i), NAK_TIMEOUT);
                     }
                     //CRC桥验
                     Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
-                    crcvalue=TempChar;
-                    crcvalue<<=8;
+                    CrcValue = TempChar;
+                    CrcValue <<= 8;
                     Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
-                    crcvalue|=TempChar;
+                    CrcValue |= TempChar;
 
-					if(Cal_CRC16(UserBuf,128)!=crcvalue)
+					if(Cal_CRC16(UserBuf,128)!=CrcValue)
                     {
                         ErrorNum+=1;
                     }
                     if(ErrorNum==0)
                     {
+                        f_lseek ( &RecvFile, FileSize );
+				        f_truncate ( &RecvFile );
+				        f_close( &RecvFile );
                         Send_Byte(_ucPort, MODEM_ACK);
-                        return ;
+                        Transfer_End = 0x04 ;
+                        continue; ;
                     }
                     else Send_Byte(_ucPort, MODEM_NAK);//接收发现错误，要求重发。
-                    if(UserBuf[0] == 0) Send_Byte(_ucPort, MODEM_ACK);
                     break;
                 }
+                //Transfer_End = 0x04 ;
+
             default:
-                return ;
+                Transfer_End = 0x01 ;
+                break ;
         }
     }
-
+#endif
     /* 卸载文件系统 */
-	//MountFS(NULL, 0);
+    printf("download file end \r\n");
+	MountFS(NULL, 0);
 }
 
 /*
@@ -1026,9 +1095,11 @@ void DemoFatFS(void)
                     printf("【9 - Update Firmware】\r\n");
                     UpdateFirmware();
                     break;
-
+                case 0x0D:
+                    DispMenu();
+					break;
 				default:
-					DispMenu();
+					//DispMenu();
 					break;
 			}
 		}

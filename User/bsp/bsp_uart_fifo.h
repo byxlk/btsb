@@ -25,9 +25,9 @@
 		PA9/USART1_TX	  --- 打印调试口
 		PA10/USART1_RX
 
-	【串口2】GPRS 模块 
+	【串口2】GPRS 模块
 		PA2/USART2_TX
-		PA3/USART2_RX 
+		PA3/USART2_RX
 
 	【串口3】 RS485 通信 - TTL 跳线 和 排针
 		PB10/USART3_TX
@@ -37,6 +37,10 @@
 	【串口4】 --- 不做串口用。
 	【串口5】 --- 不做串口用。
 */
+
+#define USING_FIFO_EN 1
+#define USING_RS485_EN 0
+
 #define	UART1_FIFO_EN	1
 #define	UART2_FIFO_EN	0
 #define	UART3_FIFO_EN	0
@@ -45,13 +49,14 @@
 #define	UART6_FIFO_EN	1
 
 /* RS485芯片发送使能GPIO, PB2 */
+#if USING_RS485_EN == 1
 #define RCC_RS485_TXEN 	 RCC_AHB1Periph_GPIOC
 #define PORT_RS485_TXEN   GPIOC
 #define PIN_RS485_TXEN	 GPIO_Pin_5
 
 #define RS485_RX_EN()	PORT_RS485_TXEN->BSRRL = PIN_RS485_TXEN
 #define RS485_TX_EN()	PORT_RS485_TXEN->BSRRH = PIN_RS485_TXEN
-
+#endif
 
 /* 定义端口号 */
 typedef enum
@@ -67,8 +72,8 @@ typedef enum
 /* 定义串口波特率和FIFO缓冲区大小，分为发送缓冲区和接收缓冲区, 支持全双工 */
 #if UART1_FIFO_EN == 1
 	#define UART1_BAUD			115200
-	#define UART1_TX_BUF_SIZE	1*1024
-	#define UART1_RX_BUF_SIZE	1*1024
+	#define UART1_TX_BUF_SIZE	2*1024
+	#define UART1_RX_BUF_SIZE	2*1024
 #endif
 
 #if UART2_FIFO_EN == 1
@@ -97,8 +102,8 @@ typedef enum
 
 #if UART6_FIFO_EN == 1
 	#define UART6_BAUD			115200
-	#define UART6_TX_BUF_SIZE	1*1024
-	#define UART6_RX_BUF_SIZE	1*1024
+	#define UART6_TX_BUF_SIZE	1*128
+	#define UART6_RX_BUF_SIZE	1*128
 #endif
 
 
@@ -138,6 +143,12 @@ void bsp_Set485Baud(uint32_t _baud);
 
 void bsp_SetUart1Baud(uint32_t _baud);
 void bsp_SetUart2Baud(uint32_t _baud);
+
+void SerialPutChar(COM_PORT_E _ucPort, uint8_t c);
+uint32_t SerialKeyPressed(COM_PORT_E _ucPort, uint8_t *key);
+void Serial_PutString(COM_PORT_E _ucPort, int8_t *s);
+
+
 
 #endif
 

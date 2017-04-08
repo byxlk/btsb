@@ -335,7 +335,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Libraries\CMSIS\Include;..\Libraries\CMSIS\RTOS\Template;..\Libraries\STM32F2xx_StdPeriph_Driver\inc;..\Libraries\CMSIS\Device\ST\STM32F2xx\Include;..\FatFS\src;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM3;..\User;..\User\bsp;..\User\emWinTask;..\STemWin\Config;..\STemWin\DisplayDriver;..\STemWin\inc;..\STemWin\OS;..\User\UartIAP</IncludePath>
+              <IncludePath>..\Libraries\CMSIS\Include;..\Libraries\CMSIS\RTOS\Template;..\Libraries\STM32F2xx_StdPeriph_Driver\inc;..\Libraries\CMSIS\Device\ST\STM32F2xx\Include;..\FatFS\src;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM3;..\User;..\User\bsp;..\User\emWinTask;..\STemWin\Config;..\STemWin\DisplayDriver;..\STemWin\inc;..\STemWin\OS</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

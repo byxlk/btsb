@@ -11,7 +11,7 @@
 *		V1.1    2013-06-09 armfly  FiFo结构增加TxCount成员变量，方便判断缓冲区满; 增加 清FiFo的函数
 *		V1.2	2014-09-29 armfly  增加RS485 MODBUS接口。接收到新字节后，直接执行回调函数。
 *
-*	修改补充 : 
+*	修改补充 :
 *		版本号    日期       作者                  说明
 *		V1.0    2015-08-19  Eric2013       临界区处理采用FreeRTOS方案
 *
@@ -59,35 +59,6 @@
 	static uint8_t g_TxBuf6[UART6_TX_BUF_SIZE];		/* 发送缓冲区 */
 	static uint8_t g_RxBuf6[UART6_RX_BUF_SIZE];		/* 接收缓冲区 */
 #endif
-
-static void UartVarInit(void);
-
-static void InitHardUart(void);
-static void UartSend(UART_T *_pUart, uint8_t *_ucaBuf, uint16_t _usLen);
-static uint8_t UartGetChar(UART_T *_pUart, uint8_t *_pByte);
-static void UartIRQ(UART_T *_pUart);
-static void ConfigUartNVIC(void);
-
-void RS485_InitTXE(void);
-
-/*
-*********************************************************************************************************
-*	函 数 名: bsp_InitUart
-*	功能说明: 初始化串口硬件，并对全局变量赋初值.
-*	形    参:  无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void bsp_InitUart(void)
-{
-	UartVarInit();		/* 必须先初始化全局变量,再配置硬件 */
-
-	InitHardUart();		/* 配置串口的硬件参数(波特率等) */
-
-	//RS485_InitTXE();	/* 配置RS485芯片的发送使能硬件，配置为推挽输出 */
-
-	ConfigUartNVIC();	/* 配置串口中断 */
-}
 
 /*
 *********************************************************************************************************
@@ -156,6 +127,77 @@ UART_T *ComToUart(COM_PORT_E _ucPort)
 
 /*
 *********************************************************************************************************
+*	函 数 名: UartSend
+*	功能说明: 填写数据到UART发送缓冲区,并启动发送中断。中断处理函数发送完毕后，自动关闭发送中断
+*	形    参:  无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+static void UartSend(UART_T *_pUart, uint8_t *_ucaBuf, uint16_t _usLen)
+{
+	uint16_t i;
+
+	for (i = 0; i < _usLen; i++)
+	{
+		/* 如果发送缓冲区已经满了，则等待缓冲区空 */
+	#if 0
+		/*
+			在调试GPRS例程时，下面的代码出现死机，while 死循环
+			原因： 发送第1个字节时 _pUart->usTxWrite = 1；_pUart->usTxRead = 0;
+			将导致while(1) 无法退出
+		*/
+		while (1)
+		{
+			uint16_t usRead;
+
+			DISABLE_INT();
+			usRead = _pUart->usTxRead;
+			ENABLE_INT();
+
+			if (++usRead >= _pUart->usTxBufSize)
+			{
+				usRead = 0;
+			}
+
+			if (usRead != _pUart->usTxWrite)
+			{
+				break;
+			}
+		}
+	#else
+		/* 当 _pUart->usTxBufSize == 1 时, 下面的函数会死掉(待完善) */
+		while (1)
+		{
+			__IO uint16_t usCount;
+
+			DISABLE_INT();
+			usCount = _pUart->usTxCount;
+			ENABLE_INT();
+
+			if (usCount < _pUart->usTxBufSize)
+			{
+				break;
+			}
+		}
+	#endif
+
+		/* 将新数据填入发送缓冲区 */
+		_pUart->pTxBuf[_pUart->usTxWrite] = _ucaBuf[i];
+
+		DISABLE_INT();
+		if (++_pUart->usTxWrite >= _pUart->usTxBufSize)
+		{
+			_pUart->usTxWrite = 0;
+		}
+		_pUart->usTxCount++;
+		ENABLE_INT();
+	}
+
+	USART_ITConfig(_pUart->uart, USART_IT_TXE, ENABLE);
+}
+
+/*
+*********************************************************************************************************
 *	函 数 名: comSendBuf
 *	功能说明: 向串口发送一组数据。数据放到发送缓冲区后立即返回，由中断服务程序在后台完成发送
 *	形    参: _ucPort: 端口号(COM1 - COM6)
@@ -198,6 +240,46 @@ void comSendChar(COM_PORT_E _ucPort, uint8_t _ucByte)
 
 /*
 *********************************************************************************************************
+*	函 数 名: UartGetChar
+*	功能说明: 从串口接收缓冲区读取1字节数据 （用于主程序调用）
+*	形    参: _pUart : 串口设备
+*			  _pByte : 存放读取数据的指针
+*	返 回 值: 0 表示无数据  1表示读取到数据
+*********************************************************************************************************
+*/
+static uint8_t UartGetChar(UART_T *_pUart, uint8_t *_pByte)
+{
+	uint16_t usCount;
+
+	/* usRxWrite 变量在中断函数中被改写，主程序读取该变量时，必须进行临界区保护 */
+	DISABLE_INT();
+	usCount = _pUart->usRxCount;
+	ENABLE_INT();
+
+	/* 如果读和写索引相同，则返回0 */
+	//if (_pUart->usRxRead == usRxWrite)
+	if (usCount == 0)	/* 已经没有数据 */
+	{
+		return 0;
+	}
+	else
+	{
+		*_pByte = _pUart->pRxBuf[_pUart->usRxRead];		/* 从串口接收FIFO取1个数据 */
+
+		/* 改写FIFO读索引 */
+		DISABLE_INT();
+		if (++_pUart->usRxRead >= _pUart->usRxBufSize)
+		{
+			_pUart->usRxRead = 0;
+		}
+		_pUart->usRxCount--;
+		ENABLE_INT();
+		return 1;
+	}
+}
+
+/*
+*********************************************************************************************************
 *	函 数 名: comGetChar
 *	功能说明: 从串口缓冲区读取1字节，非阻塞。无论有无数据均立即返回
 *	形    参: _ucPort: 端口号(COM1 - COM6)
@@ -214,8 +296,13 @@ uint8_t comGetChar(COM_PORT_E _ucPort, uint8_t *_pByte)
 	{
 		return 0;
 	}
-
+#if USING_FIFO_EN == 1
 	return UartGetChar(pUart, _pByte);
+#else
+    /* 等待串口1输入数据 */
+    while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET) ;
+    return (uint8_t)USART_ReceiveData(USART1);
+#endif
 }
 
 /*
@@ -308,7 +395,7 @@ void bsp_SetUart2Baud(uint32_t _baud)
 	USART_Init(USART2, &USART_InitStructure);
 }
 
-
+#if USING_RS485_EN == 1
 /* 如果是RS485通信，请按如下格式编写函数， 我们仅举了 USART3作为RS485的例子 */
 
 /*
@@ -326,7 +413,7 @@ void RS485_InitTXE(void)
 	RCC_APB2PeriphClockCmd(RCC_RS485_TXEN, ENABLE);	/* 打开GPIO时钟 */
 
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;	
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;/* 推挽输出模式 */
 	GPIO_InitStructure.GPIO_Pin = PIN_RS485_TXEN;
 	GPIO_Init(PORT_RS485_TXEN, &GPIO_InitStructure);
@@ -424,6 +511,7 @@ void RS485_ReciveNew(uint8_t _byte)
 {
 //	MODBUS_ReciveNew(_byte);
 }
+#endif
 
 /*
 *********************************************************************************************************
@@ -695,7 +783,7 @@ static void InitHardUart(void)
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No ;
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;	
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 	USART_Init(USART2, &USART_InitStructure);
 
 	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);	/* 使能接收中断 */
@@ -902,7 +990,7 @@ static void InitHardUart(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	
+
 	/* 第4步： 配置串口硬件参数 */
 	USART_InitStructure.USART_BaudRate = UART6_BAUD;	/* 波特率 */
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
@@ -992,113 +1080,21 @@ static void ConfigUartNVIC(void)
 
 /*
 *********************************************************************************************************
-*	函 数 名: UartSend
-*	功能说明: 填写数据到UART发送缓冲区,并启动发送中断。中断处理函数发送完毕后，自动关闭发送中断
+*	函 数 名: bsp_InitUart
+*	功能说明: 初始化串口硬件，并对全局变量赋初值.
 *	形    参:  无
 *	返 回 值: 无
 *********************************************************************************************************
 */
-static void UartSend(UART_T *_pUart, uint8_t *_ucaBuf, uint16_t _usLen)
+void bsp_InitUart(void)
 {
-	uint16_t i;
+	UartVarInit();		/* 必须先初始化全局变量,再配置硬件 */
 
-	for (i = 0; i < _usLen; i++)
-	{
-		/* 如果发送缓冲区已经满了，则等待缓冲区空 */
-	#if 0
-		/*
-			在调试GPRS例程时，下面的代码出现死机，while 死循环
-			原因： 发送第1个字节时 _pUart->usTxWrite = 1；_pUart->usTxRead = 0;
-			将导致while(1) 无法退出
-		*/
-		while (1)
-		{
-			uint16_t usRead;
+	InitHardUart();		/* 配置串口的硬件参数(波特率等) */
 
-			DISABLE_INT();
-			usRead = _pUart->usTxRead;
-			ENABLE_INT();
+	//RS485_InitTXE();	/* 配置RS485芯片的发送使能硬件，配置为推挽输出 */
 
-			if (++usRead >= _pUart->usTxBufSize)
-			{
-				usRead = 0;
-			}
-
-			if (usRead != _pUart->usTxWrite)
-			{
-				break;
-			}
-		}
-	#else
-		/* 当 _pUart->usTxBufSize == 1 时, 下面的函数会死掉(待完善) */
-		while (1)
-		{
-			__IO uint16_t usCount;
-
-			DISABLE_INT();
-			usCount = _pUart->usTxCount;
-			ENABLE_INT();
-
-			if (usCount < _pUart->usTxBufSize)
-			{
-				break;
-			}
-		}
-	#endif
-
-		/* 将新数据填入发送缓冲区 */
-		_pUart->pTxBuf[_pUart->usTxWrite] = _ucaBuf[i];
-
-		DISABLE_INT();
-		if (++_pUart->usTxWrite >= _pUart->usTxBufSize)
-		{
-			_pUart->usTxWrite = 0;
-		}
-		_pUart->usTxCount++;
-		ENABLE_INT();
-	}
-
-	USART_ITConfig(_pUart->uart, USART_IT_TXE, ENABLE);
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: UartGetChar
-*	功能说明: 从串口接收缓冲区读取1字节数据 （用于主程序调用）
-*	形    参: _pUart : 串口设备
-*			  _pByte : 存放读取数据的指针
-*	返 回 值: 0 表示无数据  1表示读取到数据
-*********************************************************************************************************
-*/
-static uint8_t UartGetChar(UART_T *_pUart, uint8_t *_pByte)
-{
-	uint16_t usCount;
-
-	/* usRxWrite 变量在中断函数中被改写，主程序读取该变量时，必须进行临界区保护 */
-	DISABLE_INT();
-	usCount = _pUart->usRxCount;
-	ENABLE_INT();
-
-	/* 如果读和写索引相同，则返回0 */
-	//if (_pUart->usRxRead == usRxWrite)
-	if (usCount == 0)	/* 已经没有数据 */
-	{
-		return 0;
-	}
-	else
-	{
-		*_pByte = _pUart->pRxBuf[_pUart->usRxRead];		/* 从串口接收FIFO取1个数据 */
-
-		/* 改写FIFO读索引 */
-		DISABLE_INT();
-		if (++_pUart->usRxRead >= _pUart->usRxBufSize)
-		{
-			_pUart->usRxRead = 0;
-		}
-		_pUart->usRxCount--;
-		ENABLE_INT();
-		return 1;
-	}
+	ConfigUartNVIC();	/* 配置串口中断 */
 }
 
 /*
@@ -1111,6 +1107,8 @@ static uint8_t UartGetChar(UART_T *_pUart, uint8_t *_pByte)
 */
 static void UartIRQ(UART_T *_pUart)
 {
+#if USING_FIFO_EN == 1
+
 	/* 处理接收中断  */
 	if (USART_GetITStatus(_pUart->uart, USART_IT_RXNE) != RESET)
 	{
@@ -1191,6 +1189,8 @@ static void UartIRQ(UART_T *_pUart)
 			_pUart->usTxCount--;
 		}
 	}
+
+#endif
 }
 
 /*
@@ -1253,7 +1253,7 @@ void USART6_IRQHandler(void)
 */
 int fputc(int ch, FILE *f)
 {
-#if 1	/* 将需要printf的字符通过串口中断FIFO发送出去，printf函数会立即返回 */
+#if USING_FIFO_EN == 1	/* 将需要printf的字符通过串口中断FIFO发送出去，printf函数会立即返回 */
 	comSendChar(COM1, ch);
 
 	return ch;
@@ -1262,8 +1262,7 @@ int fputc(int ch, FILE *f)
 	USART_SendData(USART1, (uint8_t) ch);
 
 	/* 等待发送结束 */
-	while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)
-	{}
+	while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {}
 
 	return ch;
 #endif
@@ -1280,7 +1279,7 @@ int fputc(int ch, FILE *f)
 int fgetc(FILE *f)
 {
 
-#if 1	/* 从串口接收FIFO中取1个数据, 只有取到数据才返回 */
+#if USING_FIFO_EN == 1	/* 从串口接收FIFO中取1个数据, 只有取到数据才返回 */
 	uint8_t ucData;
 
 	while(comGetChar(COM1, &ucData) == 0);
@@ -1288,10 +1287,62 @@ int fgetc(FILE *f)
 	return ucData;
 #else
 	/* 等待串口1输入数据 */
-	while (USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);
+	while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);
 
 	return (int)USART_ReceiveData(USART1);
 #endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+  * @brief  Print a character on the HyperTerminal
+  * @param  c: The character to be printed
+  * @retval None
+  */
+void SerialPutChar(COM_PORT_E _ucPort, uint8_t c)
+{
+    UART_T *pUart;
+	pUart = ComToUart(_ucPort);
+
+    USART_SendData(pUart->uart, c);
+    while(USART_GetFlagStatus(pUart->uart, USART_FLAG_TXE) == RESET)
+    {
+    }
+}
+
+/**
+  * @brief  Test to see if a key has been pressed on the HyperTerminal
+  * @param  key: The key pressed
+  * @retval 1: Correct
+  *         0: Error
+  */
+uint32_t SerialKeyPressed(COM_PORT_E _ucPort, uint8_t *key)
+{
+    UART_T *pUart;
+    pUart = ComToUart(_ucPort);
+
+    if(USART_GetFlagStatus(pUart->uart, USART_FLAG_RXNE) != RESET)
+    {
+        //*key = (uint8_t)pUart->uart->DR;
+        *key = (uint8_t)USART_ReceiveData(pUart->uart);
+        return 1;
+    }
+
+    return 0;
+}
+
+/**
+  * @brief  Print a string on the HyperTerminal
+  * @param  s: The string to be printed
+  * @retval None
+  */
+void Serial_PutString(COM_PORT_E _ucPort, int8_t *s)
+{
+  while (*s != '\0')
+  {
+    SerialPutChar(_ucPort, *s);
+    s++;
+  }
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/
