@@ -222,7 +222,7 @@ static void ViewRootDir(void)
 	FileInf.lfname = lfname;
 	FileInf.lfsize = 256;
 
-	printf("属性        |  文件大小 | 文件名\r\n");
+	printf("属性        |  文件大小 | 短文件名 | 长文件名\r\n");
 	for (cnt = 0; ;cnt++)
 	{
 		result = f_readdir(&DirInf,&FileInf); 		/* 读取目录项，索引会自动下移 */
@@ -823,10 +823,10 @@ void DownloadFile(void)
 
                         Send_Byte(_ucPort, MODEM_ACK);             //发送确认信号。
                         YmodemState = YMODEM_DATATRANS;  //状态切换到数据传输状态
-                        for ( i=0; i<128; i++ )
-                        {                        //接收数据包0，共128字节
-                            FileName[i]=0;
-                        }
+                        //for ( i=0; i<128; i++ )
+                        //{                        //接收数据包0，共128字节
+                        //    FileName[i]=0;
+                        //}
                         for ( i=0; (i<128)&&(UserBuf[i]); i++ )
                         {                          //接收数据包0，共128字节
                             FileName[i]=UserBuf[i];
