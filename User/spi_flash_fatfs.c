@@ -249,7 +249,7 @@ static void ViewRootDir(void)
 		/* 打印文件大小, 最大4G */
 		printf(" %10d", FileInf.fsize);
 
-		//printf("  %s |", FileInf.fname);	/* 短文件名 */
+		printf("  %s |", FileInf.fname);	/* 短文件名 */
 
 		printf("  %s\r\n", (char *)FileInf.lfname);	/* 长文件名 */
 	}
@@ -766,7 +766,7 @@ void DownloadFile(void)
 
     //int count=0;
     COM_PORT_E _ucPort=COM1;
-    char FileName[128] = {'\0'};
+    char FileName[128] = {0};
 
     int32_t FileSize = 0;
     uint8_t Transfer_End = 0;
@@ -798,7 +798,7 @@ void DownloadFile(void)
         if(Transfer_End != 0) break;
         switch(YmodemState) {
             case YMODEM_START: //通信起始阶段
-                printf("YMODEM_START\r\n");
+                //printf("YMODEM_START\r\n");
                 Send_Byte(_ucPort, MODEM_C);                //发起始信号
                 //每次等待0.2s钟，发生超时重发“C”
                 if(Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT) == 0) {
@@ -834,8 +834,9 @@ void DownloadFile(void)
                         Str2Int((UserBuf+i+1), &FileSize);
                         //Serial_PutString(_ucPort, FileName);
                         //Serial_PutString(_ucPort, &FileSize);
+
                         result = f_open( &RecvFile, (const char *)FileName,
-                                        FA_READ | FA_WRITE| FA_CREATE_NEW );
+                                        FA_READ | FA_WRITE| FA_CREATE_ALWAYS);
                         NextPackNum = 1;
                         //printf("FileName: %s FileSize:%d \r\n",FileName, FileSize);
                         //printf("YMODEM_DATATRANS\r\n");
@@ -902,7 +903,6 @@ void DownloadFile(void)
                         PacketLen, &ByteWrite );//将接收到得数据写入文件
                     NextPackNum++;
                     Send_Byte(_ucPort, MODEM_ACK);
-                    //printf("%c",(PacketLen == 128)? '#' : '@');
                 }
                 else
                 {
@@ -912,7 +912,7 @@ void DownloadFile(void)
                 }
                 break;
             case YMODEM_ENDOFTRANS:   //结束传输阶段
-                printf("YMODEM_ENDOFTRANS\r\n");
+                //printf("YMODEM_ENDOFTRANS\r\n");
                 Send_Byte(_ucPort, MODEM_C);
                 Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);//接收起始字符。
                 if(TempChar==MODEM_SOH)
@@ -940,7 +940,7 @@ void DownloadFile(void)
 
 					if(Cal_CRC16(UserBuf,128)!=CrcValue)
                     {
-                        ErrorNum+=1;
+                        ErrorNum += 1;
                     }
                     if(ErrorNum==0)
                     {
@@ -949,13 +949,12 @@ void DownloadFile(void)
 				        f_close( &RecvFile );
                         Send_Byte(_ucPort, MODEM_ACK);
                         Transfer_End = 0x04 ;
-                        continue; ;
+                        continue;
                     }
                     else Send_Byte(_ucPort, MODEM_NAK);//接收发现错误，要求重发。
-                    break;
                 }
-                //Transfer_End = 0x04 ;
-
+                Transfer_End = 0x04 ;
+                break;
             default:
                 Transfer_End = 0x01 ;
                 break ;
@@ -963,7 +962,8 @@ void DownloadFile(void)
     }
 #endif
     /* 卸载文件系统 */
-    printf("download file end \r\n");
+    printf("\r\nDownload file Success! \r\n");
+    printf("FileName: %s FileSize:%d \r\n",FileName, FileSize);
 	MountFS(NULL, 0);
 }
 
@@ -1038,7 +1038,8 @@ void DemoFatFS(void)
 		//{
 		//	bsp_LedToggle(1);
 		//}
-        vTaskDelay(100);
+        //vTaskDelay(100);
+        bsp_DelayMS(50);
 		if (comGetChar(COM1, &cmd))	/* 从串口读入一个字符(非阻塞方式) */
 		{
 			printf("\r\n");
