@@ -170,12 +170,14 @@ static void FileFormat(void)
 	/* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
 	FRESULT result;
 	FATFS fs;
+    BYTE work[_MAX_SS]; /* Work area (larger is better for processing time) */
 
 	/* 挂载文件系统 */
     MountFS(&fs, 0);
 
 	/* 第一次使用必须进行格式化 */
-	result = f_mkfs("0:",0,0);
+	//result = f_mkfs("0:",0,0);
+    result = f_mkfs("0:", FM_ANY, 0, work, _MAX_SS);
 	if (result != FR_OK)
 	{
 		printf("格式化失败 (%s)\r\n", FR_Table[result]);
@@ -205,7 +207,8 @@ static void ViewRootDir(void)
 	DIR DirInf;
 	FILINFO FileInf;
 	uint32_t cnt = 0;
-	char lfname[256];
+	//char Path[_MAX_LFN+1] = {0};
+
 
 	/* 挂载文件系统 */
 	MountFS(&fs, 0);
@@ -219,27 +222,18 @@ static void ViewRootDir(void)
 	}
 
 	/* 读取当前文件夹下的文件和目录 */
-	FileInf.lfname = lfname;
-	FileInf.lfsize = 256;
-
-	printf("属性        |  文件大小 | 短文件名 | 长文件名\r\n");
+	printf("属性        |  文件大小 |  文件名\r\n");
 	for (cnt = 0; ;cnt++)
 	{
-		result = f_readdir(&DirInf,&FileInf); 		/* 读取目录项，索引会自动下移 */
-		if (result != FR_OK || FileInf.fname[0] == 0)
-		{
-			break;
-		}
-
-		if (FileInf.fname[0] == '.')
-		{
-			continue;
-		}
+		result = f_readdir(&DirInf, &FileInf); 		/* 读取目录项，索引会自动下移 */
+		if (result != FR_OK || FileInf.fname[0] == 0)  break;
+		if (FileInf.fname[0] == '.')  	continue;
 
 		/* 判断是文件还是子目录 */
 		if (FileInf.fattrib & AM_DIR)
 		{
 			printf("(0x%02d)目录  ", FileInf.fattrib);
+            //sprintf(Path,"%s",FileInf.fname);
 		}
 		else
 		{
@@ -248,10 +242,9 @@ static void ViewRootDir(void)
 
 		/* 打印文件大小, 最大4G */
 		printf(" %10d", FileInf.fsize);
-
-		printf("  %s |", FileInf.fname);	/* 短文件名 */
-
-		printf("  %s\r\n", (char *)FileInf.lfname);	/* 长文件名 */
+        printf("    %s\r\n",(char *)FileInf.fname);	/* 长文件名 */
+		//printf("  %s/%s\r\n", Path, (char *)FileInf.fname);	/* 长文件名 */
+        //mem_set(Path, 0x00, _MAX_LFN);
 	}
 
 	/* 卸载文件系统 */
@@ -723,8 +716,8 @@ void GetDiskInfo(void)
 	    fs->n_fats,			/* Number of FAT copies (1 or 2) */
 	    fs->id,				/* File system mount ID */
 	    fs->ssize,			/* Bytes per sector (512, 1024, 2048 or 4096) */
-	    fs->last_clust,		/* Last allocated cluster */
-	    fs->free_clust,		/* Number of free clusters */
+	    fs->last_clst,		/* Last allocated cluster */
+	    fs->free_clst,		/* Number of free clusters */
 	    fs->fsize,			/* Sectors per FAT */
 	    fs->volbase,		/* Volume start sector */
 	    fs->fatbase,		/* FAT start sector */

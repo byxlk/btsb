@@ -856,7 +856,7 @@ void bsp_InitSFlash(void)
 
 	/* 配置片选口线为推挽输出模式 */
 
-	GPIO_InitStructure.GPIO_Pin = SF_CS_PIN;  
+	GPIO_InitStructure.GPIO_Pin = SF_CS_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -887,10 +887,10 @@ void bsp_InitSFlash(void)
 ************************************************************************************************************************
 * 函数 :  u16 GBKtoUNICODE(u16 GBKCode)
 * 功能 :  将GBK编码转换为unicode编码
-* 参数 :  GBK 
+* 参数 :  GBK
 * 返回 :  unicode
 * 依赖 :  底层读写函数
-* 作者 :  
+* 作者 :
 * 时间 :  20120602
 * 最后修改时间 : 20120602
 * 说明 : 需要flash中的码表支持
@@ -928,9 +928,9 @@ uint16_t GBKtoUNICODE(uint16_t GBKCode)
 * 函数 :  u16 UNICODEtoGBK(u16 unicode)
 * 功能 :  将unicode编码转换为GBK编码
 * 参数 :  unicode
-* 返回 :  GBK 
+* 返回 :  GBK
 * 依赖 :  底层读写函数
-* 作者 :  
+* 作者 :
 * 时间 :  20120602
 * 最后修改时间 : 20120602
 * 说明 : 需要flash中的码表支持
@@ -943,21 +943,21 @@ uint16_t UNICODEtoGBK(uint16_t unicode) //用二分查找算法
     uint8_t temp[2];
     uint16_t res;
 
-    if(unicode <= 0X9FA5) 
+    if(unicode <= 0X9FA5)
         offset = unicode - 0X4E00;
     else if(unicode > 0X9FA5)//是标点符号
     {
         if(unicode < 0XFF01 || unicode > 0XFF61)
             return 0;//没有对应编码
         offset = unicode - 0XFF01 + 0X9FA6 - 0X4E00;
-    } 
-    
-    sf_ReadBuffer(temp, offset * 2 + CODE_UtoG_BASE, 2);//得到GBK码 
-    
+    }
+
+    sf_ReadBuffer(temp, offset * 2 + CODE_UtoG_BASE, 2);//得到GBK码
+
     res = temp[0];
     res <<= 8;
-    res += temp[1];  
-    
+    res += temp[1];
+
     return res ; //返回找到的编码
 }
 
@@ -1016,10 +1016,10 @@ DRESULT SPI_disk_write(
 	uint32_t count	)	/* Number of sectors to read */
 {
     uint8_t i;
-				
+
     for(i = 0; i < count; i++)
     {
-    	sf_WriteBuffer((uint8_t *)buff, sector << 12, g_tSF.SectorSize);	
+    	sf_WriteBuffer((uint8_t *)buff, sector << 12, g_tSF.SectorSize);
     }
 
     return RES_OK;
@@ -1032,25 +1032,25 @@ DRESULT SPI_disk_ioctl(
     switch(cmd)
     {
     	/* SPI Flash不需要同步 */
-    	case CTRL_SYNC :  
+    	case CTRL_SYNC :
     		return RES_OK;
-    	
+
     	/* 返回SPI Flash扇区大小 */
     	case GET_SECTOR_SIZE:
-    		*((WORD *)buff) = g_tSF.SectorSize;  
+    		*((WORD *)buff) = g_tSF.SectorSize;
     		return RES_OK;
-    	
+
     	/* 返回SPI Flash扇区数 */
     	case GET_SECTOR_COUNT:
-    		*((DWORD *)buff) = g_tSF.TotalSize / g_tSF.SectorSize;    
+    		*((DWORD *)buff) = g_tSF.TotalSize / g_tSF.SectorSize;
     		return RES_OK;
-    	
+
     	/* 下面这两项暂时未用 */
-    	case GET_BLOCK_SIZE:   
+    	case GET_BLOCK_SIZE:
     		return RES_OK;
-    	
-    	case CTRL_ERASE_SECTOR:
-    		return RES_OK;       
+
+    	case CTRL_TRIM:
+    		return RES_OK;
     }
     return RES_OK;
 }
