@@ -102,8 +102,8 @@
 #define configIDLE_SHOULD_YIELD		1
 #define configUSE_MUTEXES		    1
 
-
 /* Run time and task stats gathering related definitions. */
+#define configUSE_TRACE_FACILITY 1
 #define configGENERATE_RUN_TIME_STATS                1
 #define configUSE_STATS_FORMATTING_FUNCTIONS         1
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()     (ulHighFrequencyTimerTicks = 0ul)

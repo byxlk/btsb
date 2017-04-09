@@ -73,8 +73,8 @@
 **********************************************************************************************************
 */
 static TaskHandle_t xHandleTaskUserKeyIF = NULL;
-//static TaskHandle_t xHandleTaskLED = NULL;
-static TaskHandle_t xHandleTaskMsgPro = NULL;
+static TaskHandle_t xHandleTaskFsDebug = NULL;
+//static TaskHandle_t xHandleTaskMsgPro = NULL;
 static TaskHandle_t xHandleTaskStart = NULL;
 static TaskHandle_t xHandleTaskAdcProc = NULL;
 
@@ -245,6 +245,7 @@ static void vTaskStart(void *pvParameters)
 {
     TickType_t tick_current = 0;
     TickType_t tick_backup = 0;
+    TickType_t td_tick_backup = 0;
 
     printf("vTaskStart Thread start.\r\n");
 
@@ -257,11 +258,32 @@ static void vTaskStart(void *pvParameters)
 		if(tick_current - tick_backup >= 10)
 		{
 		    tick_backup = tick_current;
-			//bsp_TouchKeyScan();
 		}
 
-		vTaskDelay(500);
+        if(tick_current - td_tick_backup >= 250)
+		{
+		    td_tick_backup = tick_current;
+			bsp_RTC_GetClock();
+		}
+
+		vTaskDelay(50);
 	}
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: vTaskFsDebug
+*	功能说明: FatFs调试
+*	形    参: pvParameters 是在创建该任务时传递的形参
+*	返 回 值: 无
+*   优 先 级: 2
+*********************************************************************************************************
+*/
+static void vTaskFsDebug(void *pvParameters)
+{
+    printf("vTaskFsDebug Thread start.\r\n");
+
+    DemoFatFS();
 }
 
 /*
@@ -286,8 +308,6 @@ static void vTaskTest(void *pvParameters)
         LCD_Fill_Rect(0, 0, 320, 240, CL_YELLOW);
    #endif
         //GuiTaskTest();
-        //bsp_RTC_Test();
-        DemoFatFS();
     }
 }
 /*
@@ -317,12 +337,12 @@ static void AppTaskCreate (void)
                  &xHandleTaskUserKeyIF );  /* 任务句柄  */
 
 
-	//xTaskCreate( vTaskLED,    		/* 任务函数  */
-        //         "vTaskLED",  		/* 任务名    */
-        //         512,         		/* stack大小，单位word，也就是4字节 */
-        //         NULL,        		/* 任务参数  */
-        //         3,           		/* 任务优先级*/
-        //         &xHandleTaskLED ); /* 任务句柄  */
+	xTaskCreate( vTaskFsDebug,    		/* 任务函数  */
+                 "vTaskFsDebug",  		/* 任务名    */
+                 512,         		/* stack大小，单位word，也就是4字节 */
+                 NULL,        		/* 任务参数  */
+                 3,           		/* 任务优先级*/
+                 &xHandleTaskFsDebug ); /* 任务句柄  */
 
         /* 截图功能 */
 	//xTaskCreate( vTaskMsgPro,     		/* 任务函数  */
@@ -350,7 +370,7 @@ static void AppTaskCreate (void)
     /* vTaskTest */
     xTaskCreate( vTaskTest,     		/* 任务函数  */
                  "vTaskTest",   		/* 任务名    */
-                 1024,            		/* 任务栈大小，单位word，也就是4字节 */
+                 512,            		/* 任务栈大小，单位word，也就是4字节 */
                  NULL,           		/* 任务参数  */
                  5,              		/* 任务优先级*/
                  NULL );   /* 任务句柄  */

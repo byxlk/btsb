@@ -1019,20 +1019,18 @@ void UpdateFirmware(void)
 void DemoFatFS(void)
 {
 	uint8_t cmd;
+    const portTickType xDelay = pdMS_TO_TICKS(100);
 
 	/* 打印命令列表，用户可以通过串口操作指令 */
 	DispMenu();
-	//bsp_StartAutoTimer(1, 100);
+
 	while(1)
 	{
 		bsp_Idle();		/* 这个函数在bsp.c文件。用户可以修改这个函数实现CPU休眠和喂狗 */
 
-		//if(bsp_CheckTimer(1))
-		//{
-		//	bsp_LedToggle(1);
-		//}
-        //vTaskDelay(100);
-        bsp_DelayMS(50);
+        vTaskDelay(xDelay);
+        //bsp_DelayMS(50);
+
 		if (comGetChar(COM1, &cmd))	/* 从串口读入一个字符(非阻塞方式) */
 		{
 			printf("\r\n");
@@ -1042,6 +1040,7 @@ void DemoFatFS(void)
 					printf("【0 - FileFormat】\r\n");
 					FileFormat();		/* 显示SD卡根目录下的文件名 */
 					break;
+#if 0
 
 				case '1':
 					printf("【1 - ViewRootDir】\r\n");
@@ -1089,6 +1088,7 @@ void DemoFatFS(void)
                     printf("【9 - Update Firmware】\r\n");
                     UpdateFirmware();
                     break;
+#endif
                 case 0x0D:
                     DispMenu();
 					break;
