@@ -1,1 +1,0 @@
-copy Objects\btsb.hex ..\output(mdk)_205.hex
