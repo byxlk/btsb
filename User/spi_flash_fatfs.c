@@ -1040,7 +1040,7 @@ void DemoFatFS(void)
 					printf("【0 - FileFormat】\r\n");
 					FileFormat();		/* 显示SD卡根目录下的文件名 */
 					break;
-#if 0
+#if 1
 
 				case '1':
 					printf("【1 - ViewRootDir】\r\n");
