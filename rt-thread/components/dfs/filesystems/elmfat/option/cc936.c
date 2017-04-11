@@ -10,8 +10,8 @@
 #error This file is not needed in current configuration. Remove from the project.
 #endif
 
-static
-const WCHAR uni2oem[] = {
+#ifdef _USE_INTERNAL_ROM_FLASH
+static const WCHAR uni2oem[] = {
 /*  Unicode - OEM,  Unicode - OEM,  Unicode - OEM,  Unicode - OEM */
 	0x00A4, 0xA1E8, 0x00A7, 0xA1EC, 0x00A8, 0xA1A7, 0x00B0, 0xA1E3,
 	0x00B1, 0xA1C0, 0x00B7, 0xA1A4, 0x00D7, 0xA1C1, 0x00E0, 0xA8A4,
@@ -10918,8 +10918,6 @@ const WCHAR oem2uni[] = {
 	0, 0
 };
 
-
-
 WCHAR ff_convert (	/* Converted code, 0 means conversion error */
 	WCHAR	chr,	/* Character code to be converted */
 	UINT	dir		/* 0: Unicode to OEM code, 1: OEM code to Unicode */
@@ -10935,10 +10933,10 @@ WCHAR ff_convert (	/* Converted code, 0 means conversion error */
 	} else {
 		if (dir) {		/* OEM code to unicode */
 			p = oem2uni;
-			hi = sizeof oem2uni / 4 - 1;
-		} else {		/* Unicode to OEM code */
+			hi = sizeof(oem2uni) / 4 - 1;
+		} else {		/* Unicode to OEMCP */
 			p = uni2oem;
-			hi = sizeof uni2oem / 4 - 1;
+			hi = sizeof(uni2oem) / 4 - 1;
 		}
 		li = 0;
 		for (n = 16; n; n--) {
@@ -10954,7 +10952,28 @@ WCHAR ff_convert (	/* Converted code, 0 means conversion error */
 
 	return c;
 }
+#else
+WCHAR ff_convert (	/* Converted code, 0 means conversion error */
+	WCHAR	chr,	/* Character code to be converted */
+	UINT	dir		/* 0: Unicode to OEMCP, 1: OEMCP to Unicode */
+)
+{
+	WCHAR c;
 
+	if (chr < 0x80) {	/* ASCII */
+		c = chr;
+	} else {
+		if (dir) {		/* OEMCP to unicode */	
+            //c = GBKtoUNICODE(chr);
+		} else {		/* Unicode to OEMCP */
+			//c = UNICODEtoGBK(chr);
+		}
+	}
+
+	return c;
+}
+
+#endif
 
 
 WCHAR ff_wtoupper (	/* Returns upper converted character */

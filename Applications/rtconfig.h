@@ -66,7 +66,7 @@
 // <section name="RT_USING_DEVICE" description="设备驱动框架配置" default="true" >
 #define RT_USING_DEVICE
 // <bool name="RT_USING_UART0" description="支持UART0" default="true" />
-#define RT_USING_UART0
+#define RT_USING_UART1
 // </section>
 
 // <section name="RT_USING_CONSOLE" description="支持终端功能（rt_kprintf函数可用）" default="true" >
@@ -88,7 +88,7 @@
 // <integer name="FINSH_THREAD_STACK_SIZE" description="finsh shell的任务栈大小" default="4096" />
 #define FINSH_THREAD_STACK_SIZE	4096
 // <bool name="FINSH_USING_MSH" description="支持面向应用的msh shell" default="true" />
-#define FINSH_USING_MSH
+//#define FINSH_USING_MSH
 // <bool name="FINSH_USING_MSH_DEFAULT" description="shell默认使用msh方式" default="true" />
 //#define FINSH_USING_MSH_DEFAULT
 // <bool name="FINSH_USING_MSH_ONLY" description="shell仅使用msh方式" default="true" />
@@ -107,9 +107,9 @@
 // </section>
 
 // <section name="RT_USING_DFS" description="支持设备虚拟文件系统" default="true" >
-// #define RT_USING_DFS
+ #define RT_USING_DFS
 // <bool name="DFS_USING_WORKDIR" description="使用工作目录方式，否则必须使用绝对路径进行访问" default="true" />
-// #define DFS_USING_WORKDIR
+ #define DFS_USING_WORKDIR
 // <integer name="DFS_FILESYSTEMS_MAX" description="系统中支持的最大文件系统种类" default="4" />
 #define DFS_FILESYSTEMS_MAX	2
 // <integer name="DFS_FD_MAX" description="系统中支持的同时打开文件最大数目" default="4" />
@@ -125,11 +125,11 @@
 // </integer>
 #define RT_DFS_ELM_USE_LFN	3
 // <integer name="RT_DFS_ELM_CODE_PAGE" description="OEM code page，建议使用437，否则需要载入相应的码表" default="437">
-#define RT_DFS_ELM_CODE_PAGE	437
+#define RT_DFS_ELM_CODE_PAGE	936
 // <integer name="RT_DFS_ELM_MAX_LFN" description="文件名最大长度" default="256" />
 #define RT_DFS_ELM_MAX_LFN	128
 // <integer name="RT_DFS_ELM_MAX_SECTOR_SIZE" description="支持的最大扇区大小，例如底层是flash，它的最小擦除单位是4096，需要把它设置为4096" default="256" />
-#define RT_DFS_ELM_MAX_SECTOR_SIZE	512
+#define RT_DFS_ELM_MAX_SECTOR_SIZE	4096
 // <bool name="RT_DFS_ELM_USE_ERASE" description="FAT文件系统是否支持擦除操作" default="false" />
 // #define RT_DFS_ELM_USE_ERASE
 // <bool name="RT_USING_DFS_YAFFS2" description="支持YAFFS2文件系统" default="false" />
@@ -141,52 +141,52 @@
 // <bool name="RT_USING_DFS_NFS" description="支持NFSv3网络文件系统（客户端），服务端可以使用FreeNFS" default="false" />
 // #define RT_USING_DFS_NFS
 // <string name="RT_NFS_HOST_EXPORT" description="网络文件系统服务端输出路径" default="192.168.1.5:/" />
-#define RT_NFS_HOST_EXPORT	"192.168.1.5:/"
+//#define RT_NFS_HOST_EXPORT	"192.168.1.5:/"
 // </section>
 
 // <section name="RT_USING_LWIP" description="lwIP轻型TCP/IP协议栈配置" default="true" >
-#define RT_USING_LWIP
+//#define RT_USING_LWIP
 // <bool name="RT_LWIP_ICMP" description="支持ICMP协议（ping操作需要）" default="true" />
-#define RT_LWIP_ICMP
+//#define RT_LWIP_ICMP
 // <bool name="RT_LWIP_IGMP" description="支持IGMP协议" default="false" />
 // #define RT_LWIP_IGMP
 // <bool name="RT_LWIP_UDP" description="支持UDP协议" default="true" />
-#define RT_LWIP_UDP
+//#define RT_LWIP_UDP
 // <bool name="RT_LWIP_TCP" description="支持TCP协议" default="true" />
-#define RT_LWIP_TCP
+//#define RT_LWIP_TCP
 // <bool name="RT_LWIP_DNS" description="支持DNS协议" default="true" />
-#define RT_LWIP_DNS
+//#define RT_LWIP_DNS
 // <bool name="RT_LWIP_SNMP" description="支持SNMP协议" default="false" />
 // #define RT_LWIP_SNMP
 // <bool name="RT_LWIP_DHCP" description="以DHCP方式动态获得本机的IP地址" default="false" />
 // #define RT_LWIP_DHCP
 // <integer name="RT_LWIP_TCPTHREAD_PRIORITY" description="TCP线程的优先级" default="12" />
-#define RT_LWIP_TCPTHREAD_PRIORITY	12
+//#define RT_LWIP_TCPTHREAD_PRIORITY	12
 // <integer name="RT_LWIP_TCPTHREAD_MBOX_SIZE" description="TCP线程的邮箱大小" default="32" />
-#define RT_LWIP_TCPTHREAD_MBOX_SIZE	8
+//#define RT_LWIP_TCPTHREAD_MBOX_SIZE	8
 // <integer name="RT_LWIP_TCPTHREAD_STACKSIZE" description="TCP线程的栈大小" default="4096" />
-#define RT_LWIP_TCPTHREAD_STACKSIZE	4096
+//#define RT_LWIP_TCPTHREAD_STACKSIZE	4096
 // <integer name="RT_LWIP_ETHTHREAD_PRIORITY" description="以太网收发线程的优先级" default="14" />
-#define RT_LWIP_ETHTHREAD_PRIORITY	14
+//#define RT_LWIP_ETHTHREAD_PRIORITY	14
 // <integer name="RT_LWIP_ETHTHREAD_MBOX_SIZE" description="以太网收发线程的邮箱大小" default="8" />
-#define RT_LWIP_ETHTHREAD_MBOX_SIZE	8
+//#define RT_LWIP_ETHTHREAD_MBOX_SIZE	8
 // <integer name="RT_LWIP_ETHTHREAD_STACKSIZE" description="以太网收发线程的栈大小" default="512" />
-#define RT_LWIP_ETHTHREAD_STACKSIZE	512
+//#define RT_LWIP_ETHTHREAD_STACKSIZE	512
 // <ipaddr name="RT_LWIP_IPADDR" description="本机的静态IP地址" default="192.168.1.30" />
-#define RT_LWIP_IPADDR0 192
-#define RT_LWIP_IPADDR1 168
-#define RT_LWIP_IPADDR2 1
-#define RT_LWIP_IPADDR3 30
+//#define RT_LWIP_IPADDR0 192
+//#define RT_LWIP_IPADDR1 168
+//#define RT_LWIP_IPADDR2 1
+//#define RT_LWIP_IPADDR3 30
 // <ipaddr name="RT_LWIP_GWADDR" description="网关地址" default="192.168.1.1" />
-#define RT_LWIP_GWADDR0 192
-#define RT_LWIP_GWADDR1 168
-#define RT_LWIP_GWADDR2 1
-#define RT_LWIP_GWADDR3 1
+//#define RT_LWIP_GWADDR0 192
+//#define RT_LWIP_GWADDR1 168
+//#define RT_LWIP_GWADDR2 1
+//#define RT_LWIP_GWADDR3 1
 // <ipaddr name="RT_LWIP_MSKADDR" description="子网掩码" default="255.255.255.0" />
-#define RT_LWIP_MSKADDR0 255
-#define RT_LWIP_MSKADDR1 255
-#define RT_LWIP_MSKADDR2 255
-#define RT_LWIP_MSKADDR3 0
+//#define RT_LWIP_MSKADDR0 255
+//#define RT_LWIP_MSKADDR1 255
+//#define RT_LWIP_MSKADDR2 255
+//#define RT_LWIP_MSKADDR3 0
 // </section>
 
 // <section name="RT_USING_RTGUI" description="RT-Thread 原生的GUI组件功能配置" default="true" >
@@ -218,7 +218,7 @@
 // <bool name="RTGUI_USING_HZ_FILE" description="支持汉字字库文件" default="false" />
 #define RTGUI_USING_HZ_FILE
 // <bool name="RTGUI_USING_MOUSE_CURSOR" description="显示鼠标" default="false" />
-#define RTGUI_USING_MOUSE_CURSOR
+//#define RTGUI_USING_MOUSE_CURSOR
 // </section>
 
 // <section name="RT_USING_MODBUS" description="Modbus协议栈配置" default="true" >
