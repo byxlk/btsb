@@ -96,7 +96,7 @@ static void vTaskGUI(void *pvParameters)
     printf("Main GUI Thread start.\r\n");
 	while (1)
 	{
-		//MainTask();
+		MainTask();
 		vTaskDelay(1000);
 	}
 }
@@ -341,7 +341,7 @@ static void AppTaskCreate (void)
                  "vTaskFsDebug",  		/* 任务名    */
                  4096,         		/* stack大小，单位word，也就是4字节 */
                  NULL,        		/* 任务参数  */
-                 2,           		/* 任务优先级*/
+                 3,           		/* 任务优先级*/
                  &xHandleTaskFsDebug ); /* 任务句柄  */
 
         /* 截图功能 */
@@ -357,7 +357,7 @@ static void AppTaskCreate (void)
                  "vTaskStart",   		/* 任务名    */
                  512,            		/* 任务栈大小，单位word，也就是4字节 */
                  NULL,           		/* 任务参数  */
-                 5,              		/* 任务优先级*/
+                 4,              		/* 任务优先级*/
                  &xHandleTaskStart );   /* 任务句柄  */
 
     /* ADC 处理函数 */
@@ -372,7 +372,7 @@ static void AppTaskCreate (void)
                  "vTaskTest",   		/* 任务名    */
                  512,            		/* 任务栈大小，单位word，也就是4字节 */
                  NULL,           		/* 任务参数  */
-                 5,              		/* 任务优先级*/
+                 6,              		/* 任务优先级*/
                  NULL );   /* 任务句柄  */
 }
 
