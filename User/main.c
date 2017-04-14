@@ -341,7 +341,7 @@ static void AppTaskCreate (void)
                  "vTaskFsDebug",  		/* 任务名    */
                  4096,         		/* stack大小，单位word，也就是4字节 */
                  NULL,        		/* 任务参数  */
-                 3,           		/* 任务优先级*/
+                 2,           		/* 任务优先级*/
                  &xHandleTaskFsDebug ); /* 任务句柄  */
 
         /* 截图功能 */

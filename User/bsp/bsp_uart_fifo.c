@@ -10,18 +10,83 @@
 *		V1.0    2013-02-01 armfly  正式发布
 *		V1.1    2013-06-09 armfly  FiFo结构增加TxCount成员变量，方便判断缓冲区满; 增加 清FiFo的函数
 *		V1.2	2014-09-29 armfly  增加RS485 MODBUS接口。接收到新字节后，直接执行回调函数。
+*		V1.3	2015-07-23 armfly  增加 UART_T 结构的读写指针几个成员变量必须增加 __IO 修饰,否则优化后
+*					会导致串口发送函数死机。
+*		V1.4	2015-08-04 armfly  解决UART4配置bug  GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_USART1);
+*		V1.5	2015-10-08 armfly  增加修改波特率的接口函数
 *
-*	修改补充 :
-*		版本号    日期       作者                  说明
-*		V1.0    2015-08-19  Eric2013       临界区处理采用FreeRTOS方案
-*
-*	Copyright (C), 2013-2014, 安富莱电子 www.armfly.com
+*	Copyright (C), 2015-2020, 安富莱电子 www.armfly.com
 *
 *********************************************************************************************************
 */
 
 #include "bsp.h"
 
+/* 串口1的GPIO --- RS323 */
+#define UART1_TX_PORT      GPIOA
+#define UART1_TX_PIN       GPIO_Pin_9
+#define UART1_TX_CLK       RCC_AHB1Periph_GPIOA
+#define UART1_TX_SOURCE    GPIO_PinSource9
+
+#define UART1_RX_PORT      GPIOA
+#define UART1_RX_PIN       GPIO_Pin_10
+#define UART1_RX_CLK       RCC_AHB1Periph_GPIOA
+#define UART1_RX_SOURCE    GPIO_PinSource10
+
+/* 串口2的GPIO  --- 只用了RX， 没用TX，硬件没有接（可用0欧姆接上） */
+#define UART2_TX_PORT      GPIOA
+#define UART2_TX_PIN       GPIO_Pin_2
+#define UART2_TX_CLK       RCC_AHB1Periph_GPIOA
+#define UART2_TX_SOURCE    GPIO_PinSource2
+
+#define UART2_RX_PORT      GPIOA
+#define UART2_RX_PIN       GPIO_Pin_3
+#define UART2_RX_CLK       RCC_AHB1Periph_GPIOA
+#define UART2_RX_SOURCE    GPIO_PinSource3
+
+/* 串口3的GPIO - RS485 */
+#define UART3_TX_PORT      GPIOB
+#define UART3_TX_PIN       GPIO_Pin_10
+#define UART3_TX_CLK       RCC_AHB1Periph_GPIOB
+#define UART3_TX_SOURCE    GPIO_PinSource10
+
+#define UART3_RX_PORT      GPIOCB
+#define UART3_RX_PIN       GPIO_Pin_11
+#define UART3_RX_CLK       RCC_AHB1Periph_GPIOB
+#define UART3_RX_SOURCE    GPIO_PinSource11
+
+/* 串口4的GPIO - 在SDIO接口 */
+#define UART4_TX_PORT      GPIOC
+#define UART4_TX_PIN       GPIO_Pin_10
+#define UART4_TX_CLK       RCC_AHB1Periph_GPIOC
+#define UART4_TX_SOURCE    GPIO_PinSource10
+
+#define UART4_RX_PORT      GPIOC
+#define UART4_RX_PIN       GPIO_Pin_11
+#define UART4_RX_CLK       RCC_AHB1Periph_GPIOC
+#define UART4_RX_SOURCE    GPIO_PinSource11
+
+/* 串口5的GPIO - 在SDIO接口 */
+#define UART5_TX_PORT      GPIOC
+#define UART5_TX_PIN       GPIO_Pin_12
+#define UART5_TX_CLK       RCC_AHB1Periph_GPIOC
+#define UART5_TX_SOURCE    GPIO_PinSource12
+
+#define UART5_RX_PORT      GPIOD
+#define UART5_RX_PIN       GPIO_Pin_2
+#define UART5_RX_CLK       RCC_AHB1Periph_GPIOD
+#define UART5_RX_SOURCE    GPIO_PinSource2
+
+/* 串口6的GPIO -- GPRS,WIFI */
+#define UART6_TX_PORT      GPIOG
+#define UART6_TX_PIN       GPIO_Pin_14
+#define UART6_TX_CLK       RCC_AHB1Periph_GPIOG
+#define UART6_TX_SOURCE    GPIO_PinSource14
+
+#define UART6_RX_PORT      GPIOC
+#define UART6_RX_PIN       GPIO_Pin_7
+#define UART6_RX_CLK       RCC_AHB1Periph_GPIOC
+#define UART6_RX_SOURCE    GPIO_PinSource7
 
 /* 定义每个串口结构体变量 */
 #if UART1_FIFO_EN == 1
@@ -281,8 +346,8 @@ static uint8_t UartGetChar(UART_T *_pUart, uint8_t *_pByte)
 /*
 *********************************************************************************************************
 *	函 数 名: comGetChar
-*	功能说明: 从串口缓冲区读取1字节，非阻塞。无论有无数据均立即返回
-*	形    参: _ucPort: 端口号(COM1 - COM6)
+*	功能说明: 从接收缓冲区读取1字节，非阻塞。无论有无数据均立即返回。
+*	形    参: _ucPort: 端口号(COM1 - COM5)
 *			  _pByte: 接收到的数据存放在这个地址
 *	返 回 值: 0 表示无数据, 1 表示读取到有效字节
 *********************************************************************************************************
@@ -875,7 +940,7 @@ static void InitHardUart(void)
 	GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_USART1);
 
 	/* 将 PC11 映射为 UART4_RX */
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_USART1);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_USART1);
 
 	/* 配置 USART Tx 为复用功能 */
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;	/* 输出类型为推挽 */
@@ -1032,6 +1097,7 @@ static void ConfigUartNVIC(void)
 #if UART1_FIFO_EN == 1
 	/* 使能串口1中断 */
 	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 13;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
@@ -1048,7 +1114,8 @@ static void ConfigUartNVIC(void)
 #if UART3_FIFO_EN == 1
 	/* 使能串口3中断t */
 	NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 #endif
@@ -1128,7 +1195,7 @@ static void UartIRQ(UART_T *_pUart)
 
 		/* 回调函数,通知应用程序收到新数据,一般是发送1个消息或者设置一个标记 */
 		//if (_pUart->usRxWrite == _pUart->usRxRead)
-		if (_pUart->usRxCount == 1)
+		//if (_pUart->usRxCount == 1)
 		{
 			if (_pUart->ReciveNew)
 			{
@@ -1253,12 +1320,17 @@ void USART6_IRQHandler(void)
 */
 int fputc(int ch, FILE *f)
 {
-#if USING_FIFO_EN == 1	/* 将需要printf的字符通过串口中断FIFO发送出去，printf函数会立即返回 */
+#if USING_FIFO_EN == 0	/* 将需要printf的字符通过串口中断FIFO发送出去，printf函数会立即返回 */
 	comSendChar(COM1, ch);
 
 	return ch;
 #else	/* 采用阻塞方式发送每个字符,等待数据发送完毕 */
-	/* 写一个字节到USART1 */
+	
+	/* 等待发送结束 */
+	while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)
+	{}
+		
+			/* 写一个字节到USART1 */
 	USART_SendData(USART1, (uint8_t) ch);
 
 	/* 等待发送结束 */
@@ -1279,7 +1351,7 @@ int fputc(int ch, FILE *f)
 int fgetc(FILE *f)
 {
 
-#if USING_FIFO_EN == 1	/* 从串口接收FIFO中取1个数据, 只有取到数据才返回 */
+#if USING_FIFO_EN == 0	/* 从串口接收FIFO中取1个数据, 只有取到数据才返回 */
 	uint8_t ucData;
 
 	while(comGetChar(COM1, &ucData) == 0);
