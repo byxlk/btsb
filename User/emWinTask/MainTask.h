@@ -7,7 +7,7 @@
 *	说    明 : GUI界面主函数
 *		版本号   日期         作者            说明
 *		v1.0    2015-08-05  Eric2013  	      首版
-
+*
 *	Copyright (C), 2015-2020, 安富莱电子 www.armfly.com
 *
 *********************************************************************************************************
@@ -39,7 +39,6 @@
 #include "TREEVIEW.h"
 
 #include "ff.h"
-#include "diskio.h"
 
 /*
 ************************************************************************
@@ -48,7 +47,6 @@
 */
 extern FRESULT result;
 extern FIL file;
-extern FILINFO finfo;
 extern DIR DirInf;
 extern UINT bw;
 extern FATFS fs;
@@ -56,17 +54,19 @@ extern FATFS fs;
 extern void _WriteByte2File(U8 Data, void * p); 
 /*
 ************************************************************************
-*						emWin字体
+*						供外部文件调用
 ************************************************************************
 */
-extern GUI_CONST_STORAGE  GUI_FONT GUI_FontHZ_Song_12;
-extern GUI_CONST_STORAGE  GUI_FONT GUI_FontHZ_FangSong_16;
-extern GUI_CONST_STORAGE  GUI_FONT GUI_FontHZ_Song_16;
-extern GUI_CONST_STORAGE  GUI_FONT GUI_FontHZ_Hei_24;
-extern GUI_CONST_STORAGE  GUI_FONT GUI_FontHZ_Kai_24;
-extern GUI_CONST_STORAGE  GUI_FONT GUI_FontHZ_Song_24;
-extern GUI_CONST_STORAGE  GUI_FONT GUI_FontHZ_SimSun_1616;
-extern GUI_CONST_STORAGE  GUI_FONT GUI_FontHZ_SimSun_2424;
+extern void MainTask(void);
+extern void TOUCH_Calibration(void);
+
+/*
+************************************************************************
+*						宏定义
+************************************************************************
+*/
+#define   GUI_KEY_NextPage       42
+
 
 #endif
 

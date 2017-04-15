@@ -165,60 +165,73 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 					vTaskGetRunTimeStats((char *)&pcWriteBuffer);
 					printf("%s\r\n", pcWriteBuffer);
 					printf("当前动态内存剩余大小 = %d字节\r\n", xPortGetFreeHeapSize());
+                    GUI_SendKeyMsg(GUI_KEY_F2, 1);
 					break;
 
                 case KEY_DOWN_DEBUG_LONG:
                     printf("Press Key: DEBUG LONG \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_F2, 1);
                     break;
 
 				case KEY_DOWN_MUX:
                     printf("Press Key: MUX \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_F1, 1);
                     break;
 
                 case KEY_DOWN_MUX_LONG:
                     printf("Press Key: MUX LONG\r\n");
+                    GUI_SendKeyMsg(GUI_KEY_F1, 1);
                     break;
 
 				/* K2键按下，实现截图功能，将图片以BMP格式保存到SD卡中 */
 				case KEY_DOWN_VOL_DOWN:
                     printf("Press Key: VOL- \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_DOWN, 1);
                     break;
 
                 case KEY_DOWN_VOL_UP:
                     printf("Press Key: VOL+ \r\n");
-					//xTaskNotifyGive(xHandleTaskMsgPro);
+					GUI_SendKeyMsg(GUI_KEY_UP, 1);
 					break;
 
                 case KEY_DOWN_PLAY_PAUSE:
                     printf("Press Key: PLAY/PAUSE \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_ENTER, 1);
                     break;
 
                 case KEY_DOWN_PLAY_PAUSE_LONG:
                     printf("Press Key: PLAY/PAUSE LONG\r\n");
+                    GUI_SendKeyMsg(GUI_KEY_ENTER, 1);
                     break;
 
                 case KEY_DOWN_MENU:
                     printf("Press Key: MENU \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_NextPage, 1);
                     break;
 
                 case KEY_DOWN_MENU_LONG:
                     printf("Press Key: MENU LONG\r\n");
+                    GUI_SendKeyMsg(GUI_KEY_NextPage, 1);
                     break;
 
                 case KEY_DOWN_UP:
                     printf("Press Key: UP \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_PGUP, 1);
                     break;
 
                 case KEY_DOWN_UP_LONG:
                     printf("Press Key: UP LONG\r\n");
+                    GUI_SendKeyMsg(GUI_KEY_PGUP, 1);
                     break;
 
                 case KEY_DOWN_DOWN:
                     printf("Press Key: DOWN \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_PGDOWN, 1);
                     break;
 
                 case KEY_DOWN_DOWN_LONG:
                     printf("Press Key: DOWN LONG\r\n");
+                    GUI_SendKeyMsg(GUI_KEY_PGDOWN, 1);
                     break;
 
 				/* 其他的键值不处理 */

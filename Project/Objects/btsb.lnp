@@ -64,7 +64,15 @@
 ".\objects\bsp_key.o"
 ".\objects\maintask.o"
 ".\objects\app_sysfunction.o"
-".\objects\guitasktest.o"
+".\objects\logo_americanexpress.o"
+".\objects\logo_armfly.o"
+".\objects\logo_armflysmall.o"
+".\objects\logo_eccard.o"
+".\objects\logo_geldkarte.o"
+".\objects\logo_maestro.o"
+".\objects\logo_mastercard.o"
+".\objects\logo_visacard.o"
+".\objects\yahei.o"
 --library_type=microlib --strict --scatter ".\Objects\btsb.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

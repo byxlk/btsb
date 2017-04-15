@@ -795,9 +795,49 @@
               <FilePath>..\User\emWinTask\App_SysFunction.c</FilePath>
             </File>
             <File>
-              <FileName>guitasktest.c</FileName>
+              <FileName>Logo_AmericanExpress.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\User\emWinTask\guitasktest.c</FilePath>
+              <FilePath>..\User\emWinTask\Logo_AmericanExpress.c</FilePath>
+            </File>
+            <File>
+              <FileName>Logo_armfly.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\Logo_armfly.c</FilePath>
+            </File>
+            <File>
+              <FileName>Logo_armflySmall.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\Logo_armflySmall.c</FilePath>
+            </File>
+            <File>
+              <FileName>Logo_ECCard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\Logo_ECCard.c</FilePath>
+            </File>
+            <File>
+              <FileName>Logo_GeldKarte.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\Logo_GeldKarte.c</FilePath>
+            </File>
+            <File>
+              <FileName>Logo_Maestro.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\Logo_Maestro.c</FilePath>
+            </File>
+            <File>
+              <FileName>Logo_MasterCard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\Logo_MasterCard.c</FilePath>
+            </File>
+            <File>
+              <FileName>Logo_VisaCard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\Logo_VisaCard.c</FilePath>
+            </File>
+            <File>
+              <FileName>Yahei.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\Yahei.c</FilePath>
             </File>
           </Files>
         </Group>
