@@ -741,7 +741,7 @@ static void _cbThanks(WM_MESSAGE* pMsg)
 					WM_SetFocusOnNextChild(hWin);
 					break;
 
-				case GUI_KEY_NextPage:
+				case GUI_KEY_BACKTAB:
 					{
 						GUI_PID_STATE CurrentState;
 						CurrentState.x = WM_GetWindowOrgX(hWin)+4;
@@ -802,7 +802,7 @@ static void _cbRemoveMoney(WM_MESSAGE* pMsg)
 					WM_SetFocusOnNextChild(hWin);
 					break;
 
-				case GUI_KEY_NextPage:
+				case GUI_KEY_BACKTAB:
 					{
 						GUI_PID_STATE CurrentState;
 						CurrentState.x = WM_GetWindowOrgX(hWin)+3;
@@ -866,7 +866,7 @@ static void _cbRemoveCard(WM_MESSAGE* pMsg)
 					WM_SetFocusOnNextChild(hWin);
 					break;
 
-				case GUI_KEY_NextPage:
+				case GUI_KEY_BACKTAB:
 					{
 						GUI_PID_STATE CurrentState;
 						CurrentState.x = WM_GetWindowOrgX(hWin)+2;
@@ -927,7 +927,7 @@ static void _cbWait(WM_MESSAGE* pMsg)
 					WM_SetFocusOnNextChild(hWin);
 					break;
 
-				case GUI_KEY_NextPage:
+				case GUI_KEY_BACKTAB:
 					{
 						GUI_PID_STATE CurrentState;
 						CurrentState.x = WM_GetWindowOrgX(hWin)+1;
@@ -1338,24 +1338,24 @@ static void _cbInsertCard(WM_MESSAGE* pMsg)
 		case WM_KEY:
             switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
             {
-				case GUI_KEY_ESCAPE:
+				case GUI_KEY_BACKTAB:
                     GUI_EndDialog(hWin, 1);
                     break;
 
-				case GUI_KEY_TAB:
-					WM_SetFocusOnNextChild(hWin);
+				case GUI_KEY_ENTER:
+					//WM_SetFocusOnNextChild(hWin);
 					break;
 
-				case GUI_KEY_NextPage:
-					{
-						GUI_PID_STATE CurrentState;
-						CurrentState.x = WM_GetWindowOrgX(hWin);
-						CurrentState.y = WM_GetWindowOrgY(hWin);
-						CurrentState.Layer = 0;
-						CurrentState.Pressed = 1;
-						GUI_PID_StoreState(&CurrentState);
-					}
-					break;
+				//case GUI_KEY_BACKTAB:
+				//	{
+				//		GUI_PID_STATE CurrentState;
+				//		CurrentState.x = WM_GetWindowOrgX(hWin);
+				//		CurrentState.y = WM_GetWindowOrgY(hWin);
+				//		CurrentState.Layer = 0;
+				//		CurrentState.Pressed = 1;
+				//		//GUI_PID_StoreState(&CurrentState);
+				//	}
+				//	break;
             }
             break;
 
@@ -1369,13 +1369,13 @@ static void _cbInsertCard(WM_MESSAGE* pMsg)
 			GUI_DispStringHCenterAt(_GetLang(TEXT_ID_KARTE_EINFUEHREN), FRAME_WIDTH >> 1, 15);
 			break;
 
-		case WM_TOUCH:
-			if (((GUI_PID_STATE *)pMsg->Data.p)->Pressed == 1)
-			{
-				_DeleteFrame();
-				_CreateFrame(&_cbEnterPIN);
-			}
-			break;
+//		case WM_TOUCH:
+//			if (((GUI_PID_STATE *)pMsg->Data.p)->Pressed == 1)
+//			{
+//				_DeleteFrame();
+//				_CreateFrame(&_cbEnterPIN);
+//			}
+//			break;
 
 		default:
 			WM_DefaultProc(pMsg);
@@ -1409,12 +1409,13 @@ static void _cbLanguage(WM_MESSAGE* pMsg)
 		 case WM_KEY:
 			switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
             {
-				case GUI_KEY_NextPage:
-                    GUI_EndDialog(hWin, 1);
-                    break;
+				//case GUI_KEY_NextPage:
+                //    GUI_EndDialog(hWin, 1);
+                //    break;
 
 				case GUI_KEY_ENTER:
-					WM_SetFocusOnNextChild(hWin);
+					//WM_SetFocusOnNextChild(hWin);
+                    _CreateFrame(&_cbInsertCard);
 					break;
             }
             break;
@@ -1450,7 +1451,7 @@ static void _cbLanguage(WM_MESSAGE* pMsg)
 
 				/* 删除这个创建的界面 */
 				_DeleteFrame();
-				_CreateFrame(&_cbInsertCard);
+				//_CreateFrame(&_cbInsertCard);
 			}
 			break;
 
@@ -1499,6 +1500,7 @@ void MainTask(void)
 
 	/* 设置桌面窗口的回调函数 */
 	//WM_SetCallback(WM_HBKWIN, &_cbBkWindow);
+	//WM_SetCallback(WM_HBKWIN, &_cbLanguage);
 
 	/* 进入主界面 */
 	_CreateFrame(&_cbLanguage);
