@@ -685,32 +685,32 @@ static void _DeleteNumPad(void)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-static void _cbBkWindow(WM_MESSAGE* pMsg)
-{
-	switch (pMsg->MsgId)
-	{
-		case WM_PAINT:
-			{
-				//int x, y, w, h;
-
-				GUI_SetBkColor(MAIN_BKCOLOR);
-				GUI_SetColor(MAIN_TEXTCOLOR);
-				GUI_SetFont(MAIN_FONT);
-				GUI_Clear();
-				//x = MAIN_LOGO_OFFSET_X + MAIN_BORDER;
-				//y = MAIN_LOGO_OFFSET_Y + ((MAIN_TITLE_HEIGHT - MAIN_LOGO_BITMAP->YSize) >> 1);
-				//GUI_DrawBitmap(MAIN_LOGO_BITMAP, x, y);
-				//x = MAIN_BORDER;
-				//y = MAIN_TITLE_HEIGHT;
-				//w = LCD_GetXSize() - (MAIN_BORDER * 2);
-				//h = LCD_GetYSize()  - (MAIN_BORDER + MAIN_TITLE_HEIGHT);
-				//_DrawDownRect(FRAME_EFFECT, x, y, x + w - 1, y + h - 1);
-			}
-			break;
-		default:
-			WM_DefaultProc(pMsg);
-	}
-}
+//static void _cbBkWindow(WM_MESSAGE* pMsg)
+//{
+//	switch (pMsg->MsgId)
+//	{
+//		case WM_PAINT:
+//			{
+//				int x, y, w, h;
+//
+//				GUI_SetBkColor(MAIN_BKCOLOR);
+//				GUI_SetColor(MAIN_TEXTCOLOR);
+//				GUI_SetFont(MAIN_FONT);
+//				GUI_Clear();
+//				//x = MAIN_LOGO_OFFSET_X + MAIN_BORDER;
+//				//y = MAIN_LOGO_OFFSET_Y + ((MAIN_TITLE_HEIGHT - MAIN_LOGO_BITMAP->YSize) >> 1);
+//				GUI_DrawBitmap(MAIN_LOGO_BITMAP, 0, 0);
+//				//x = MAIN_BORDER;
+//				//y = MAIN_TITLE_HEIGHT;
+//				//w = LCD_GetXSize() - (MAIN_BORDER * 2);
+//				//h = LCD_GetYSize()  - (MAIN_BORDER + MAIN_TITLE_HEIGHT);
+//				//_DrawDownRect(FRAME_EFFECT, x, y, x + w - 1, y + h - 1);
+//			}
+//			break;
+//		default:
+//			WM_DefaultProc(pMsg);
+//	}
+//}
 
 /*
 *********************************************************************************************************
@@ -1421,9 +1421,12 @@ static void _cbLanguage(WM_MESSAGE* pMsg)
 
 		case WM_PAINT:
 			_PaintFrame();
-		    GUI_DispStringHCenterAt("请选择语言", FRAME_WIDTH >> 1, 5);
+            /* 绘制背景图片 */
+            //GUI_DrawBitmap(MAIN_LOGO_BITMAP, 0, 28);
+
+		    //GUI_DispStringHCenterAt("请选择语言", FRAME_WIDTH >> 1, 5);
 			GUI_DispStringHCenterAt("Please select your language", FRAME_WIDTH >> 1, 32);
-			break;
+            break;
 
 		case WM_NOTIFY_PARENT:
 			if (pMsg->Data.v == WM_NOTIFICATION_RELEASED)
@@ -1467,35 +1470,38 @@ static void _cbLanguage(WM_MESSAGE* pMsg)
 */
 void MainTask(void)
 {
-	/* 初始化 */
+    /* 初始化 */
 	GUI_Init();
 
-	/*
-	 关于多缓冲和窗口内存设备的设置说明
-	   1. 使能多缓冲是调用的如下函数，用户要在LCDConf_Lin_Template.c文件中配置了多缓冲，调用此函数才有效：
-		  WM_MULTIBUF_Enable(1);
-	   2. 窗口使能使用内存设备是调用函数：WM_SetCreateFlags(WM_CF_MEMDEV);
-	   3. 如果emWin的配置多缓冲和窗口内存设备都支持，二选一即可，且务必优先选择使用多缓冲，实际使用
-		  STM32F429BIT6 + 32位SDRAM + RGB565/RGB888平台测试，多缓冲可以有效的降低窗口移动或者滑动时的撕裂
-		  感，并有效的提高流畅性，通过使能窗口使用内存设备是做不到的。
-	   4. 所有emWin例子默认是开启三缓冲。
-	*/
-	WM_MULTIBUF_Enable(1);
+    /****************************************************************************
+     * 关于多缓冲和窗口内存设备的设置说明
+     * 1. 使能多缓冲是调用的如下函数，用户要在LCDConf_Lin_Template.c文件中
+     *    配置了多缓冲，调用此函数才有效：WM_MULTIBUF_Enable(1);
+     * 2. 窗口使能使用内存设备是调用函数：WM_SetCreateFlags(WM_CF_MEMDEV);
+     * 3. 如果emWin的配置多缓冲和窗口内存设备都支持，二选一即可，且务必优先
+     *    选择使用多缓冲，实际使 用STM32F429BIT6 + 32位SDRAM + RGB565/RGB888
+     *    平台测试，多缓冲可以有效的降低窗口移动或者滑动时的撕裂感，
+     *    并有效的提高流畅性，通过使能窗口使用内存设备是做不到的。
+     * 4. 所有emWin例子默认是开启三缓冲。
+    *****************************************************************************/
+#if 1
+    WM_MULTIBUF_Enable(1);
+#else
+    /* 创建使用内存设备 */
+	WM_SetCreateFlags(WM_CF_MEMDEV);
+#endif
 
-	/*
-       触摸校准函数默认是注释掉的，电阻屏需要校准，电容屏无需校准。如果用户需要校准电阻屏的话，执行
-	   此函数即可，会将触摸校准参数保存到EEPROM里面，以后系统上电会自动从EEPROM里面加载。
-	*/
-    //TOUCH_Calibration();
-
-	/* 设置桌面窗口的回调函数 */
-	WM_SetCallback(WM_HBKWIN, &_cbBkWindow);
-
-	/* 进入主界面 */
-	_CreateFrame(&_cbLanguage);
+	/* 使能桌面窗口也使用内存设备 */
+    WM_EnableMemdev(WM_HBKWIN);
 
 	/* 使能UTF8解码 */
 	GUI_UC_SetEncodeUTF8();
+
+	/* 设置桌面窗口的回调函数 */
+	//WM_SetCallback(WM_HBKWIN, &_cbBkWindow);
+
+	/* 进入主界面 */
+	_CreateFrame(&_cbLanguage);
 
 	while(1)
 	{

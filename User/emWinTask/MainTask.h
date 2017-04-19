@@ -1,6 +1,6 @@
 /*
 *********************************************************************************************************
-*	                                  
+*
 *	模块名称 : GUI界面主函数
 *	文件名称 : MainTask.c
 *	版    本 : V1.0
@@ -51,7 +51,7 @@ extern DIR DirInf;
 extern UINT bw;
 extern FATFS fs;
 
-extern void _WriteByte2File(U8 Data, void * p); 
+extern void _WriteByte2File(U8 Data, void * p);
 /*
 ************************************************************************
 *						供外部文件调用
@@ -65,7 +65,9 @@ extern void TOUCH_Calibration(void);
 *						宏定义
 ************************************************************************
 */
-#define   GUI_KEY_NextPage       42
+#define   GUI_KEY_SLEEPMODE       42
+#define   GUI_KEY_MUSIC       43
+
 
 
 #endif

@@ -154,8 +154,13 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 			switch (ucKeyCode)
 			{
 				/* K1键按下 打印任务执行情况 */
+                case KEY_DOWN_DEBUG_LONG:
+                    printf("Press Key: DEBUG LONG \r\n");
+                    //GUI_SendKeyMsg(GUI_KEY_F2, 1);
+                    //break;
 				case KEY_DOWN_DEBUG:
-                    printf("Press Key: DEBUG \r\n");
+                    if(ucKeyCode == KEY_DOWN_DEBUG)
+                        printf("Press Key: DEBUG \r\n");
 					printf("=================================================\r\n");
 					printf("任务名      任务状态 优先级   剩余栈 任务序号\r\n");
 					vTaskList((char *)&pcWriteBuffer);
@@ -165,22 +170,17 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 					vTaskGetRunTimeStats((char *)&pcWriteBuffer);
 					printf("%s\r\n", pcWriteBuffer);
 					printf("当前动态内存剩余大小 = %d字节\r\n", xPortGetFreeHeapSize());
-                    GUI_SendKeyMsg(GUI_KEY_F2, 1);
+                    //GUI_SendKeyMsg(GUI_KEY_F2, 1);
 					break;
 
-                case KEY_DOWN_DEBUG_LONG:
-                    printf("Press Key: DEBUG LONG \r\n");
-                    GUI_SendKeyMsg(GUI_KEY_F2, 1);
-                    break;
-
-				case KEY_DOWN_MUX:
+				case KEY_DOWN_MUX:/* 锁屏 */
                     printf("Press Key: MUX \r\n");
                     GUI_SendKeyMsg(GUI_KEY_F1, 1);
                     break;
 
-                case KEY_DOWN_MUX_LONG:
+                case KEY_DOWN_MUX_LONG:/* 解锁 */
                     printf("Press Key: MUX LONG\r\n");
-                    GUI_SendKeyMsg(GUI_KEY_F1, 1);
+                    GUI_SendKeyMsg(GUI_KEY_F2, 1);
                     break;
 
 				/* K2键按下，实现截图功能，将图片以BMP格式保存到SD卡中 */
@@ -194,44 +194,44 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 					GUI_SendKeyMsg(GUI_KEY_UP, 1);
 					break;
 
-                case KEY_DOWN_PLAY_PAUSE:
+                case KEY_DOWN_PLAY_PAUSE:/* 播放、确认 */
                     printf("Press Key: PLAY/PAUSE \r\n");
                     GUI_SendKeyMsg(GUI_KEY_ENTER, 1);
                     break;
 
-                case KEY_DOWN_PLAY_PAUSE_LONG:
+                case KEY_DOWN_PLAY_PAUSE_LONG:/* 选择功能 */
                     printf("Press Key: PLAY/PAUSE LONG\r\n");
-                    GUI_SendKeyMsg(GUI_KEY_ENTER, 1);
+                    GUI_SendKeyMsg(GUI_KEY_MUSIC, 1);
                     break;
 
-                case KEY_DOWN_MENU:
+                case KEY_DOWN_MENU:/* 菜单 */
                     printf("Press Key: MENU \r\n");
-                    GUI_SendKeyMsg(GUI_KEY_NextPage, 1);
+                    GUI_SendKeyMsg(GUI_KEY_BACKTAB, 1);
                     break;
 
-                case KEY_DOWN_MENU_LONG:
+                case KEY_DOWN_MENU_LONG:/* 直接进入睡眠模式 */
                     printf("Press Key: MENU LONG\r\n");
-                    GUI_SendKeyMsg(GUI_KEY_NextPage, 1);
+                    GUI_SendKeyMsg(GUI_KEY_SLEEPMODE, 1);
                     break;
 
-                case KEY_DOWN_UP:
+                case KEY_DOWN_UP:/* 上一曲 */
                     printf("Press Key: UP \r\n");
                     GUI_SendKeyMsg(GUI_KEY_PGUP, 1);
                     break;
 
-                case KEY_DOWN_UP_LONG:
+                case KEY_DOWN_UP_LONG:/* 快退 */
                     printf("Press Key: UP LONG\r\n");
-                    GUI_SendKeyMsg(GUI_KEY_PGUP, 1);
+                    GUI_SendKeyMsg(GUI_KEY_LEFT, 1);
                     break;
 
-                case KEY_DOWN_DOWN:
+                case KEY_DOWN_DOWN:/* 下一曲 */
                     printf("Press Key: DOWN \r\n");
                     GUI_SendKeyMsg(GUI_KEY_PGDOWN, 1);
                     break;
 
-                case KEY_DOWN_DOWN_LONG:
+                case KEY_DOWN_DOWN_LONG:/* 快进 */
                     printf("Press Key: DOWN LONG\r\n");
-                    GUI_SendKeyMsg(GUI_KEY_PGDOWN, 1);
+                    GUI_SendKeyMsg(GUI_KEY_RIGHT, 1);
                     break;
 
 				/* 其他的键值不处理 */
