@@ -352,13 +352,13 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_1);
     TEXT_SetTextAlign(hItem, GUI_TA_LEFT | GUI_TA_VCENTER);
-    TEXT_SetText(hItem, "2017年01月01日");
+    TEXT_SetText(hItem, "2017骞?1鏈?1鏃?);
     //
     // Initialization of 'desktop_nl'
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_2);
     TEXT_SetTextAlign(hItem, GUI_TA_RIGHT | GUI_TA_VCENTER);
-    TEXT_SetText(hItem, "甲午年三月二十");
+    TEXT_SetText(hItem, "鐢插崍骞翠笁鏈堜簩鍗?);
     //
     // Initialization of 'desktop_temp'
     //
@@ -407,7 +407,7 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
     //
     hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_6);
     TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
-    TEXT_SetText(hItem, "深圳");
+    TEXT_SetText(hItem, "娣卞湷");
     //
     // Initialization of 'dexktop_clock'
     //
@@ -445,10 +445,10 @@ static void _cbDialog(WM_MESSAGE * pMsg) {
     break;
   // USER START (Optionally insert additional message handling)
   case WM_CREATE:
-    /* 设置聚焦 */
+    /* 璁剧疆鑱氱劍 */
 	WM_SetFocus(pMsg->hWin);
     break;
-  /* 外部按键消息的处理 */
+  /* 澶栭儴鎸夐敭娑堟伅鐨勫鐞?*/
   case WM_KEY:
     	if (((const WM_KEY_INFO *)(pMsg->Data.p))->PressedCnt > 0)
     	{
@@ -493,42 +493,34 @@ WM_HWIN CreateWindow(void) {
 // USER START (Optionally insert additional public code)
 /*
 *********************************************************************************************************
-*	函 数 名: MainTask
-*	功能说明: GUI主函数
-*	形    参: 无
-*	返 回 值: 无
-*********************************************************************************************************
+*	鍑?鏁?鍚? MainTask
+*	鍔熻兘璇存槑: GUI涓诲嚱鏁?*	褰?   鍙? 鏃?*	杩?鍥?鍊? 鏃?*********************************************************************************************************
 */
 void MainTask(void)
 {
-    /* 初始化 */
+    /* 鍒濆鍖?*/
 	GUI_Init();
 
     /****************************************************************************
-     * 关于多缓冲和窗口内存设备的设置说明
-     * 1. 使能多缓冲是调用的如下函数，用户要在LCDConf_Lin_Template.c文件中
-     *    配置了多缓冲，调用此函数才有效：WM_MULTIBUF_Enable(1);
-     * 2. 窗口使能使用内存设备是调用函数：WM_SetCreateFlags(WM_CF_MEMDEV);
-     * 3. 如果emWin的配置多缓冲和窗口内存设备都支持，二选一即可，且务必优先
-     *    选择使用多缓冲，实际使 用STM32F429BIT6 + 32位SDRAM + RGB565/RGB888
-     *    平台测试，多缓冲可以有效的降低窗口移动或者滑动时的撕裂感，
-     *    并有效的提高流畅性，通过使能窗口使用内存设备是做不到的。
-     * 4. 所有emWin例子默认是开启三缓冲。
-    *****************************************************************************/
+     * 鍏充簬澶氱紦鍐插拰绐楀彛鍐呭瓨璁惧鐨勮缃鏄?     * 1. 浣胯兘澶氱紦鍐叉槸璋冪敤鐨勫涓嬪嚱鏁帮紝鐢ㄦ埛瑕佸湪LCDConf_Lin_Template.c鏂囦欢涓?     *    閰嶇疆浜嗗缂撳啿锛岃皟鐢ㄦ鍑芥暟鎵嶆湁鏁堬細WM_MULTIBUF_Enable(1);
+     * 2. 绐楀彛浣胯兘浣跨敤鍐呭瓨璁惧鏄皟鐢ㄥ嚱鏁帮細WM_SetCreateFlags(WM_CF_MEMDEV);
+     * 3. 濡傛灉emWin鐨勯厤缃缂撳啿鍜岀獥鍙ｅ唴瀛樿澶囬兘鏀寔锛屼簩閫変竴鍗冲彲锛屼笖鍔″繀浼樺厛
+     *    閫夋嫨浣跨敤澶氱紦鍐诧紝瀹為檯浣?鐢⊿TM32F429BIT6 + 32浣峉DRAM + RGB565/RGB888
+     *    骞冲彴娴嬭瘯锛屽缂撳啿鍙互鏈夋晥鐨勯檷浣庣獥鍙ｇЩ鍔ㄦ垨鑰呮粦鍔ㄦ椂鐨勬挄瑁傛劅锛?     *    骞舵湁鏁堢殑鎻愰珮娴佺晠鎬э紝閫氳繃浣胯兘绐楀彛浣跨敤鍐呭瓨璁惧鏄仛涓嶅埌鐨勩�?     * 4. 鎵�鏈塭mWin渚嬪瓙榛樿鏄紑鍚笁缂撳啿銆?    *****************************************************************************/
 #if 0
     WM_MULTIBUF_Enable(1);
 #else
-    /* 创建使用内存设备 */
+    /* 鍒涘缓浣跨敤鍐呭瓨璁惧 */
 	WM_SetCreateFlags(WM_CF_MEMDEV);
 #endif
 
-    /* 使能桌面窗口也使用内存设备 */
+    /* 浣胯兘妗岄潰绐楀彛涔熶娇鐢ㄥ唴瀛樿澶?*/
     WM_EnableMemdev(WM_HBKWIN);
 
-    /* 使能UTF8解码 */
+    /* 浣胯兘UTF8瑙ｇ爜 */
 	GUI_UC_SetEncodeUTF8();
 
-    /* 设置桌面窗口的回调函数 */
+    /* 璁剧疆妗岄潰绐楀彛鐨勫洖璋冨嚱鏁?*/
 	//WM_SetCallback(WM_HBKWIN, &_cbBkWindow);
 
 	CreateWindow();

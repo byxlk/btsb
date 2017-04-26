@@ -255,6 +255,8 @@ static unsigned   _PIN_Digits;
 static unsigned   _Language;
 static WM_HWIN    _hTitle;
 
+static void _cbDrawHomePage(WM_MESSAGE * pMsg);
+
 /*
 *********************************************************************************************************
 *	函 数 名: _GetLang
@@ -362,13 +364,24 @@ static void _PaintFrame(void)
 */
 static WM_HWIN _CreateFrame(WM_CALLBACK* cb)
 {
+#if 0
 	//int x = 0;
 	//int y = 0;
 	//x = FRAME_BORDER + MAIN_BORDER;
 	//y = FRAME_BORDER + MAIN_TITLE_HEIGHT;
 
-	//_hLastFrame = WM_CreateWindowAsChild(x, y, FRAME_WIDTH, FRAME_HEIGHT, WM_HBKWIN, WM_CF_SHOW, cb, 0);
-	_hLastFrame = WM_CreateWindowAsChild(0, 0, FRAME_WIDTH, FRAME_HEIGHT, WM_HBKWIN, WM_CF_SHOW, cb, 0);
+	//_hLastFrame = WM_CreateWindowAsChild(x, y,
+                                           FRAME_WIDTH,
+                                           FRAME_HEIGHT,
+                                           WM_HBKWIN,
+                                           WM_CF_SHOW, cb, 0);
+#else
+	_hLastFrame = WM_CreateWindowAsChild(0, 0,
+	                                         FRAME_WIDTH,
+	                                         FRAME_HEIGHT,
+	                                         WM_HBKWIN,
+	                                         WM_CF_SHOW, cb, 0);
+#endif
 	return _hLastFrame;
 }
 
@@ -720,7 +733,6 @@ static void _DeleteNumPad(void)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-static void _cbLanguage(WM_MESSAGE* pMsg);
 static void _cbThanks(WM_MESSAGE* pMsg)
 {
 	WM_HWIN hWin = pMsg->hWin;
@@ -765,7 +777,7 @@ static void _cbThanks(WM_MESSAGE* pMsg)
 			{
 				_DeleteFrame();
 				WM_DeleteWindow(_hTitle);
-				_CreateFrame(&_cbLanguage);
+				//_CreateFrame(&_cbLanguage);
 			}
 			break;
 
@@ -1366,21 +1378,15 @@ static void _cbInsertCard(WM_MESSAGE* pMsg)
 			_DrawLogoBox(2, &bmLogo_MasterCard);
 			_DrawLogoBox(3, &bmLogo_VisaCard);
 			_DrawLogoBox(4, &bmLogo_AmericanExpress);
-			GUI_DispStringHCenterAt(_GetLang(TEXT_ID_KARTE_EINFUEHREN), FRAME_WIDTH >> 1, 15);
+			GUI_DispStringHCenterAt(_GetLang(TEXT_ID_KARTE_EINFUEHREN),
+                                      FRAME_WIDTH >> 1, 15);
 			break;
-
-//		case WM_TOUCH:
-//			if (((GUI_PID_STATE *)pMsg->Data.p)->Pressed == 1)
-//			{
-//				_DeleteFrame();
-//				_CreateFrame(&_cbEnterPIN);
-//			}
-//			break;
 
 		default:
 			WM_DefaultProc(pMsg);
 	}
 }
+
 
 /*
 *********************************************************************************************************
@@ -1390,76 +1396,119 @@ static void _cbInsertCard(WM_MESSAGE* pMsg)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-static void _cbLanguage(WM_MESSAGE* pMsg)
+static void _cbShowDesktop(WM_MESSAGE* pMsg)
 {
 	WM_HWIN hWin = pMsg->hWin;
 
 	switch (pMsg->MsgId)
 	{
 		case WM_CREATE:
-
+			GUI_DispStringHCenterAt("WM_CREATE", FRAME_WIDTH >> 1, 64);
 			/* 设置聚焦 */
 			WM_SetFocus(hWin);
-
-			/* 创建两个按钮，用于选择中文和英文 */
-			_CreateButton(hWin, "中文", GUI_ID_BUTTON0, (FRAME_WIDTH >> 1) - 150, 80, 300,  50, 0);
-			_CreateButton(hWin, "English", GUI_ID_BUTTON1, (FRAME_WIDTH >> 1) - 150, 150, 300,  50, 0);
 			break;
-
-		 case WM_KEY:
-			switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
-            {
-				//case GUI_KEY_NextPage:
-                //    GUI_EndDialog(hWin, 1);
-                //    break;
-
-				case GUI_KEY_ENTER:
-					//WM_SetFocusOnNextChild(hWin);
-                    _CreateFrame(&_cbInsertCard);
-					break;
-            }
-            break;
 
 		case WM_PAINT:
 			_PaintFrame();
             /* 绘制背景图片 */
             //GUI_DrawBitmap(MAIN_LOGO_BITMAP, 0, 28);
 
-		    //GUI_DispStringHCenterAt("请选择语言", FRAME_WIDTH >> 1, 5);
 			GUI_DispStringHCenterAt("Please select your language", FRAME_WIDTH >> 1, 32);
             break;
 
-		case WM_NOTIFY_PARENT:
-			if (pMsg->Data.v == WM_NOTIFICATION_RELEASED)
-			{
-				int Id = WM_GetId(pMsg->hWinSrc);
-				switch (Id)
-				{
-					case GUI_ID_BUTTON0:
-						_Language = 0;
-						break;
+        case WM_KEY:
+            switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
+            {
+                case GUI_KEY_BACKTAB:
+                    _DeleteFrame();
+                    _CreateFrame(&_cbDrawHomePage);
+                    break;
 
-					case GUI_ID_BUTTON1:
-						_Language = 1;
-						break;
-				}
+                case GUI_KEY_MUSIC://播放音乐
+                    break;
 
-				/* 创建标题，居中显示 */
-				_hTitle = TEXT_CreateEx(0, 0, LCD_GetXSize(), 32, WM_HBKWIN, WM_CF_SHOW, 0, GUI_ID_TEXT0, _GetLang(TEXT_ID_GELDAUTOMAT));
-				TEXT_SetTextAlign(_hTitle, GUI_TA_HCENTER);
-				TEXT_SetFont(_hTitle, MAIN_FONT);
+        		case GUI_KEY_SLEEPMODE://进入睡眠模式
+                    break;
 
-				/* 删除这个创建的界面 */
-				_DeleteFrame();
-				//_CreateFrame(&_cbInsertCard);
-			}
-			break;
+                case GUI_KEY_DOWN://音量减小
+                    break;
 
+                case GUI_KEY_UP://音量增加
+                    break;
+
+                case KEY_DOWN_MUX://锁屏
+                    break;
+
+                case KEY_DOWN_MUX_LONG://解锁
+                    break;
+
+                default:
+                    break;
+            }
 		default:
 			WM_DefaultProc(pMsg);
+            break;
 	}
 }
 
+static void _cbDrawHomePage(WM_MESSAGE * pMsg)
+{
+  //const void * pData;
+  //WM_HWIN      hItem;
+  //U32          FileSize;
+  // USER START (Optionally insert additional variables)
+  // USER END
+
+  switch (pMsg->MsgId) {
+  // USER START (Optionally insert additional message handling)
+  case WM_CREATE:
+	/* 设置聚焦 */
+    GUI_DispStringHCenterAt("WM_CREATE",FRAME_WIDTH >> 1,32);
+	WM_SetFocus(pMsg->hWin);
+	break;
+
+  case WM_PAINT:
+      _PaintFrame();
+      GUI_DispStringHCenterAt("WM_PAINT",FRAME_WIDTH >> 1,64);
+      break;
+
+  case WM_KEY:
+	switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
+    {
+		case GUI_KEY_BACKTAB:
+			_DeleteFrame();
+            _CreateFrame(&_cbShowDesktop);
+			break;
+
+        case GUI_KEY_MUSIC://播放音乐
+            break;
+
+		case GUI_KEY_SLEEPMODE://进入睡眠模式
+            break;
+
+        case GUI_KEY_DOWN://音量减小
+            break;
+
+        case GUI_KEY_UP://音量增加
+            break;
+
+        case KEY_DOWN_MUX://锁屏
+            break;
+
+        case KEY_DOWN_MUX_LONG://解锁
+            break;
+
+        default:
+            break;
+    }
+    break;
+
+  // USER END
+  default:
+    WM_DefaultProc(pMsg);
+    break;
+  }
+}
 
 /*
 *********************************************************************************************************
@@ -1503,7 +1552,7 @@ void MainTask(void)
 	//WM_SetCallback(WM_HBKWIN, &_cbLanguage);
 
 	/* 进入主界面 */
-	_CreateFrame(&_cbLanguage);
+	_CreateFrame(&_cbDrawHomePage);
 
 	while(1)
 	{
