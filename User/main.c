@@ -58,7 +58,6 @@
 */
 #include <includes.h>
 #include "MainTask.h"
-#include "guitasktest.h"
 #include "spi_flash_fatfs.h"
 /*
 **********************************************************************************************************
