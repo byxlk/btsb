@@ -135,6 +135,7 @@ static void vTaskAdcProc(void *pvParameters)
 *   优 先 级: 2
 *********************************************************************************************************
 */
+extern WM_HWIN  hWinMain;
 static void vTaskTaskUserKeyIF(void *pvParameters)
 {
 	uint8_t ucKeyCode;
@@ -174,63 +175,63 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 
 				case KEY_DOWN_MUX:/* 锁屏 */
                     printf("Press Key: MUX \r\n");
-                    GUI_SendKeyMsg(GUI_KEY_F1, 1);
+                    GUI_SendKeyMsg(GUI_KEY_LockScreen, 1);
                     break;
 
                 case KEY_DOWN_MUX_LONG:/* 解锁 */
                     printf("Press Key: MUX LONG\r\n");
-                    GUI_SendKeyMsg(GUI_KEY_F2, 1);
+                    GUI_SendKeyMsg(GUI_KEY_UnLock, 1);
                     break;
 
 				/* K2键按下，实现截图功能，将图片以BMP格式保存到SD卡中 */
 				case KEY_DOWN_VOL_DOWN:
                     printf("Press Key: VOL- \r\n");
-                    GUI_SendKeyMsg(GUI_KEY_DOWN, 1);
+                    GUI_SendKeyMsg(GUI_KEY_Vol_Dec, 1);
                     break;
 
                 case KEY_DOWN_VOL_UP:
                     printf("Press Key: VOL+ \r\n");
-					GUI_SendKeyMsg(GUI_KEY_UP, 1);
+					GUI_SendKeyMsg(GUI_KEY_Vol_Plus, 1);
 					break;
 
                 case KEY_DOWN_PLAY_PAUSE:/* 播放、确认 */
                     printf("Press Key: PLAY/PAUSE \r\n");
-                    GUI_SendKeyMsg(GUI_KEY_ENTER, 1);
+                    GUI_SendKeyMsg(GUI_KEY_PlayPause, 1);
                     break;
 
                 case KEY_DOWN_PLAY_PAUSE_LONG:/* 选择功能 */
                     printf("Press Key: PLAY/PAUSE LONG\r\n");
-                    GUI_SendKeyMsg(GUI_KEY_MUSIC, 1);
+                    GUI_SendKeyMsg(GUI_KEY_PlayPause_Long, 1);
                     break;
 
                 case KEY_DOWN_MENU:/* 菜单 */
                     printf("Press Key: MENU \r\n");
-                    GUI_SendKeyMsg(GUI_KEY_BACKTAB, 1);
+                    GUI_SendKeyMsg(GUI_KEY_Menu, 1);
                     break;
 
                 case KEY_DOWN_MENU_LONG:/* 直接进入睡眠模式 */
                     printf("Press Key: MENU LONG\r\n");
-                    GUI_SendKeyMsg(GUI_KEY_SLEEPMODE, 1);
+                    GUI_SendKeyMsg(GUI_KEY_Menu_Long, 1);
                     break;
 
                 case KEY_DOWN_UP:/* 上一曲 */
                     printf("Press Key: UP \r\n");
-                    GUI_SendKeyMsg(GUI_KEY_PGUP, 1);
+                    GUI_SendKeyMsg(GUI_KEY_Direction_Up, 1);
                     break;
 
                 case KEY_DOWN_UP_LONG:/* 快退 */
                     printf("Press Key: UP LONG\r\n");
-                    GUI_SendKeyMsg(GUI_KEY_LEFT, 1);
+                    GUI_SendKeyMsg(GUI_KEY_Direction_Left, 1);
                     break;
 
                 case KEY_DOWN_DOWN:/* 下一曲 */
                     printf("Press Key: DOWN \r\n");
-                    GUI_SendKeyMsg(GUI_KEY_PGDOWN, 1);
+                    GUI_SendKeyMsg(GUI_KEY_Direction_Down, 1);
                     break;
 
                 case KEY_DOWN_DOWN_LONG:/* 快进 */
                     printf("Press Key: DOWN LONG\r\n");
-                    GUI_SendKeyMsg(GUI_KEY_RIGHT, 1);
+                    GUI_SendKeyMsg(GUI_KEY_Direction_Right, 1);
                     break;
 
 				/* 其他的键值不处理 */
@@ -270,6 +271,7 @@ static void vTaskStart(void *pvParameters)
 		if(tick_current - tick_backup >= 10)
 		{
 		    tick_backup = tick_current;
+            WM_Exec();
 		}
 
         if(tick_current - td_tick_backup >= 250)

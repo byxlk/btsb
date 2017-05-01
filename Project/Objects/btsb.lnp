@@ -71,6 +71,12 @@
 ".\objects\icon_d.o"
 ".\objects\icon_e.o"
 ".\objects\icon_f.o"
+".\objects\app_about.o"
+".\objects\app_bluetooth.o"
+".\objects\app_datetime.o"
+".\objects\app_language.o"
+".\objects\app_music.o"
+".\objects\app_sleep.o"
 --library_type=microlib --strict --scatter ".\Objects\btsb.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
