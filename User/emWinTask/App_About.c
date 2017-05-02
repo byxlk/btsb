@@ -83,7 +83,7 @@ WM_HWIN  hWin_About = WM_HWIN_NULL;               /* 音乐播放对话框句柄 */
 static const GUI_WIDGET_CREATE_INFO _aDialogCreateMusic[] =
 {
 
-	{ BUTTON_CreateIndirect, "MusicList",  ID_BUTTON_6,    0,   0,  100, 100, 0, 0, 0 },
+	{ BUTTON_CreateIndirect, "About",  ID_BUTTON_6,    0,   0,  100, 100, 0, 0, 0 },
 
 	{ BUTTON_CreateIndirect, "MusicSet",   ID_BUTTON_7,   0,   110,  100, 100, 0, 0, 0 },
 
@@ -108,6 +108,7 @@ static void _cbWinCallBack(WM_MESSAGE * pMsg)
     switch (pMsg->MsgId)
     {
         case WM_INIT_DIALOG:
+            WM_SetFocus(pMsg->hWin);
             break;
 		case WM_CREATE:
             break;
@@ -169,9 +170,9 @@ static void _cbWinCallBack(WM_MESSAGE * pMsg)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-WM_HWIN App_About(WM_HWIN hWin)
+void App_About(WM_HWIN hWin)
 {
-#if 0
+#if 1
 	hWin_About = GUI_CreateDialogBox(_aDialogCreateMusic,
 	                                GUI_COUNTOF(_aDialogCreateMusic),
                                   	_cbWinCallBack,
@@ -186,7 +187,7 @@ WM_HWIN App_About(WM_HWIN hWin)
                                   WM_CF_MOTION_X | WM_CF_SHOW | WM_CF_HASTRANS,
                                   _cbWinCallBack, 0);
 #endif
-    return hWin_About;
+    //return hWin_About;
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

@@ -85,9 +85,7 @@
 *********************************************************************************************************
 */
 const char s_MusicPathDir[] = {"M0:\\Music\\"};  /* 存储器中歌曲存放的路径 */
-static uint8_t s_MusicName[MusicPathSzie] = {0}; /* 用于记录当前播放的歌曲 */
-static uint8_t s_ucPlayStatus = 0; 	      		 /* 播放器的开始和暂停按钮状态，0表示暂停，1表示运行 */
-WM_HWIN  hWinMainPage = WM_HWIN_NULL;               /* 音乐播放对话框句柄 */
+WM_HWIN  hWin_HomePage = WM_HWIN_NULL;               /* 音乐播放对话框句柄 */
 
 /*
 *********************************************************************************************************
@@ -97,7 +95,7 @@ WM_HWIN  hWinMainPage = WM_HWIN_NULL;               /* 音乐播放对话框句柄 */
 static const GUI_WIDGET_CREATE_INFO _aDialogCreateMusic[] =
 {
 
-	{ BUTTON_CreateIndirect, "MusicList",  ID_BUTTON_6,    0,   0,  100, 100, 0, 0, 0 },
+	{ BUTTON_CreateIndirect, "HomePage",  ID_BUTTON_6,    0,   0,  100, 100, 0, 0, 0 },
 
 	{ BUTTON_CreateIndirect, "MusicSet",   ID_BUTTON_7,   0,   110,  100, 100, 0, 0, 0 },
 
@@ -150,16 +148,9 @@ static void Caculate_RTC(WM_MESSAGE * pMsg)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-static void _cbDialogMainPage(WM_MESSAGE * pMsg)
+static void _cbWinCallBack(WM_MESSAGE * pMsg)
 {
-	const   GUI_RECT  Rect = {162, 200-29, 638, 300}; /* 左上角x，y，右下角x，y*/
 	static  WM_HTIMER hTimerSpec;
-	static  WM_HTIMER hTimerProcess;
-	static  int  MusicPlayNum = 0;
-	WM_HWIN hItem;
-	int     NCode;
-	int     Id;
-	char    buf[MusicPathSzie + 20];
 
 	(void)hTimerSpec;
 
@@ -178,7 +169,7 @@ static void _cbDialogMainPage(WM_MESSAGE * pMsg)
 
 		/* 定时器回调消息 */
 		case WM_TIMER:
-			Id = WM_GetTimerId(pMsg->Data.v);
+			//Id = WM_GetTimerId(pMsg->Data.v);
 	        break;
 
 		/* 重绘消息处理，使用了多缓冲 */
@@ -187,8 +178,8 @@ static void _cbDialogMainPage(WM_MESSAGE * pMsg)
 		    break;
 
 		case WM_PAINT:
-			GUI_SetBkColor(GUI_WHITE);
-			GUI_Clear();
+			//GUI_SetBkColor(GUI_WHITE);
+			//GUI_Clear();
 			break;
 
 		case WM_POST_PAINT:
@@ -196,8 +187,8 @@ static void _cbDialogMainPage(WM_MESSAGE * pMsg)
 		    break;
 
 		case WM_NOTIFY_PARENT:
-			Id    = WM_GetId(pMsg->hWinSrc);
-			NCode = pMsg->Data.v;
+			//Id    = WM_GetId(pMsg->hWinSrc);
+			//NCode = pMsg->Data.v;
 			break;
 
         case WM_KEY:
@@ -205,12 +196,6 @@ static void _cbDialogMainPage(WM_MESSAGE * pMsg)
             {
                 case GUI_KEY_BACKTAB:
                     GUI_EndDialog(pMsg->hWin, 0);
-                    break;
-
-                case GUI_KEY_MUSIC://播放音乐
-                    break;
-
-                case GUI_KEY_SLEEPMODE://进入睡眠模式
                     break;
 
                 case GUI_KEY_DOWN://音量减小
@@ -244,15 +229,15 @@ static void _cbDialogMainPage(WM_MESSAGE * pMsg)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-WM_HWIN App_MainPage(WM_HWIN hWin)
+void App_HomePage(WM_HWIN hWin)
 {
-	hWinMainPage = GUI_CreateDialogBox(_aDialogCreateMusic,
+	hWin_HomePage = GUI_CreateDialogBox(_aDialogCreateMusic,
 	                                GUI_COUNTOF(_aDialogCreateMusic),
-                                  	_cbDialogMainPage,
+                                  	_cbWinCallBack,
 	                                hWin,
 	                                0,
 	                                0);
-    return hWinMainPage;
+    //return hWin_HomePage;
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

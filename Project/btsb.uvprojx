@@ -859,6 +859,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\emWinTask\App_Sleep.c</FilePath>
             </File>
+            <File>
+              <FileName>App_HomePage.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\App_HomePage.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

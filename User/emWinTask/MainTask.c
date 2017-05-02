@@ -74,6 +74,7 @@ extern WM_HWIN  hWin_Sleep;
 extern WM_HWIN  hWin_Language;
 extern WM_HWIN  hWin_DateTime;
 extern WM_HWIN  hWin_About;
+extern WM_HWIN  hWin_HomePage;
 
 extern void App_Bluetooth(WM_HWIN hWin);
 extern void App_Music(WM_HWIN hWin);
@@ -81,7 +82,7 @@ extern void App_Sleep(WM_HWIN hWin);
 extern void App_Language(WM_HWIN hWin);
 extern void App_DateTime(WM_HWIN hWin);
 extern void App_About(WM_HWIN hWin);
-
+extern void App_HomePage(WM_HWIN hWin);
 /*
 *********************************************************************************************************
 *                                      变量和数组
@@ -308,7 +309,7 @@ static WM_HWIN _CreateICONVIEW(WM_HWIN hParent,
 	ICONVIEW_SetBkColor(hIcon, ICONVIEW_CI_SEL, GUI_DARKBLUE | 0x80000000);
     //ICONVIEW_SetBkColor(hIcon, ICONVIEW_CI_BK, GUI_WHITE | 0x00000000);
     ICONVIEW_SetTextColor(hIcon, ICONVIEW_CI_BK, GUI_BLACK);
-    //ICONVIEW_SetTextColor(hIcon, ICONVIEW_CI_SEL, GUI_RED);
+    ICONVIEW_SetTextColor(hIcon, ICONVIEW_CI_SEL, GUI_BLACK);
 
 	/* 设置字体 */
 	ICONVIEW_SetFont(hIcon, &GUI_FontYahei);
@@ -374,11 +375,12 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
 
 	switch (pMsg->MsgId)
 	{
-		case WM_INIT_DIALOG:
-			break;
-
         case WM_CREATE:
+            s_ucSelDesktopIndex = 0;
+            s_ucSelIconIndex = 0;
             WM_SetFocus(pMsg->hWin);
+            //WM_HideWindow(hWinICON);
+            //WM_ShowWindow(hWin_HomePage);
             break;
 
         case WM_PRE_PAINT:
@@ -386,7 +388,13 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
             break;
 
         case WM_PAINT:
-            WM_SetFocus(pMsg->hWin);
+            //if(s_ucSelDesktopIndex == 0) {
+            //    WM_HideWindow(hWinICON);
+            //    WM_ShowWindow(hWin_HomePage);
+            //} else {
+            //    WM_ShowWindow(hWinICON);
+            //    WM_HideWindow(hWin_HomePage);
+            //}
             break;
 
         case WM_POST_PAINT:
@@ -400,26 +408,16 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
 			//WM_RestartTimer(pMsg->Data.v, 1000);
 			break;
 
-
-        /*  设置ICON的聚焦 */
-        case MSG_SetICONFocus:
-            WM_SetFocus(hWinICON);
-            break;
-
-		case MSG_Delect:
-			WM_DeleteWindow(hWinInfo); /* 删除通过ICON创建的对话框 */
-			break;
-
 		case WM_NOTIFY_PARENT:
 			Id    = WM_GetId(pMsg->hWinSrc);      /* Id of widget */
 			NCode = pMsg->Data.v;                 /* Notification code */
 
             if((Id == GUI_ID_ICONVIEW0) && (NCode == WM_NOTIFICATION_RELEASED))
             {
-                //WM_SetFocus(WM_HBKWIN);
 				s_ucSelIconIndex  = ICONVIEW_GetSel(pMsg->hWinSrc);
                 printf("s_ucSelIconIndex = %d \n",s_ucSelIconIndex);
-                _appModules[s_ucSelIconIndex](WM_HBKWIN);
+                if(WM_HasFocus(hWinICON))
+                    _appModules[s_ucSelIconIndex](pMsg->hWin);
             }
 			break;
 
@@ -427,11 +425,23 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
             switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
             {
                 case GUI_KEY_Menu:
-                    if(s_ucSelDesktopIndex == 0) s_ucSelDesktopIndex = 1;
+                    WM_SetFocus(pMsg->hWin);
+
+                    if(s_ucSelDesktopIndex == 0) {
+                        s_ucSelDesktopIndex = 1;
+                        s_ucSelIconIndex = 0;
+                    }
                     else s_ucSelDesktopIndex = 0;
                     WM_MoveTo(pMsg->hWin,
                                s_ucSelDesktopIndex * (-LCD_GetXSize()), 0);
-                    //if(s_ucSelDesktopIndex == 0) WM_DeleteWindow(hWinInfo);
+
+                    //if(s_ucSelDesktopIndex == 0) {
+                    //    WM_HideWindow(hWinICON);
+                    //    WM_ShowWindow(hWin_HomePage);
+                    //} else {
+                    //    WM_ShowWindow(hWinICON);
+                    //    WM_HideWindow(hWin_HomePage);
+                    //}
                     break;
                 case GUI_KEY_PlayPause:
                     if(s_ucSelDesktopIndex == 1)
@@ -443,22 +453,52 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
                     }
                     break;
                 case GUI_KEY_Direction_Up:
+                    if(s_ucSelDesktopIndex) {
+                        WM_SetFocus(hWinICON);
+                        //s_ucSelIconIndex  = ICONVIEW_GetSel(pMsg->hWinSrc);
+                        switch(s_ucSelIconIndex) {
+                            case 0: s_ucSelIconIndex = 5;break;
+                            case 1: s_ucSelIconIndex = 4; break;
+                            case 2: s_ucSelIconIndex = 0; break;
+                            case 3: s_ucSelIconIndex = 1; break;
+                            case 4: s_ucSelIconIndex = 2; break;
+                            case 5: s_ucSelIconIndex = 3; break;
+                            default: break;
+                        }
+                        ICONVIEW_SetSel(hWinICON, s_ucSelIconIndex);
+                    }
+                    break;
                 case GUI_KEY_Direction_Down:
+                    if(s_ucSelDesktopIndex) {
+                        WM_SetFocus(hWinICON);
+                        //s_ucSelIconIndex  = ICONVIEW_GetSel(pMsg->hWinSrc);
+                        switch(s_ucSelIconIndex) {
+                            case 0: s_ucSelIconIndex = 2; break;
+                            case 1: s_ucSelIconIndex = 3; break;
+                            case 2: s_ucSelIconIndex = 4; break;
+                            case 3: s_ucSelIconIndex = 5; break;
+                            case 4: s_ucSelIconIndex = 1; break;
+                            case 5: s_ucSelIconIndex = 0; break;
+                            default: break;
+                        }
+                        ICONVIEW_SetSel(hWinICON, s_ucSelIconIndex);
+                    }
+                    break;
                 case GUI_KEY_Direction_Right:
                 case GUI_KEY_Direction_Left:
-                    if(s_ucSelDesktopIndex)  WM_SetFocus(hWinICON);
+                    //if(s_ucSelDesktopIndex)  WM_SetFocus(hWinICON);
                     break;
 
-                case GUI_KEY_PGDOWN://音量减小
+                case GUI_KEY_Vol_Dec://音量减小
                     break;
 
-                case GUI_KEY_PGUP://音量增加
+                case GUI_KEY_Vol_Plus://音量增加
                     break;
 
-                case KEY_DOWN_MUX://锁屏
+                case GUI_KEY_LockScreen://锁屏
                     break;
 
-                case KEY_DOWN_MUX_LONG://解锁
+                case GUI_KEY_UnLock://解锁
                     break;
 
                 default:
@@ -551,20 +591,22 @@ void MainTask(void)
     WM_SetCallback(WM_HBKWIN, _cbBkWindow);
 
     hWinMain = WM_CreateWindowAsChild(0, 0,
-                                  LCD_GetXSize() * 2,
+                                  LCD_GetXSize()*2,
                                   LCD_GetYSize(),
                                   WM_HBKWIN,
                                   WM_CF_MOTION_X | WM_CF_SHOW | WM_CF_HASTRANS,
                                   _cbDesktopDisplayProc, 0);
 
-    _CreateButton(hWinMain, "Test Button",
-                    GUI_ID_BUTTON0,
-                    (FRAME_WIDTH >> 1) - 100 , 80, 200,  50, 0);
+    //_CreateButton(hWinMain, "Test Button",
+    //                GUI_ID_BUTTON0,
+    //                (FRAME_WIDTH >> 1) - 100 , 80, 200,  50, 0);
+
+    App_HomePage(hWinMain);
 
     hWinICON = _CreateICONVIEW(hWinMain,
                              _aBitmapItem, GUI_COUNTOF(_aBitmapItem),
                              GUI_ID_ICONVIEW0,
-                             LCD_GetXSize() + 22, 30, 220, 280);
+                             LCD_GetXSize()+22, 30, 220, 280);
 
     WM_CreateTimer(WM_GetClientWindow(hWinMain), /* 接受信息的窗口的句柄 */
                        ID_TimerTime,                 /* 用户定义的Id。如果不对同一窗口使用多个定时器，此值可以设置为零。 */
