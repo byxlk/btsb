@@ -37,29 +37,11 @@
 *				                      宏定义
 *********************************************************************************************************
 */
-#define ID_WINDOW_0 		(GUI_ID_USER + 0x00)
-#define ID_IMAGE_0  		(GUI_ID_USER + 0x01)
-#define ID_SLIDER_0 		(GUI_ID_USER + 0x02)
-#define ID_BUTTON_0 		(GUI_ID_USER + 0x03)
-#define ID_BUTTON_1 		(GUI_ID_USER + 0x04)
-#define ID_BUTTON_2 		(GUI_ID_USER + 0x05)
-#define ID_BUTTON_3 		(GUI_ID_USER + 0x06)
-#define ID_BUTTON_4 		(GUI_ID_USER + 0x07)
-#define ID_BUTTON_5 		(GUI_ID_USER + 0x08)
-#define ID_BUTTON_6 		(GUI_ID_USER + 0x09)
-#define ID_SLIDER_1  	    (GUI_ID_USER + 0x0A)
-#define ID_TEXT_0 			(GUI_ID_USER + 0x0B)
-#define ID_TEXT_1 			(GUI_ID_USER + 0x0C)
-#define ID_TEXT_2 			(GUI_ID_USER + 0x0D)
-#define ID_TEXT_3 			(GUI_ID_USER + 0x0E)
-
-#define ID_BUTTON_7 		(GUI_ID_USER + 0x0F)
-
-/* 不同定时器的句柄 */
-#define ID_TIMER_SPEC       0
-#define ID_TIMER_PROCESS    1
-
-
+#define ID_WINDOW_0 (GUI_ID_USER + 0x00)
+#define ID_TEXT_0 (GUI_ID_USER + 0x01)
+#define ID_PROGBAR_0 (GUI_ID_USER + 0x02)
+#define ID_PROGBAR_1 (GUI_ID_USER + 0x03)
+#define ID_TEXT_1 (GUI_ID_USER + 0x04)
 
 /*
 *********************************************************************************************************
@@ -82,14 +64,11 @@ WM_HWIN  hWin_Bluetooth = WM_HWIN_NULL;               /* 音乐播放对话框句柄 */
 */
 static const GUI_WIDGET_CREATE_INFO _aDialogCreateMusic[] =
 {
-
-	{ BUTTON_CreateIndirect, "Bluetooth",  ID_BUTTON_6,    0,   0,  100, 100, 0, 0, 0 },
-
-	{ BUTTON_CreateIndirect, "MusicSet",   ID_BUTTON_7,   0,   110,  100, 100, 0, 0, 0 },
-
-	/* 声音大小 */
-	{ SLIDER_CreateIndirect, "Speaker",    ID_SLIDER_1, 10, 220, 200, 20, 0, 0x0, 0  },
-
+    { WINDOW_CreateIndirect, "Window", ID_WINDOW_0, -1, -1, 240, 320, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "Bluetooth", ID_TEXT_0, 16, 28, 80, 20, 0, 0x0, 0 },
+    { PROGBAR_CreateIndirect, "Progbar", ID_PROGBAR_0, 6, 48, 228, 5, 0, 0x0, 0 },
+    { PROGBAR_CreateIndirect, "Progbar", ID_PROGBAR_1, 10, 191, 222, 5, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "Avaliable Device", ID_TEXT_1, 14, 167, 139, 20, 0, 0x0, 0 },
 };
 
 /*
@@ -103,54 +82,41 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreateMusic[] =
 static void _cbWinCallBack(WM_MESSAGE * pMsg)
 {
 	int NCode, Id;
+    WM_HWIN hItem;
     WM_HWIN hWin = pMsg->hWin;
 
     switch (pMsg->MsgId)
     {
         case WM_INIT_DIALOG:
+            hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_0);
+            TEXT_SetFont(hItem, GUI_FONT_20_1);
+
+            hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_1);
+            TEXT_SetFont(hItem, GUI_FONT_20_1);
             WM_SetFocus(pMsg->hWin);
             break;
 		case WM_CREATE:
             break;
 		case WM_PAINT:
             break;
-		case WM_NOTIFY_PARENT:
-            Id = WM_GetId(pMsg->hWinSrc);
-            NCode = pMsg->Data.v;
-            switch (Id)
-            {
-                case GUI_ID_OK:
-                    if(NCode==WM_NOTIFICATION_RELEASED)
-                        GUI_EndDialog(hWin, 0);
-                    break;
-                case GUI_ID_CANCEL:
-                    if(NCode==WM_NOTIFICATION_RELEASED)
-                        GUI_EndDialog(hWin, 0);
-                    break;
 
-                default:
-                    break;
-            }
-            break;
         case WM_KEY:
             switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
             {
-                case GUI_KEY_ESCAPE:
+                case GUI_KEY_Menu:
                     GUI_EndDialog(hWin, 1);
                     break;
-                case GUI_KEY_ENTER:
-                    GUI_EndDialog(hWin, 0);
+                case GUI_KEY_PlayPause:
                     break;
-				case GUI_KEY_BACKTAB:
-                    GUI_EndDialog(pMsg->hWin, 0);
+				case GUI_KEY_Direction_Down:
                     break;
-                case GUI_KEY_DOWN://音量减小
+                case GUI_KEY_Vol_Dec://音量减小
                     break;
-                case GUI_KEY_UP://音量增加
+                case GUI_KEY_Vol_Plus://音量增加
                     break;
-                case KEY_DOWN_MUX://锁屏
+                case GUI_KEY_LockScreen://锁屏
                     break;
-                case KEY_DOWN_MUX_LONG://解锁
+                case GUI_KEY_UnLock://解锁
                     break;
 				default:
 					break;

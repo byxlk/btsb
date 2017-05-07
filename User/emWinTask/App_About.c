@@ -37,29 +37,16 @@
 *				                      宏定义
 *********************************************************************************************************
 */
-#define ID_WINDOW_0 		(GUI_ID_USER + 0x00)
-#define ID_IMAGE_0  		(GUI_ID_USER + 0x01)
-#define ID_SLIDER_0 		(GUI_ID_USER + 0x02)
-#define ID_BUTTON_0 		(GUI_ID_USER + 0x03)
-#define ID_BUTTON_1 		(GUI_ID_USER + 0x04)
-#define ID_BUTTON_2 		(GUI_ID_USER + 0x05)
-#define ID_BUTTON_3 		(GUI_ID_USER + 0x06)
-#define ID_BUTTON_4 		(GUI_ID_USER + 0x07)
-#define ID_BUTTON_5 		(GUI_ID_USER + 0x08)
-#define ID_BUTTON_6 		(GUI_ID_USER + 0x09)
-#define ID_SLIDER_1  	    (GUI_ID_USER + 0x0A)
-#define ID_TEXT_0 			(GUI_ID_USER + 0x0B)
-#define ID_TEXT_1 			(GUI_ID_USER + 0x0C)
-#define ID_TEXT_2 			(GUI_ID_USER + 0x0D)
-#define ID_TEXT_3 			(GUI_ID_USER + 0x0E)
-
-#define ID_BUTTON_7 		(GUI_ID_USER + 0x0F)
-
-/* 不同定时器的句柄 */
-#define ID_TIMER_SPEC       0
-#define ID_TIMER_PROCESS    1
-
-
+#define ID_WINDOW_0 (GUI_ID_USER + 0x00)
+#define ID_TEXT_0 (GUI_ID_USER + 0x01)
+#define ID_TEXT_1 (GUI_ID_USER + 0x02)
+#define ID_TEXT_2 (GUI_ID_USER + 0x03)
+#define ID_TEXT_3 (GUI_ID_USER + 0x04)
+#define ID_TEXT_4 (GUI_ID_USER + 0x05)
+#define ID_TEXT_5 (GUI_ID_USER + 0x06)
+#define ID_TEXT_6 (GUI_ID_USER + 0x07)
+#define ID_PROGBAR_0 (GUI_ID_USER + 0x08)
+#define ID_PROGBAR_1 (GUI_ID_USER + 0x09)
 
 /*
 *********************************************************************************************************
@@ -80,16 +67,18 @@ WM_HWIN  hWin_About = WM_HWIN_NULL;               /* 音乐播放对话框句柄 */
 *				                         任务对话框初始化选项
 *********************************************************************************************************
 */
-static const GUI_WIDGET_CREATE_INFO _aDialogCreateMusic[] =
+static const GUI_WIDGET_CREATE_INFO _aDialogCreate_About[] =
 {
-
-	{ BUTTON_CreateIndirect, "About",  ID_BUTTON_6,    0,   0,  100, 100, 0, 0, 0 },
-
-	{ BUTTON_CreateIndirect, "MusicSet",   ID_BUTTON_7,   0,   110,  100, 100, 0, 0, 0 },
-
-	/* 声音大小 */
-	{ SLIDER_CreateIndirect, "Speaker",    ID_SLIDER_1, 10, 220, 200, 20, 0, 0x0, 0  },
-
+    { WINDOW_CreateIndirect, "Window", ID_WINDOW_0, 1, 1, 240, 320, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "SN: SA1620123456", ID_TEXT_0, 24, 29, 181, 20, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "VPING", ID_TEXT_1, 66, 71, 99, 42, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "Sleep abc", ID_TEXT_2, 66, 132, 92, 20, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "Firmware Version: V1.0.0", ID_TEXT_3, 16, 183, 210, 20, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "Change Theme", ID_TEXT_4, 51, 226, 131, 20, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "Copyright @2017", ID_TEXT_5, 37, 260, 161, 20, 0, 0x0, 0 },
+    { TEXT_CreateIndirect, "www.vping.com", ID_TEXT_6, 43, 284, 146, 20, 0, 0x0, 0 },
+    { PROGBAR_CreateIndirect, "Progbar", ID_PROGBAR_0, 5, 50, 232, 5, 0, 0x0, 0 },
+    { PROGBAR_CreateIndirect, "Progbar", ID_PROGBAR_1, 2, 204, 238, 4, 0, 0x0, 0 },
 };
 
 /*
@@ -100,21 +89,62 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreateMusic[] =
 *	返 回 值: 无
 *********************************************************************************************************
 */
-static void _cbWinCallBack(WM_MESSAGE * pMsg)
+static void _cbWinCallBack_About(WM_MESSAGE * pMsg)
 {
 	int NCode, Id;
+    WM_HWIN hItem;
     WM_HWIN hWin = pMsg->hWin;
+
+    //printf("[%s : %d] MsgId = %d\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
 
     switch (pMsg->MsgId)
     {
         case WM_INIT_DIALOG:
+            printf("[%s : %d] WM_INIT_DIALOG(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
+            hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_0);
+            TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
+            TEXT_SetFont(hItem, GUI_FONT_20_1);
+
+            hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_1);
+            TEXT_SetFont(hItem, GUI_FONT_32B_1);
+            TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
+
+            hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_2);
+            TEXT_SetFont(hItem, GUI_FONT_20_1);
+            TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
+
+            hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_3);
+            TEXT_SetFont(hItem, GUI_FONT_20_1);
+            TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
+
+            hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_4);
+            TEXT_SetFont(hItem, GUI_FONT_20_1);
+            TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
+
+            hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_5);
+            TEXT_SetFont(hItem, GUI_FONT_20_1);
+            TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
+
+            hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_6);
+            TEXT_SetFont(hItem, GUI_FONT_20_1);
+            TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
             WM_SetFocus(pMsg->hWin);
             break;
+        case WM_PRE_PAINT:
+			GUI_MULTIBUF_Begin();
+			break;
+
+		case WM_POST_PAINT:
+			GUI_MULTIBUF_End();
+			break;
 		case WM_CREATE:
+            printf("[%s : %d] WM_INIT_DIALOG(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
             break;
 		case WM_PAINT:
+            printf("[%s : %d] WM_INIT_DIALOG(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
             break;
 		case WM_NOTIFY_PARENT:
+            printf("[%s : %d] WM_INIT_DIALOG(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
             Id = WM_GetId(pMsg->hWinSrc);
             NCode = pMsg->Data.v;
             switch (Id)
@@ -135,22 +165,25 @@ static void _cbWinCallBack(WM_MESSAGE * pMsg)
         case WM_KEY:
             switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
             {
-                case GUI_KEY_ESCAPE:
+                case GUI_KEY_Menu:
+                    printf("[%s : %d] GUI_KEY_Menu \r\n",__FUNCTION__,__LINE__);
                     GUI_EndDialog(hWin, 1);
                     break;
-                case GUI_KEY_ENTER:
-                    GUI_EndDialog(hWin, 0);
+                case GUI_KEY_PlayPause:
+                    printf("[%s : %d] GUI_KEY_PlayPause \r\n",__FUNCTION__,__LINE__);
                     break;
-				case GUI_KEY_BACKTAB:
-                    GUI_EndDialog(pMsg->hWin, 0);
+                case GUI_KEY_Direction_Up:
+                    printf("[%s : %d] GUI_KEY_Direction_Up \r\n",__FUNCTION__,__LINE__);
+				case GUI_KEY_Direction_Down:
+                    printf("[%s : %d] GUI_KEY_Direction_Down \r\n",__FUNCTION__,__LINE__);
                     break;
-                case GUI_KEY_DOWN://音量减小
+                case GUI_KEY_Vol_Dec://音量减小
                     break;
-                case GUI_KEY_UP://音量增加
+                case GUI_KEY_Vol_Plus://音量增加
                     break;
-                case KEY_DOWN_MUX://锁屏
+                case GUI_KEY_LockScreen://锁屏
                     break;
-                case KEY_DOWN_MUX_LONG://解锁
+                case GUI_KEY_UnLock://解锁
                     break;
 				default:
 					break;
@@ -173,9 +206,9 @@ static void _cbWinCallBack(WM_MESSAGE * pMsg)
 void App_About(WM_HWIN hWin)
 {
 #if 1
-	hWin_About = GUI_CreateDialogBox(_aDialogCreateMusic,
-	                                GUI_COUNTOF(_aDialogCreateMusic),
-                                  	_cbWinCallBack,
+	hWin_About = GUI_CreateDialogBox(_aDialogCreate_About,
+	                                GUI_COUNTOF(_aDialogCreate_About),
+                                  	_cbWinCallBack_About,
 	                                hWin,
 	                                0,
 	                                0);

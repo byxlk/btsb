@@ -110,6 +110,7 @@ extern GUI_CONST_STORAGE  GUI_FONT GUI_FontHZ_SimSun_2424;
 #define MSG_SetENTER      (GUI_ID_USER + 0x0E)
 #define MSG_SetICONFocus  (GUI_ID_USER + 0x0F)
 #define MSG_Delect        (GUI_ID_USER + 0x10)
+#define MSG_ShowApp        (GUI_ID_USER + 0x11)
 
 #endif
 

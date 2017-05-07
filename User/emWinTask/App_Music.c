@@ -135,22 +135,20 @@ static void _cbWinCallBack(WM_MESSAGE * pMsg)
         case WM_KEY:
             switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
             {
-                case GUI_KEY_ESCAPE:
+                case GUI_KEY_Menu:
                     GUI_EndDialog(hWin, 1);
                     break;
-                case GUI_KEY_ENTER:
-                    GUI_EndDialog(hWin, 0);
+                case GUI_KEY_PlayPause:
                     break;
-				case GUI_KEY_BACKTAB:
-                    GUI_EndDialog(pMsg->hWin, 0);
+				case GUI_KEY_Direction_Down:
                     break;
-                case GUI_KEY_DOWN://音量减小
+                case GUI_KEY_Vol_Dec://音量减小
                     break;
-                case GUI_KEY_UP://音量增加
+                case GUI_KEY_Vol_Plus://音量增加
                     break;
-                case KEY_DOWN_MUX://锁屏
+                case GUI_KEY_LockScreen://锁屏
                     break;
-                case KEY_DOWN_MUX_LONG://解锁
+                case GUI_KEY_UnLock://解锁
                     break;
 				default:
 					break;
