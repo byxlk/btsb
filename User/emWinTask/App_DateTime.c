@@ -115,6 +115,13 @@ static void _cbWinCallBack(WM_MESSAGE * pMsg)
             break;
 		case WM_PAINT:
             break;
+        case WM_PRE_PAINT:
+			GUI_MULTIBUF_Begin();
+			break;
+
+		case WM_POST_PAINT:
+			GUI_MULTIBUF_End();
+			break;
 		case WM_NOTIFY_PARENT:
             Id = WM_GetId(pMsg->hWinSrc);
             NCode = pMsg->Data.v;

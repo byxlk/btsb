@@ -99,6 +99,13 @@ static void _cbWinCallBack(WM_MESSAGE * pMsg)
             break;
 		case WM_PAINT:
             break;
+        case WM_PRE_PAINT:
+            GUI_MULTIBUF_Begin();
+            break;
+
+        case WM_POST_PAINT:
+            GUI_MULTIBUF_End();
+            break;
 
         case WM_KEY:
             switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)

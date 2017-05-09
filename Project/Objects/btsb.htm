@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\btsb.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\btsb.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060300: Last Updated: Mon May 08 01:25:09 2017
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060300: Last Updated: Mon May 08 01:51:35 2017
 <BR><P>
 <H3>Maximum Stack Usage =      10136 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -3512,7 +3512,10 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbWinCallBack_About
 <LI><a href="#[aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbDesktopDisplayProc
 <LI><a href="#[a9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbBkWindow
+<LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbWinCallBack
 <LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbWinCallBack_HomePage
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbWinCallBack
+<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbWinCallBack
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> gui_multibuf.o(.constdata)
 </UL>
@@ -3532,7 +3535,10 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbWinCallBack_About
 <LI><a href="#[aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbDesktopDisplayProc
 <LI><a href="#[a9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbBkWindow
+<LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbWinCallBack
 <LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbWinCallBack_HomePage
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbWinCallBack
+<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_cbWinCallBack
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> gui_multibuf.o(.constdata)
 </UL>
@@ -10906,7 +10912,7 @@ Local Symbols
 <BR>[Called By]<UL><LI><a href="#[482]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;bsp_InitKey
 </UL>
 
-<P><STRONG><a name="[8e]"></a>_cbWinCallBack</STRONG> (Thumb, 164 bytes, Stack size 16 bytes, app_language.o(i._cbWinCallBack))
+<P><STRONG><a name="[8e]"></a>_cbWinCallBack</STRONG> (Thumb, 184 bytes, Stack size 16 bytes, app_language.o(i._cbWinCallBack))
 <BR><BR>[Stack]<UL><LI>Max Depth = 688<LI>Call Chain = _cbWinCallBack &rArr; LISTBOX_SetFont &rArr; LISTBOX_InvalidateItem &rArr; LISTBOX_UpdateScrollers &rArr; _ManageAutoScroll &rArr; WM_SetScrollbarV &rArr; WM__SetScrollbarV &rArr; _SetScrollbar &rArr; SCROLLBAR_CreateAttached &rArr; SCROLLBAR_CreateEx &rArr; SCROLLBAR_CreateUser &rArr; SCROLLBAR__InvalidatePartner &rArr; WM_GetScrollPartner &rArr; WM_GetDialogItem &rArr; _GetDialogItem &rArr;  _GetDialogItem (Cycle)
 </UL>
 <BR>[Calls]<UL><LI><a href="#[3aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_SetFocus
@@ -10917,6 +10923,8 @@ Local Symbols
 <LI><a href="#[39e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TEXT_SetFont
 <LI><a href="#[34a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LISTBOX_SetFont
 <LI><a href="#[32f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LISTBOX_AddString
+<LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
+<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
 <LI><a href="#[23b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_EndDialog
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> app_language.o(i.App_Language)
@@ -10950,17 +10958,17 @@ Local Symbols
 <P><STRONG><a name="[a9]"></a>_cbBkWindow</STRONG> (Thumb, 86 bytes, Stack size 8 bytes, maintask.o(i._cbBkWindow))
 <BR><BR>[Stack]<UL><LI>Max Depth = 496<LI>Call Chain = _cbBkWindow &rArr; _ShowBMPEx &rArr; f_open &rArr; dir_register &rArr; dir_find &rArr; dir_next &rArr; create_chain &rArr; put_fat &rArr; move_window &rArr; sync_window &rArr; disk_write &rArr; SPI_disk_write &rArr; sf_WriteBuffer &rArr; sf_AutoWritePage &rArr; sf_PageWrite &rArr; sf_WriteEnable &rArr; sf_SendByte
 </UL>
-<BR>[Calls]<UL><LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
-<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
-<LI><a href="#[282]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MEMDEV_WriteAt
+<BR>[Calls]<UL><LI><a href="#[282]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MEMDEV_WriteAt
 <LI><a href="#[264]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MEMDEV_Select
 <LI><a href="#[359]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_ShowBMPEx
 <LI><a href="#[170]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_DefaultProc
+<LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
+<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
 <LI><a href="#[199]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> maintask.o(i.MainTask)
 </UL>
-<P><STRONG><a name="[aa]"></a>_cbDesktopDisplayProc</STRONG> (Thumb, 768 bytes, Stack size 72 bytes, maintask.o(i._cbDesktopDisplayProc))
+<P><STRONG><a name="[aa]"></a>_cbDesktopDisplayProc</STRONG> (Thumb, 762 bytes, Stack size 72 bytes, maintask.o(i._cbDesktopDisplayProc))
 <BR><BR>[Stack]<UL><LI>Max Depth = 840<LI>Call Chain = _cbDesktopDisplayProc &rArr; _CreateICONVIEW &rArr; ICONVIEW_AddBitmapItem &rArr; ICONVIEW__ManageAutoScroll &rArr; WM_SetScrollbarV &rArr; WM__SetScrollbarV &rArr; _SetScrollbar &rArr; SCROLLBAR_CreateAttached &rArr; SCROLLBAR_CreateEx &rArr; SCROLLBAR_CreateUser &rArr; SCROLLBAR__InvalidatePartner &rArr; WM_GetScrollPartner &rArr; WM_GetDialogItem &rArr; _GetDialogItem &rArr;  _GetDialogItem (Cycle)
 </UL>
 <BR>[Calls]<UL><LI><a href="#[212]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_ShowWindow
@@ -10971,13 +10979,13 @@ Local Symbols
 <LI><a href="#[216]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_DeleteWindow
 <LI><a href="#[2e5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LCD_GetXSize
 <LI><a href="#[2dc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ICONVIEW_SetSel
-<LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
-<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
 <LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;App_HomePage
 <LI><a href="#[41f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_CreateICONVIEW
 <LI><a href="#[3aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_SetFocus
 <LI><a href="#[3d5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_GetId
 <LI><a href="#[170]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_DefaultProc
+<LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
+<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
 <LI><a href="#[199]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> maintask.o(i.MainTask)
@@ -10993,31 +11001,33 @@ Local Symbols
 <P><STRONG><a name="[8a]"></a>_cbWinCallBack_About</STRONG> (Thumb, 402 bytes, Stack size 16 bytes, app_about.o(i._cbWinCallBack_About))
 <BR><BR>[Stack]<UL><LI>Max Depth = 400<LI>Call Chain = _cbWinCallBack_About &rArr; WM_GetDialogItem &rArr; _GetDialogItem &rArr;  _GetDialogItem (Cycle)
 </UL>
-<BR>[Calls]<UL><LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
-<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
-<LI><a href="#[3aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_SetFocus
+<BR>[Calls]<UL><LI><a href="#[3aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_SetFocus
 <LI><a href="#[3d5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_GetId
 <LI><a href="#[2e3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_GetDialogItem
 <LI><a href="#[170]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_DefaultProc
 <LI><a href="#[3a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TEXT_SetTextAlign
 <LI><a href="#[39e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TEXT_SetFont
+<LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
+<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
 <LI><a href="#[23b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_EndDialog
 <LI><a href="#[199]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> app_about.o(i.App_About)
 </UL>
-<P><STRONG><a name="[8b]"></a>_cbWinCallBack</STRONG> (Thumb, 98 bytes, Stack size 8 bytes, app_bluetooth.o(i._cbWinCallBack))
+<P><STRONG><a name="[8b]"></a>_cbWinCallBack</STRONG> (Thumb, 120 bytes, Stack size 8 bytes, app_bluetooth.o(i._cbWinCallBack))
 <BR><BR>[Stack]<UL><LI>Max Depth = 392<LI>Call Chain = _cbWinCallBack &rArr; WM_GetDialogItem &rArr; _GetDialogItem &rArr;  _GetDialogItem (Cycle)
 </UL>
 <BR>[Calls]<UL><LI><a href="#[3aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_SetFocus
 <LI><a href="#[2e3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_GetDialogItem
 <LI><a href="#[170]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_DefaultProc
 <LI><a href="#[39e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TEXT_SetFont
+<LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
+<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
 <LI><a href="#[23b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_EndDialog
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> app_bluetooth.o(i.App_Bluetooth)
 </UL>
-<P><STRONG><a name="[8c]"></a>_cbWinCallBack</STRONG> (Thumb, 200 bytes, Stack size 16 bytes, app_datetime.o(i._cbWinCallBack))
+<P><STRONG><a name="[8c]"></a>_cbWinCallBack</STRONG> (Thumb, 222 bytes, Stack size 16 bytes, app_datetime.o(i._cbWinCallBack))
 <BR><BR>[Stack]<UL><LI>Max Depth = 688<LI>Call Chain = _cbWinCallBack &rArr; LISTBOX_AddString &rArr; LISTBOX_UpdateScrollers &rArr; _ManageAutoScroll &rArr; WM_SetScrollbarV &rArr; WM__SetScrollbarV &rArr; _SetScrollbar &rArr; SCROLLBAR_CreateAttached &rArr; SCROLLBAR_CreateEx &rArr; SCROLLBAR_CreateUser &rArr; SCROLLBAR__InvalidatePartner &rArr; WM_GetScrollPartner &rArr; WM_GetDialogItem &rArr; _GetDialogItem &rArr;  _GetDialogItem (Cycle)
 </UL>
 <BR>[Calls]<UL><LI><a href="#[3aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_SetFocus
@@ -11027,6 +11037,8 @@ Local Symbols
 <LI><a href="#[3a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TEXT_SetTextAlign
 <LI><a href="#[39e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TEXT_SetFont
 <LI><a href="#[32f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LISTBOX_AddString
+<LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
+<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
 <LI><a href="#[23b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_EndDialog
 <LI><a href="#[192]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CHECKBOX_SetText
 </UL>
@@ -11059,12 +11071,12 @@ Local Symbols
 <P><STRONG><a name="[8d]"></a>_cbWinCallBack_HomePage</STRONG> (Thumb, 1022 bytes, Stack size 56 bytes, app_homepage.o(i._cbWinCallBack_HomePage))
 <BR><BR>[Stack]<UL><LI>Max Depth = 592<LI>Call Chain = _cbWinCallBack_HomePage &rArr; TEXT_Create &rArr; TEXT_CreateEx &rArr; TEXT_CreateUser &rArr; WM_CreateWindowAsChild &rArr; WM__SendMsgNoData &rArr; WM__SendMessage &rArr; WM_DefaultProc &rArr;  WM_SendToParent (Cycle)
 </UL>
-<BR>[Calls]<UL><LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
-<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
-<LI><a href="#[2e3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_GetDialogItem
+<BR>[Calls]<UL><LI><a href="#[2e3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_GetDialogItem
 <LI><a href="#[170]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WM_DefaultProc
 <LI><a href="#[3a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TEXT_SetTextAlign
 <LI><a href="#[39e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TEXT_SetFont
+<LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_End
+<LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_MULTIBUF_Begin
 <LI><a href="#[23b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GUI_EndDialog
 <LI><a href="#[3a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TEXT_SetTextColor
 <LI><a href="#[39f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TEXT_SetText

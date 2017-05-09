@@ -422,10 +422,7 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
                 //WM_ShowWindow(hWinICON);
             //    WM_DeleteWindow(hWin_HomePage);
             //    WM_SetFocus(hWinICON);
-                hWinICON = _CreateICONVIEW(pMsg->hWin,
-                             _aBitmapItem, GUI_COUNTOF(_aBitmapItem),
-                             GUI_ID_ICONVIEW0,
-                             LCD_GetXSize()+22, 30, 210, 280);
+                //WM_DeleteWindow(hWinICON);
             }
             break;
         case WM_POST_PAINT:
@@ -470,6 +467,10 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
 			break;
 
         case MSG_SetICONFocus:
+            hWinICON = _CreateICONVIEW(pMsg->hWin,
+                             _aBitmapItem, GUI_COUNTOF(_aBitmapItem),
+                             GUI_ID_ICONVIEW0,
+                             LCD_GetXSize()+22, 30, 210, 280);
             WM_SetFocus(hWinICON);
             ICONVIEW_SetSel(hWinICON, s_ucSelIconIndex);
             printf("[lsl]s_ucSelIconIndex = %d \r\n",s_ucSelIconIndex);
