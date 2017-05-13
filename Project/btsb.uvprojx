@@ -805,36 +805,6 @@
               <FilePath>..\User\emWinTask\Yahei.c</FilePath>
             </File>
             <File>
-              <FileName>ICON_A.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\emWinTask\ICON_A.c</FilePath>
-            </File>
-            <File>
-              <FileName>ICON_B.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\emWinTask\ICON_B.c</FilePath>
-            </File>
-            <File>
-              <FileName>ICON_C.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\emWinTask\ICON_C.c</FilePath>
-            </File>
-            <File>
-              <FileName>ICON_D.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\emWinTask\ICON_D.c</FilePath>
-            </File>
-            <File>
-              <FileName>ICON_E.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\emWinTask\ICON_E.c</FilePath>
-            </File>
-            <File>
-              <FileName>ICON_F.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\emWinTask\ICON_F.c</FilePath>
-            </File>
-            <File>
               <FileName>App_About.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\emWinTask\App_About.c</FilePath>
@@ -863,6 +833,11 @@
               <FileName>App_HomePage.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\emWinTask\App_HomePage.c</FilePath>
+            </File>
+            <File>
+              <FileName>Image_Resource.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\Image_Resource.c</FilePath>
             </File>
           </Files>
         </Group>

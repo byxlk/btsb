@@ -383,7 +383,7 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
 {
     int NCode, Id;
 	WM_MESSAGE pMsgInfo;
-    GUI_ALPHA_STATE AlphaState;
+//    GUI_ALPHA_STATE AlphaState;
 
     //printf("[%s : %d] MsgId = %d\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
 
