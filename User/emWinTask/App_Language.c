@@ -163,7 +163,7 @@ static void _cbWinCallBack(WM_MESSAGE * pMsg)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void App_Language(WM_HWIN hWin)
+WM_HWIN App_Language(WM_HWIN hWin)
 {
 #if 1
 	hWin_Language = GUI_CreateDialogBox(_aDialogCreateMusic,
@@ -180,7 +180,7 @@ void App_Language(WM_HWIN hWin)
                                   WM_CF_MOTION_X | WM_CF_SHOW | WM_CF_HASTRANS,
                                   _cbWinCallBack, 0);
 #endif
-    //return hWin_Language;
+    return hWin_Language;
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

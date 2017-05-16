@@ -6,38 +6,6 @@
 *	版    本 : V3.0
 *	说    明 : 实验内容
 *              1. 本实例有两个个值得大家学习的地方:
-*                 (1). ICONVIEW控件的使用。
-*                 (2). 所有界面支持触摸也支持按键操作。
-*              2. 按键K2实现对话框的删除。
-*                 按键K3实现ICONVIEW的聚焦。
-*				  摇杆UP键实现ICONVIEW选项的上移。
-*				  摇杆DOWN键实现ICONVIEW选项的下移。
-*				  摇杆LIGHT键实现ICONVIEW选项的左移。
-*				  摇杆RIGHT键实现ICONVIEW选项的右移。
-*				  摇杆OK键实现对话框的创建。
-*
-*	修改记录 :
-*		版本号    日期          作者          说明
-*		V1.0    2014-06-21    Eric2013        首发
-*             								 实际测试中发现三个问题，值得大家注意：
-*                							 (1). 使用ICONVIEW的WM_NOTIFICATION_CLICKED消息会使得打开一次对话框后，再将其关闭。
-*                      							  再次操作ICONVIEW的时候需要点击两次才有效果。
-*                 							 (2). 显示游标后，设置显示图片为565格式，GUI_DrawBitmap(&bmButtonLine, 0, 272-44);无法显示了。
-*                      							  显示游标后，设置显示图片为32位ARGB格式，GUI_DrawBitmap(&bmButtonLine, 0, 272-44);可以显示。
-*                 							 (3). 使能hWinMain窗口使用内存设备后（WM_SetCreateFlags(WM_CF_MEMDEV);），窗口上建立了ICONVIEW.
-*                      							  4.3寸可以正常显示，7寸和5寸屏不能，使用外部SRAM作为emWin动态内存或者修改LCDConf.C中的5寸
-*                      							  和7寸的输出都是480*272解决，使用原始尺寸将造成图标不显示，向此窗口发送消息造成死机。
-*	    V2.0    2015-04-15    Eric2013       1. 升级固件库到V1.5.0
-*                                            2. 升级BSP板级支持包
-*                                            3. 升级fatfs到0.11
-*                                            4. 升级STemWin到5.26
-*                                            5. 更改为新的四点触摸校准算法，并重查编排触摸检测任务
-*                                            6. 添加7寸800*480分辨率电容屏支持，添加3.5寸480*320的ILI9488支持。
-*                                            7. 重新编排uCOS-III的任务。
-*                                            8. V2.0版本使用外部2MB SRAM作为emWin动态内存，V1.0版本存在的问题已经得到解决。
-*	    V3.0    2015-12-18  Eric2013         1. 升级BSP板级支持包
-*                                            2. 升级STemWin到5.28
-*                                            3. 添加4.3寸和5寸电容屏支持。
 *
 *	Copyright (C), 2015-2020, 安富莱电子 www.armfly.com
 *
@@ -47,6 +15,7 @@
 #include "MainTask.h"
 #include "bsp.h"
 
+#define RECOMMENDED_MEMORY (1024L * 30)
 
 /*
 *********************************************************************************************************
@@ -660,11 +629,9 @@ static void _cbBkWindow(WM_MESSAGE * pMsg)
             GUI_MEMDEV_WriteAt(hMempic, 0, 0);
 			break;
        case WM_PRE_PAINT:
-            //printf("[%s : %d] WM_PRE_PAINT(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
             GUI_MULTIBUF_Begin();
             break;
        case WM_POST_PAINT:
-            //printf("[%s : %d] WM_PRE_PAINT(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
             GUI_MULTIBUF_End();
             break;
 
@@ -715,6 +682,12 @@ void MainTask(void)
 
 	/* 使能UTF-8解码用于汉字显示 */
 	GUI_UC_SetEncodeUTF8();
+
+    _LOGD("FreeBytes = %d\r\n",GUI_ALLOC_GetNumFreeBytes());
+    if (GUI_ALLOC_GetNumFreeBytes() < RECOMMENDED_MEMORY) {
+        GUI_ErrorOut("Not enough memory available.");
+        return;
+    }
 
     hMempic = GUI_MEMDEV_CreateFixed(0, 0,
 	                                 LCD_GetXSize(),

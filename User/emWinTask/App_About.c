@@ -203,7 +203,7 @@ static void _cbWinCallBack_About(WM_MESSAGE * pMsg)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void App_About(WM_HWIN hWin)
+WM_HWIN App_About(WM_HWIN hWin)
 {
 #if 1
 	hWin_About = GUI_CreateDialogBox(_aDialogCreate_About,
@@ -220,7 +220,7 @@ void App_About(WM_HWIN hWin)
                                   WM_CF_MOTION_X | WM_CF_SHOW | WM_CF_HASTRANS,
                                   _cbWinCallBack, 0);
 #endif
-    //return hWin_About;
+    return hWin_About;
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

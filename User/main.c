@@ -135,7 +135,6 @@ static void vTaskAdcProc(void *pvParameters)
 *   优 先 级: 2
 *********************************************************************************************************
 */
-extern WM_HWIN  hWinMain;
 static void vTaskTaskUserKeyIF(void *pvParameters)
 {
 	uint8_t ucKeyCode;
@@ -271,7 +270,6 @@ static void vTaskStart(void *pvParameters)
 		if(tick_current - tick_backup >= 10)
 		{
 		    tick_backup = tick_current;
-            WM_Exec();
 		}
 
         if(tick_current - td_tick_backup >= 250)
@@ -320,7 +318,7 @@ static void vTaskTest(void *pvParameters)
         LCD_Fill_Rect(0, 0, 320, 240, CL_BLUE);
         vTaskDelay(1000);
         LCD_Fill_Rect(0, 0, 320, 240, CL_YELLOW);
-   #endif
+  #endif
         //GuiTaskTest();
     }
 }
@@ -337,7 +335,7 @@ static void AppTaskCreate (void)
         /* GUI 界面绘制 */
 	xTaskCreate(  vTaskGUI,             /* 任务函数  */
                   "vTaskGUI",           /* 任务名    */
-                  1024,                 /* 任务栈大小，单位word，也就是4字节 */
+                  2048,                 /* 任务栈大小，单位word，也就是4字节 */
                   NULL,                 /* 任务参数  */
                   1,                    /* 任务优先级*/
                   NULL );               /* 任务句柄  */
@@ -379,14 +377,14 @@ static void AppTaskCreate (void)
                  "vTaskAdcProc",   		/* 任务名    */
                  512,            		/* 任务栈大小，单位word，也就是4字节 */
                  NULL,           		/* 任务参数  */
-                 5,              		/* 任务优先级*/
+                 4,              		/* 任务优先级*/
                  &xHandleTaskAdcProc );   /* 任务句柄  */
     /* vTaskTest */
     xTaskCreate( vTaskTest,     		/* 任务函数  */
                  "vTaskTest",   		/* 任务名    */
                  512,            		/* 任务栈大小，单位word，也就是4字节 */
                  NULL,           		/* 任务参数  */
-                 6,              		/* 任务优先级*/
+                 4,              		/* 任务优先级*/
                  NULL );   /* 任务句柄  */
 }
 

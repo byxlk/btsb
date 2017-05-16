@@ -81,7 +81,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreateMusic[] =
 */
 static void _cbWinCallBack(WM_MESSAGE * pMsg)
 {
-	int NCode, Id;
+	//int NCode, Id;
     WM_HWIN hItem;
     WM_HWIN hWin = pMsg->hWin;
 
@@ -143,7 +143,7 @@ static void _cbWinCallBack(WM_MESSAGE * pMsg)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void App_Bluetooth(WM_HWIN hWin)
+WM_HWIN App_Bluetooth(WM_HWIN hWin)
 {
 #if 1
 	hWin_Bluetooth = GUI_CreateDialogBox(_aDialogCreateMusic,
@@ -160,7 +160,7 @@ void App_Bluetooth(WM_HWIN hWin)
                                   WM_CF_MOTION_X | WM_CF_SHOW | WM_CF_HASTRANS,
                                   _cbWinCallBack, 0);
 #endif
-    //return hWin_Bluetooth;
+    return hWin_Bluetooth;
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/
