@@ -43,7 +43,7 @@ extern WM_HWIN  hWin_Sleep;
 extern WM_HWIN  hWin_Language;
 extern WM_HWIN  hWin_DateTime;
 extern WM_HWIN  hWin_About;
-extern WM_HWIN  hWin_HomePage;
+WM_HWIN  hWin_HomePage;
 
 extern void App_Bluetooth(WM_HWIN hWin);
 extern void App_Music(WM_HWIN hWin);
@@ -52,35 +52,26 @@ extern void App_Language(WM_HWIN hWin);
 extern void App_DateTime(WM_HWIN hWin);
 extern void App_About(WM_HWIN hWin);
 extern void App_HomePage(WM_HWIN hWin);
+
+extern WM_HWIN CreateWindow_HomePage(WM_HWIN hParent);
 /*
 *********************************************************************************************************
 *                                      变量和数组
 *********************************************************************************************************
 */
-static GUI_MEMDEV_Handle   hMempic;
+//static GUI_MEMDEV_Handle   hMempic;
 
 WM_HWIN  hWinInfo;   /* 通过ICONVIEW所打开窗口的句柄 */
 WM_HWIN  hWinICON;   /* ICONVIEW控件句柄 */
-WM_HWIN  hWinMain;
 WM_HWIN  hWinDesktop;   /* 主窗口句柄, ICONVIEW控件建立在这个窗口上面 */
 
 uint8_t	s_ucSelIconIndex = 0;	/* 选择的ICON，默认不选择任何 */
 uint8_t s_ucSelDesktopIndex = 0;
 uint8_t s_ucEnteryAppFlag = 0;
-#if 0
-GUI_RECT Icon_Rect[6] = {
-    {22,  30.104, 110},          // 0
-    {144, 30.206, 110},          // 1
-    {22,  122.104, 202},          // 2
-    {144, 122.206, 202},          // 3
-    {22,  214.104, 294},          // 4
-    {144, 214.206, 294}           // 5
-};
-#endif
 
-/* 实际的测试需要是图像宽度的4倍即可，切记(也就是保证每个像素如果是32
-位数据的情况) */
-static char _acBuffer[240 * 48];
+
+/* 实际的测试需要是图像宽度的4倍即可，切记(也就是保证每个像素如果是32位数据的情况) */
+static char _acBuffer[240 * 32];
 
 /* 用于桌面ICONVIEW图标的创建 */
 typedef struct
@@ -307,39 +298,6 @@ static WM_HWIN _CreateICONVIEW(WM_HWIN hParent,
 	return hIcon;
 }
 
-#if 0
-/*
-*******************************************************************************
-*	函 数 名: _CreateButton
-*	功能说明: 创建按钮
-*	形    参：hParent  父窗口
-*             pText    按键上显示的文本
-*             Id       按钮Id
-*             x        x轴坐标
-*             y        y轴坐标
-*             w        按钮宽
-*             h        按钮高
-*             TextId   文本的ID
-*	返 回 值: 无
-*******************************************************************************
-*/
-static WM_HWIN _CreateButton(WM_HWIN hParent, const char* pText,
-                            int Id, int x, int y, int w, int h, unsigned TextId)
-{
-	WM_HWIN hButton;
-	hButton = BUTTON_CreateEx(x, y, w, h, hParent, WM_CF_SHOW, 0, Id);
-
-	/* 获取当前创建按钮要显示的文本 */
-
-	BUTTON_SetText      (hButton,    pText);
-
-	/* 设置接收输入焦点的能力 */
-	//BUTTON_SetFocussable(hButton,    1);
-
-	return hButton;
-}
-#endif
-
 /*
 *********************************************************************************************************
 *	函 数 名: _cbDialogInfo
@@ -517,14 +475,14 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
                         //App_HomePage(pMsg->hWin);
                         //WM_DeleteWindow(hWinICON);
                         //WM_SetFocus(pMsg->hWin);
-                        WM_MoveTo(hWinMain, 0, 0);
-                        WM_ShowWindow(hWin_HomePage);
+                        //WM_MoveTo(hWinMain, 0, 0);
+                        //WM_ShowWindow(hWin_HomePage);
                     } else {
                         //WM_HideWindow(hWin_HomePage);
                         //WM_ShowWindow(hWinICON);
                         //WM_DeleteWindow(hWin_HomePage);
-                        WM_MoveTo(hWinMain, -LCD_GetXSize(), 0);
-                        WM_ShowWindow(hWinICON);
+                        //WM_MoveTo(hWinMain, -LCD_GetXSize(), 0);
+                        //WM_ShowWindow(hWinICON);
                     }
                     //WM_Paint(pMsg->hWin);
                     break;
@@ -607,6 +565,56 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
 	}
 }
 
+static void GUI_KeyEvent_Response(WM_KEY_INFO *KeyInfo)
+{
+    switch (KeyInfo->Key)
+    {
+        case GUI_KEY_Menu:
+            _LOGD("GUI_KEY_Menu \r\n");
+            if(s_ucSelDesktopIndex == 0) {
+                s_ucSelDesktopIndex = 1;
+                //WM_HideWindow(hWinMain);
+                WM_ShowWindow(hWinICON);
+                //if(hWinICON == HBWIN_NULL)
+                //    hWinICON = CreateWindow_IconMenu(WM_HBKWIN);
+                //if(hWinMain != HBWIN_NULL) {
+                //    WM_DeleteWindow(hWinMain);
+                //    hWinMain = HBWIN_NULL;
+                //}
+            } else {
+                s_ucSelDesktopIndex = 0;
+                WM_HideWindow(hWinICON);
+                //WM_ShowWindow(hWinMain);
+                //if(hWinICON != HBWIN_NULL) {
+                //    WM_DeleteWindow(hWinICON);
+                //    hWinICON = HBWIN_NULL;
+                //}
+                //if(hWinMain == HBWIN_NULL)
+                //    hWinMain = CreateWindow_HomePage(WM_HBKWIN);
+            }
+            break;
+        case GUI_KEY_PlayPause_Long:
+            _LOGD("GUI_KEY_PlayPause_Long \r\n");
+            break;
+        case GUI_KEY_Direction_Up:
+            _LOGD("GUI_KEY_Direction_Up \r\n");
+        case GUI_KEY_Direction_Down:
+            _LOGD("GUI_KEY_Direction_Down \r\n");
+            break;
+        case GUI_KEY_Vol_Dec://音量减小
+            break;
+        case GUI_KEY_Vol_Plus://音量增加
+            break;
+        case GUI_KEY_LockScreen://锁屏
+            break;
+        case GUI_KEY_UnLock://解锁
+            break;
+        default:
+            break;
+    }
+}
+
+
 /*
 *******************************************************************************
 *	函 数 名: _cbBkWindow
@@ -616,25 +624,31 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
 *	返 回 值: 无
 *******************************************************************************
 */
-static void _cbBkWindow(WM_MESSAGE * pMsg)
+static void _cbBackGround(WM_MESSAGE * pMsg)  //桌面背景的回调函数
 {
-    //printf("[%s : %d] MsgId = %d\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
+    _LOGD("MsgId = %d\r\n",pMsg->MsgId);
 	switch (pMsg->MsgId)
 	{
-       case WM_PAINT:/* 重绘消息*/
-            printf("[%s : %d] WM_PAINT(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
-            GUI_MEMDEV_Select(hMempic);
+	    case WM_TIMER:
+            WM_InvalidateWindow(pMsg->hWin);
+            WM_RestartTimer(pMsg->Data.v, 200);
+            break;
+        case WM_PAINT:/* 重绘消息*/
+            _LOGD("WM_PAINT(%d)\r\n",pMsg->MsgId);
+            //GUI_MEMDEV_Select(hMempic);
             _ShowBMPEx("bg.bmp");
-        	GUI_MEMDEV_Select(0);
-            GUI_MEMDEV_WriteAt(hMempic, 0, 0);
+        	//GUI_MEMDEV_Select(0);
+            //GUI_MEMDEV_WriteAt(hMempic, 0, 0);
 			break;
-       case WM_PRE_PAINT:
+        case WM_PRE_PAINT:
             GUI_MULTIBUF_Begin();
             break;
-       case WM_POST_PAINT:
+        case WM_POST_PAINT:
             GUI_MULTIBUF_End();
             break;
-
+        case WM_KEY:
+            GUI_KeyEvent_Response(((WM_KEY_INFO *)(pMsg->Data.p)));
+            break;
 
 		default:
 			WM_DefaultProc(pMsg);
@@ -652,9 +666,7 @@ static void _cbBkWindow(WM_MESSAGE * pMsg)
 */
 void MainTask(void)
 {
-	/* 初始化并创建对话框 */
-	GUI_Init();
-    //GUI_EnableAlpha(1);
+    WM_HWIN    hWinMain;
 
      /****************************************************************************
      * 关于多缓冲和窗口内存设备的设置说明
@@ -668,16 +680,15 @@ void MainTask(void)
      * 4. 所有emWin例子默认是开启三缓冲。
 
     *****************************************************************************/
-#if 1
+#if 0
+    GUI_Init(); /* 初始化并创建对话框 */
     WM_MULTIBUF_Enable(1);
 #else
-    /* 创建使用内存设备 */
-	WM_SetCreateFlags(WM_CF_MEMDEV | WM_CF_MEMDEV_ON_REDRAW);
-
-    /* 使能桌面窗口也使用内存设备 */
-    //WM_EnableMemdev(WM_HBKWIN);
+	WM_SetCreateFlags(WM_CF_MEMDEV); /* 创建使用内存设备 */
+    //WM_EnableMemdev(WM_HBKWIN); /* 使能桌面窗口也使用内存设备 */
+    GUI_Init(); /* 初始化并创建对话框 */
 #endif
-    WM_MOTION_Enable(1);    /* 使能滑动 */
+    //WM_MOTION_Enable(1);    /* 使能滑动 */
     //WM_MOTION_SetDefaultPeriod(50);
 
 	/* 使能UTF-8解码用于汉字显示 */
@@ -689,18 +700,34 @@ void MainTask(void)
         return;
     }
 
-    hMempic = GUI_MEMDEV_CreateFixed(0, 0,
-	                                 LCD_GetXSize(),
-	                                 LCD_GetYSize(),
-									 GUI_MEMDEV_HASTRANS,
-									 GUI_MEMDEV_APILIST_16,
-									 GUICC_M565);
-	GUI_MEMDEV_Select(hMempic);
-    _ShowBMPEx("bg.bmp");
-	GUI_MEMDEV_Select(0);
+	FRAMEWIN_SetDefaultFont(&GUI_FontComic18B_ASCII);
+    FRAMEWIN_SetDefaultTextAlign(GUI_TA_CENTER);
+    TEXT_SetDefaultFont(&GUI_FontComic18B_ASCII);
+    TEXT_SetDefaultTextColor(GUI_WHITE);
+    FRAMEWIN_SetDefaultBarColor(1, GUI_MAGENTA);
 
-    WM_SetCallback(WM_HBKWIN, _cbBkWindow);
+    //hMempic = GUI_MEMDEV_CreateFixed(0, 0,
+	//                                 LCD_GetXSize(),
+	//                                 LCD_GetYSize(),
+	//								 GUI_MEMDEV_HASTRANS,
+	//								 GUI_MEMDEV_APILIST_16,
+	//								 GUICC_M565);
+	//GUI_MEMDEV_Select(hMempic);
+    //_ShowBMPEx("bg.bmp");
+	//GUI_MEMDEV_Select(0);
+    WM_SetDesktopColor(GUI_BLACK);
+    hWinMain = WM_CreateWindow(0, 0, LCD_GetXSize(), LCD_GetYSize(),
+                             WM_CF_SHOW, _cbBackGround, 0);
+    WM_CreateTimer(hWinMain, 0, 10, 0);
 
+#if 1
+    hWin_HomePage = CreateWindow_HomePage(0);
+    WM_CreateTimer(hWin_HomePage, 0, 10, 0);
+
+    //hWin_IconMenu = CreateWindow_IconMenu(0);
+
+
+#else
     hWinMain = WM_CreateWindowAsChild(0, 0,
                                   LCD_GetXSize()*2,
                                   LCD_GetYSize(),
@@ -708,7 +735,6 @@ void MainTask(void)
                                   WM_CF_MOTION_X | WM_CF_SHOW | WM_CF_HASTRANS,
                                   _cbDesktopDisplayProc, 0);
 
-#if 0
     hWinICON = _CreateICONVIEW(hWinMain,
                              _aBitmapItem, GUI_COUNTOF(_aBitmapItem),
                              GUI_ID_ICONVIEW0,

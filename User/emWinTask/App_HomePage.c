@@ -23,6 +23,9 @@
 */
 #include "includes.h"
 #include "MainTask.h"
+#include "bsp.h"
+#include <stm32f2xx.h>
+
 
 /*
 *********************************************************************************************************
@@ -33,7 +36,7 @@
 #define MAIN_TEXTCOLOR            0x000000
 #define MAIN_FONT                 (&GUI_FontYahei)
 
-#define ID_WINDOW_0 (GUI_ID_USER + 0x00)
+#define ID_FRAMEWIN_0 (GUI_ID_USER + 0x00)
 #define ID_IMAGE_0 (GUI_ID_USER + 0x01)
 #define ID_TEXT_0 (GUI_ID_USER + 0x02)
 #define ID_TEXT_1 (GUI_ID_USER + 0x03)
@@ -66,6 +69,12 @@
 #define ID_TIMER_SPEC       0
 #define ID_TIMER_PROCESS    1
 
+/*
+*********************************************************************************************************
+*                                      变量和数组
+*********************************************************************************************************
+*/
+static WM_CALLBACK * _pcbClient;
 
 /*********************************************************************
 *
@@ -238,9 +247,9 @@ static const U8 _acImage_8[463] = {
 };
 
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate_HomePage[] = {
-  { WINDOW_CreateIndirect, "Window", ID_WINDOW_0, 0, 0, 240, 320, 0, 0x0, 0 },
+  { FRAMEWIN_CreateIndirect, "HomePage", ID_FRAMEWIN_0, 0, 0, 240, 320, FRAMEWIN_CF_MOVEABLE, 0x0, 0 },
   { IMAGE_CreateIndirect, "desktop_bg", ID_IMAGE_0, 0, 0, 240, 320, 0, 0, 0 },
-  { TEXT_CreateIndirect, "deskyop_time", ID_TEXT_0, 0, 230, 240, 80, 0, 0x64, 0 },
+  { TEXT_CreateIndirect, "deskyop_time", ID_TEXT_0, 0, 210, 240, 80, 0, 0x64, 0 },
   { TEXT_CreateIndirect, "desktop_date", ID_TEXT_1, 5, 2, 100, 20, 0, 0x64, 0 },
   { TEXT_CreateIndirect, "desktop_nl", ID_TEXT_2, 100, 2, 140, 20, 0, 0x64, 0 },
   { IMAGE_CreateIndirect, "desktop_temp", ID_IMAGE_1, 18, 120, 50, 50, 0, IMAGE_CF_ALPHA, 0 },
@@ -251,7 +260,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate_HomePage[] = {
   { IMAGE_CreateIndirect, "desktop_temp_dw", ID_IMAGE_3, 92, 120, 20, 20, 0, IMAGE_CF_ALPHA, 0 },
   { IMAGE_CreateIndirect, "desktop_gps", ID_IMAGE_4, 2, 25, 20, 20, 0, IMAGE_CF_ALPHA, 0 },
   { TEXT_CreateIndirect, "desktop_gps_text", ID_TEXT_6, 24, 25, 40, 20, 0, 0x64, 0 },
-  { TEXT_CreateIndirect, "dexktop_clock", ID_TEXT_7, 200, 25, 40, 20, 0, 0x64, 0 },
+  { TEXT_CreateIndirect, "dexktop_clock", ID_TEXT_7, 180, 25, 40, 20, 0, 0x64, 0 },
   { IMAGE_CreateIndirect, "desktop_clock_icon", ID_IMAGE_5, 180, 25, 20, 20, 0, IMAGE_CF_ALPHA, 0 },
   { IMAGE_CreateIndirect, "desktop_lock_icon", ID_IMAGE_6, 160, 25, 20, 20, 0, IMAGE_CF_ALPHA, 0 },
   { IMAGE_CreateIndirect, "desktop_bt_icon", ID_IMAGE_7, 140, 25, 20, 20, 0, IMAGE_CF_ALPHA, 0 },
@@ -259,31 +268,6 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate_HomePage[] = {
   // USER START (Optionally insert additional widgets)
   // USER END
 };
-/*
-*********************************************************************************************************
-*				                         变量
-*********************************************************************************************************
-*/
-const char s_MusicPathDir[] = {"M0:\\Music\\"};  /* 存储器中歌曲存放的路径 */
-WM_HWIN  hWin_HomePage = WM_HWIN_NULL;               /* 音乐播放对话框句柄 */
-TEXT_Handle desktop_time;
-TEXT_Handle desktop_date;
-TEXT_Handle desktop_nl;
-TEXT_Handle desktop_temp_value;
-TEXT_Handle desktop_temp_rang;
-TEXT_Handle desktop_temp_sn_value;
-TEXT_Handle desktop_gps_text;
-TEXT_Handle dexktop_clock;
-
-IMAGE_Handle desktop_temp;
-IMAGE_Handle desktop_temp_sn;
-IMAGE_Handle desktop_temp_dw;
-IMAGE_Handle desktop_gps;
-IMAGE_Handle desktop_clock_icon;
-IMAGE_Handle desktop_bt_icon;
-IMAGE_Handle desktop_phone_icon;
-IMAGE_Handle desktop_lock_icon;
-
 
 /*********************************************************************
 *
@@ -330,34 +314,31 @@ static const void * _GetImageById(U32 Id, U32 * pSize) {
 *	返 回 值: 无
 *********************************************************************************************************
 */
-#if 0
-//extern RTC_TimeTypeDef  RTC_TimeStructure;
-extern RTC_InitTypeDef  RTC_InitStructure;
-extern RTC_AlarmTypeDef RTC_AlarmStructure;
-//extern RTC_DateTypeDef  RTC_DateStructure;
 static void Caculate_RTC(WM_MESSAGE * pMsg)
 {
 	  char buf[30];
 	  WM_HWIN hWin = pMsg->hWin;
+      RTC_TimeTypeDef  RTC_TimeStructure;
+      //RTC_InitTypeDef  RTC_InitStructure;
+      //RTC_AlarmTypeDef RTC_AlarmStructure;
+      RTC_DateTypeDef  RTC_DateStructure;
 
 	  RTC_GetTime(RTC_Format_BIN, &RTC_TimeStructure);
 	  RTC_GetDate(RTC_Format_BIN, &RTC_DateStructure);
 
 	  sprintf(buf,
-	          "%0.2d:%0.2d:%0.2d",
+	          "%0.2d:%0.2d",
 			  RTC_TimeStructure.RTC_Hours,
-			  RTC_TimeStructure.RTC_Minutes,
 			  RTC_TimeStructure.RTC_Seconds);
-	 TEXT_SetText(WM_GetDialogItem(hWin,ID_TEXT_10), buf);
+	 TEXT_SetText(WM_GetDialogItem(hWin,ID_TEXT_0), buf);
 
 	  sprintf(buf,
 	          "20%0.2d/%0.2d/%0.2d",
 			  RTC_DateStructure.RTC_Year,
 			  RTC_DateStructure.RTC_Month,
 			  RTC_DateStructure.RTC_Date);
-	  TEXT_SetText(WM_GetDialogItem(hWin,ID_TEXT_9), buf);
+	  TEXT_SetText(WM_GetDialogItem(hWin,ID_TEXT_7), buf);
 }
-#endif
 
 /*
 *********************************************************************************************************
@@ -369,192 +350,148 @@ static void Caculate_RTC(WM_MESSAGE * pMsg)
 */
 static void _cbWinCallBack_HomePage(WM_MESSAGE * pMsg)
 {
-	int NCode, Id;
-    WM_HWIN      hItem;
-    WM_HWIN hWin = pMsg->hWin;
-    const void * pData;
+	int          NCode;
+    int          Id;
+    const void   *pData;
     U32          FileSize;
+    WM_HWIN      hItem;
+    //WM_MESSAGE   pMsgInfo;
 
-    //printf("[%s : %d] MsgId = %d\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
+    _LOGD("MsgId = %d\r\n",pMsg->MsgId);
 
     switch (pMsg->MsgId)
     {
         case WM_INIT_DIALOG:
-            printf("[%s : %d] WM_INIT_DIALOG(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
-            //
+            _LOGD("WM_INIT_DIALOG(%d)\r\n",pMsg->MsgId);
+
             // Initialization of 'desktop_bg'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_IMAGE_0);
             pData = _GetImageById(ID_IMAGE_0_IMAGE_0, &FileSize);
             IMAGE_SetBMP(hItem, pData, FileSize);
-            //
+
             // Initialization of 'deskyop_time'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_0);
             TEXT_SetFont(hItem, GUI_FONT_D64);
             TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
             TEXT_SetText(hItem, "08:00");
-            TEXT_SetTextColor(hItem, GUI_MAKE_COLOR(0x00000000));
-            //
+            //TEXT_SetTextColor(hItem, GUI_MAKE_COLOR(0x00000000));
+
             // Initialization of 'desktop_date'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_1);
             TEXT_SetTextAlign(hItem, GUI_TA_LEFT | GUI_TA_VCENTER);
             TEXT_SetText(hItem, "2017");
-            //
+
             // Initialization of 'desktop_nl'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_2);
             TEXT_SetTextAlign(hItem, GUI_TA_RIGHT | GUI_TA_VCENTER);
             TEXT_SetText(hItem, "Test1");
-            //
+
             // Initialization of 'desktop_temp'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_IMAGE_1);
             pData = _GetImageById(ID_IMAGE_1_IMAGE_0, &FileSize);
             IMAGE_SetBMP(hItem, pData, FileSize);
-            //
+
             // Initialization of 'desktop_temp_sn'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_IMAGE_2);
             pData = _GetImageById(ID_IMAGE_2_IMAGE_0, &FileSize);
             IMAGE_SetBMP(hItem, pData, FileSize);
-            //
+
             // Initialization of 'desktop_temp_value'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_3);
             TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
             TEXT_SetText(hItem, "28");
-            //
+
             // Initialization of 'desktop_temp_rang'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_4);
             TEXT_SetText(hItem, "25 / 30");
             TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
-            //
+
             // Initialization of 'desktop_temp_sn_value'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_5);
             TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
             TEXT_SetText(hItem, "29");
             TEXT_SetFont(hItem, GUI_FONT_D24X32);
-            //
+
             // Initialization of 'desktop_temp_dw'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_IMAGE_3);
             pData = _GetImageById(ID_IMAGE_3_IMAGE_0, &FileSize);
             IMAGE_SetBMP(hItem, pData, FileSize);
-            //
+
             // Initialization of 'desktop_gps'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_IMAGE_4);
             pData = _GetImageById(ID_IMAGE_4_IMAGE_0, &FileSize);
             IMAGE_SetBMP(hItem, pData, FileSize);
-            //
+
             // Initialization of 'desktop_gps_text'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_6);
             TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
             TEXT_SetText(hItem, "???");
-            //
+
             // Initialization of 'dexktop_clock'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_7);
             TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
+            TEXT_SetTextColor(hItem, GUI_WHITE);
             TEXT_SetText(hItem, "08:00");
-            //
+
             // Initialization of 'desktop_clock_icon'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_IMAGE_5);
             pData = _GetImageById(ID_IMAGE_5_IMAGE_0, &FileSize);
             IMAGE_SetBMP(hItem, pData, FileSize);
-            //
+
             // Initialization of 'desktop_lock_icon'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_IMAGE_6);
             pData = _GetImageById(ID_IMAGE_6_IMAGE_0, &FileSize);
             IMAGE_SetBMP(hItem, pData, FileSize);
-            //
+
             // Initialization of 'desktop_bt_icon'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_IMAGE_7);
             pData = _GetImageById(ID_IMAGE_7_IMAGE_0, &FileSize);
             IMAGE_SetBMP(hItem, pData, FileSize);
-            //
+
             // Initialization of 'desktop_phone_icon'
-            //
             hItem = WM_GetDialogItem(pMsg->hWin, ID_IMAGE_8);
             pData = _GetImageById(ID_IMAGE_8_IMAGE_0, &FileSize);
             IMAGE_SetBMP(hItem, pData, FileSize);
 
             //WM_SetFocus(pMsg->hWin);
             break;
-        case WM_PRE_PAINT:
-            //printf("[%s : %d] WM_PRE_PAINT(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
-			GUI_MULTIBUF_Begin();
-			break;
-
-		case WM_POST_PAINT:
-            //printf("[%s : %d] WM_POST_PAINT(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
-			GUI_MULTIBUF_End();
-			break;
-		case WM_CREATE:
-            printf("[%s : %d] WM_CREATE(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
-            desktop_time = TEXT_Create(0, 230, 240, 80, ID_TEXT_0, WM_CF_SHOW, "08:00", TEXT_CF_HCENTER | TEXT_CF_VCENTER);
-            TEXT_SetFont(desktop_time, GUI_FONT_D64);
-            TEXT_SetTextAlign(desktop_time, GUI_TA_HCENTER | GUI_TA_VCENTER);
-            //TEXT_SetText(desktop_time, "08:00");
-            TEXT_SetTextColor(desktop_time, GUI_WHITE);
-
-            desktop_date = TEXT_Create(5, 2, 100, 20, ID_TEXT_1, WM_CF_SHOW, "2017-01-01", TEXT_CF_HCENTER | TEXT_CF_VCENTER);
-            TEXT_SetTextAlign(desktop_date, GUI_TA_LEFT | GUI_TA_VCENTER);
-            //TEXT_SetText(hItem, "2017-01-01");
-
-            desktop_nl = TEXT_Create(100, 2, 140, 20, ID_TEXT_2, WM_CF_SHOW, "TEXT2", TEXT_CF_HCENTER | TEXT_CF_VCENTER);
-            TEXT_SetTextAlign(desktop_nl, GUI_TA_RIGHT | GUI_TA_VCENTER);
-            //TEXT_SetText(hItem, "TEXT2");
-            desktop_temp_value = TEXT_Create(74, 122, 20, 20, ID_TEXT_3, WM_CF_SHOW, " ", TEXT_CF_HCENTER | TEXT_CF_VCENTER);
-            desktop_temp_rang = TEXT_Create(74, 150, 40, 20, ID_TEXT_4, WM_CF_SHOW, " ", TEXT_CF_HCENTER | TEXT_CF_VCENTER);
-            desktop_temp_sn_value = TEXT_Create(166, 120, 50, 50, ID_TEXT_5, WM_CF_SHOW, " ", TEXT_CF_HCENTER | TEXT_CF_VCENTER);
-            desktop_gps_text = TEXT_Create(24, 25, 40, 20, ID_TEXT_6, WM_CF_SHOW, " ", TEXT_CF_HCENTER | TEXT_CF_VCENTER);
-            dexktop_clock = TEXT_Create(200, 25, 40, 20, ID_TEXT_7, WM_CF_SHOW, " ", TEXT_CF_HCENTER | TEXT_CF_VCENTER);
-
-            desktop_temp = IMAGE_CreateEx(18, 120, 50, 50, pMsg->hWin, WM_CF_SHOW, IMAGE_CF_AUTOSIZE, ID_IMAGE_1);
-            pData = _GetImageById(ID_IMAGE_1_IMAGE_0, &FileSize);
-            IMAGE_SetBMP(desktop_temp, pData, FileSize);
-            //{ IMAGE_CreateIndirect, "desktop_temp", ID_IMAGE_1, 18, 120, 50, 50, 0, IMAGE_CF_ALPHA, 0 },
-            //{ IMAGE_CreateIndirect, "desktop_temp_sn", ID_IMAGE_2, 166, 120, 50, 50, 0, IMAGE_CF_ALPHA, 0 },
-            //{ IMAGE_CreateIndirect, "desktop_temp_dw", ID_IMAGE_3, 92, 120, 20, 20, 0, IMAGE_CF_ALPHA, 0 },
-            //{ IMAGE_CreateIndirect, "desktop_gps", ID_IMAGE_4, 2, 25, 20, 20, 0, IMAGE_CF_ALPHA, 0 },
-            //{ IMAGE_CreateIndirect, "desktop_clock_icon", ID_IMAGE_5, 180, 25, 20, 20, 0, IMAGE_CF_ALPHA, 0 },
-            //{ IMAGE_CreateIndirect, "desktop_lock_icon", ID_IMAGE_6, 160, 25, 20, 20, 0, IMAGE_CF_ALPHA, 0 },
-            //{ IMAGE_CreateIndirect, "desktop_bt_icon", ID_IMAGE_7, 140, 25, 20, 20, 0, IMAGE_CF_ALPHA, 0 },
-            //{ IMAGE_CreateIndirect, "desktop_phone_icon", ID_IMAGE_8, 120, 25, 20, 20, 0, IMAGE_CF_ALPHA, 0 }
-
-
-            //WM_SetFocus(pMsg->hWin);
+        case WM_TIMER:
+            Caculate_RTC(pMsg);
+            WM_InvalidateWindow(pMsg->hWin);
+            WM_RestartTimer(pMsg->Data.v, 300);
             break;
+
 		case WM_PAINT:
-            printf("[%s : %d] WM_PAINT(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
-            break;
+            _LOGD("WM_PAINT(%d)\r\n",pMsg->MsgId);
+            GUI_SetAlpha(0xFF);   // Set alpha value for drawing operations
+            GUI_SetBkColor(0xAAAAAA); // Draw gray background...
+            GUI_Clear();              // ...with alpha blending
+            GUI_SetAlpha(0);          // Set alpha value to default
+            return;
 		case WM_NOTIFY_PARENT:
-            printf("[%s : %d] WM_NOTIFY_PARENT(%d)\r\n",__FUNCTION__,__LINE__,pMsg->MsgId);
-
+            Id	  = WM_GetId(pMsg->hWinSrc);
+            NCode = pMsg->Data.v;
+            _LOGD("WM_NOTIFY_PARENT(%d) \r\n",pMsg->MsgId);
+            //WM_InvalidateWindow(WM_GetParent(pMsg->hWin));
+            //WM_InvalidateWindow(pMsg->hWin);
             break;
         case WM_KEY:
             switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
             {
                 case GUI_KEY_Menu:
-                    printf("[%s : %d] GUI_KEY_Menu \r\n",__FUNCTION__,__LINE__);
-                    GUI_EndDialog(hWin, 1);
+                    _LOGD("GUI_KEY_Menu \r\n");
+                    //pMsgInfo.MsgId = WM_NOTIFY_PARENT;
+        			//pMsgInfo.hWinSrc = pMsg->hWinSrc;
+        			//pMsgInfo.Data.v = WM_NOTIFICATION_RELEASED;
+        			//WM_SendMessage(pMsg->hWin, &pMsgInfo);
                     break;
-                case GUI_KEY_PlayPause:
-                    printf("[%s : %d] GUI_KEY_PlayPause \r\n",__FUNCTION__,__LINE__);
+                case GUI_KEY_PlayPause_Long:
+                    _LOGD("GUI_KEY_PlayPause_Long \r\n");
                     break;
                 case GUI_KEY_Direction_Up:
-                    printf("[%s : %d] GUI_KEY_Direction_Up \r\n",__FUNCTION__,__LINE__);
+                    _LOGD("GUI_KEY_Direction_Up \r\n");
 				case GUI_KEY_Direction_Down:
-                    printf("[%s : %d] GUI_KEY_Direction_Down \r\n",__FUNCTION__,__LINE__);
+                    _LOGD("GUI_KEY_Direction_Down \r\n");
                     break;
                 case GUI_KEY_Vol_Dec://音量减小
                     break;
@@ -571,7 +508,19 @@ static void _cbWinCallBack_HomePage(WM_MESSAGE * pMsg)
 
         default:
             WM_DefaultProc(pMsg);
+            break;
     }
+    if (_pcbClient) _pcbClient(pMsg);
+}
+
+static void _cbFrame(WM_MESSAGE * pMsg) {
+  switch (pMsg->MsgId) {
+  case WM_PAINT:
+    GUI_SetAlpha(0xFF);
+    break;
+  }
+  FRAMEWIN_Callback(pMsg);
+  GUI_SetAlpha(0);
 }
 
 /*
@@ -582,27 +531,25 @@ static void _cbWinCallBack_HomePage(WM_MESSAGE * pMsg)
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void App_HomePage(WM_HWIN hWin)
+WM_HWIN CreateWindow_HomePage(WM_HWIN hParent)
 {
-#if 1
-        hWin_HomePage = GUI_CreateDialogBox(_aDialogCreate_HomePage,
+    WM_MESSAGE Msg = {0};
+    WM_HWIN    hFrame;
+    WM_HWIN    hClient;
+
+    hFrame = GUI_CreateDialogBox(_aDialogCreate_HomePage,
                                         GUI_COUNTOF(_aDialogCreate_HomePage),
-                                        _cbWinCallBack_HomePage,
-                                        hWin,
-                                        0,
-                                        0);
-        WM_SetHasTrans(hWin_HomePage);
-#else
-        //hWin_HomePage = WM_CreateWindowAsChild(0, 0,
-        //                              LCD_GetXSize(),
-        //                              LCD_GetYSize(),
-        //                              hWin,
-        //                              WM_CF_SHOW | WM_CF_HASTRANS,
-        //                              _cbWinCallBack, 0);
+                                        0, hParent, 0, 0);
+    WM_SetHasTrans(hFrame);           // Set transparency
+    WM_SetCallback(hFrame, _cbFrame); // Overwrite callback
 
-#endif
+    hClient    = WM_GetClientWindow(hFrame);         // Get handle of client window
+    WM_SetHasTrans(hClient);                         // Set transparency
+    _pcbClient = WM_SetCallback(hClient, _cbWinCallBack_HomePage); // Overwrite callback
+    Msg.MsgId = WM_INIT_DIALOG;                      // Send WM_INIT_DIALOG
+    WM_SendMessage(hClient, &Msg);
 
-    //return hWin_HomePage;
+    return hFrame;
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

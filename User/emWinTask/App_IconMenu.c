@@ -72,7 +72,7 @@ static const BITMAP_ITEM _aBitmapItem[] =
 	{&bmb,    "Music"},
 	{&bmc,    "Sleep"},
 	{&bmd,    "Language"},
-	{&bme,    "Date"},
+	{&bme,    "DateTime"},
 	{&bmf,    "About"},
 };
 
