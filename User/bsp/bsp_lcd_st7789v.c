@@ -259,7 +259,15 @@ static void ST7789V_ReadData(uint8_t *readBuf, uint8_t _uCount)
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 
 	/* LCD Data Bus */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
+	/* LCD Data Bus */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0    /* Data0 */
+	                                            | GPIO_Pin_1    /* Data1 */
+	                                            | GPIO_Pin_2    /* Data2 */
+	                                            | GPIO_Pin_3    /* Data3 */
+	                                            | GPIO_Pin_4    /* Data4 */
+	                                            | GPIO_Pin_5    /* Data5 */
+	                                            | GPIO_Pin_6    /* Data6 */
+	                                            | GPIO_Pin_7;   /* Data7 */
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
  
         // INIT status
@@ -268,21 +276,28 @@ static void ST7789V_ReadData(uint8_t *readBuf, uint8_t _uCount)
         //GPIO_SetBits(GPIOC, GPIO_Pin_6);  // RD = 1
         //GPIO_SetBits(GPIOC, GPIO_Pin_7);  //WR = 1;
         //GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
-        GPIO_ResetBits(GPIOC, GPIO_Pin_9); // CS = 0
+        GPIO_ResetBits(GPIOB, GPIO_Pin_8); // CS = 0
 
         for(i = 0; i < _uCount; i++)
         {
-                GPIO_ResetBits(GPIOC, GPIO_Pin_6); // RD = 0
-                GPIO_SetBits(GPIOC, GPIO_Pin_6);  //RD = 1;
+                GPIO_ResetBits(GPIOB, GPIO_Pin_10); // RD = 0
+                GPIO_SetBits(GPIOB, GPIO_Pin_10);  //RD = 1;
                 readBuf[i] = (uint8_t)(GPIO_ReadInputData(GPIOB) & 0xFF);
         }
-        GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
+        GPIO_SetBits(GPIOB, GPIO_Pin_8);  // CS = 1;
 
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
         GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 
 	/* LCD Data Bus */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0    /* Data0 */
+	                                            | GPIO_Pin_1    /* Data1 */
+	                                            | GPIO_Pin_2    /* Data2 */
+	                                            | GPIO_Pin_3    /* Data3 */
+	                                            | GPIO_Pin_4    /* Data4 */
+	                                            | GPIO_Pin_5    /* Data5 */
+	                                            | GPIO_Pin_6    /* Data6 */
+	                                            | GPIO_Pin_7;   /* Data7 */
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 }
 
@@ -305,16 +320,20 @@ static void ST7789V_WriteCmd(uint8_t _ucCmd)
         //GPIO_SetBits(GPIOC, GPIO_Pin_6);  // RD = 1
         //GPIO_SetBits(GPIOC, GPIO_Pin_7);  //WR = 1;
         //GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
-
-        GPIO_ResetBits(GPIOC, GPIO_Pin_9); // CS = 0
-        GPIO_ResetBits(GPIOC, GPIO_Pin_8);  //DCX = 0, //DCX = 0;Write Comand
-        GPIO_ResetBits(GPIOC, GPIO_Pin_7); // WR = 0
+#if 0
+        GPIO_ResetBits(GPIOB, GPIO_Pin_8); // CS = 0
+        GPIO_ResetBits(GPIOB, GPIO_Pin_9);  //DCX = 0, //DCX = 0;Write Comand
+        GPIO_ResetBits(GPIOB, GPIO_Pin_11); // WR = 0
         
         GPIO_Write(GPIOB, (0xff << 8) | _ucCmd);
         
-        GPIO_SetBits(GPIOC, GPIO_Pin_7);  //WR = 1;
-        GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
-        GPIO_SetBits(GPIOC, GPIO_Pin_8);  //DCX = 1, //DCX = 0;Write Comand
+        GPIO_SetBits(GPIOB, GPIO_Pin_11);  //WR = 1;
+        GPIO_SetBits(GPIOB, GPIO_Pin_8);  // CS = 1;
+        GPIO_SetBits(GPIOB, GPIO_Pin_9);  //DCX = 1, //DCX = 0;Write Comand
+ #else
+        GPIO_Write(GPIOB, (0xf4 << 8) | _ucCmd);
+        GPIO_Write(GPIOB, (0xff << 8) | _ucCmd);
+ #endif
 }
 
 
@@ -336,14 +355,18 @@ static void ST7789V_WriteParam(uint8_t _ucParam)
         //GPIO_SetBits(GPIOC, GPIO_Pin_6);  // RD = 1
         //GPIO_SetBits(GPIOC, GPIO_Pin_7);  //WR = 1;
         //GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
-
-        GPIO_ResetBits(GPIOC, GPIO_Pin_9); // CS = 0
-        GPIO_ResetBits(GPIOC, GPIO_Pin_7); // WR = 0
+#if 0
+        GPIO_ResetBits(GPIOB, GPIO_Pin_8); // CS = 0
+        GPIO_ResetBits(GPIOB, GPIO_Pin_11); // WR = 0
         
         GPIO_Write(GPIOB, (0xff << 8) | _ucParam);
         
-        GPIO_SetBits(GPIOC, GPIO_Pin_7);  //WR = 1;
-        GPIO_SetBits(GPIOC, GPIO_Pin_9);  // CS = 1;
+        GPIO_SetBits(GPIOB, GPIO_Pin_11);  //WR = 1;
+        GPIO_SetBits(GPIOB, GPIO_Pin_8);  // CS = 1;
+ #else
+        GPIO_Write(GPIOB, (0xf6 << 8) | _ucParam);
+        GPIO_Write(GPIOB, (0xff << 8) | _ucParam);
+ #endif
 }
 /*
 *********************************************************************************************************

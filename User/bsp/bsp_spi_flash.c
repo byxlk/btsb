@@ -58,337 +58,61 @@
 #define SF_CS_GPIO			GPIOA
 #define SF_CS_PIN			GPIO_Pin_4
 
-/* 片选口线置高不选中 */
-/* Deselect sFLASH: Chip Select pin high */
-#define SF_CS_HIGH() GPIO_SetBits(SF_CS_GPIO, SF_CS_PIN)
 
 /* 片选口线置低选中  */
 /* Select Flash: Chip Select pin low */
 #define SF_CS_LOW() GPIO_ResetBits(SF_CS_GPIO, SF_CS_PIN)
 
+/* 片选口线置高不选中 */
+/* Deselect sFLASH: Chip Select pin high */
+#define SF_CS_HIGH() GPIO_SetBits(SF_CS_GPIO, SF_CS_PIN)
 
 #define CMD_AAI       0xAD  	/* AAI 连续编程指令(FOR SST25VF016B) */
 #define CMD_DISWR	  0x04		/* 禁止写, 退出AAI状态 */
 #define CMD_EWRSR	  0x50		/* 允许写状态寄存器的命令 */
 #define CMD_WRSR      0x01  	/* 写状态寄存器命令 */
 #define CMD_WREN      0x06		/* 写使能命令 */
+#define CMD_WRPP      0x02		/* 写page命令 */
 #define CMD_READ      0x03  	/* 读数据区命令 */
 #define CMD_RDSR      0x05		/* 读状态寄存器命令 */
 #define CMD_RDID      0x9F		/* 读器件ID命令 */
 #define CMD_SE        0x20		/* 擦除扇区命令 */
-#define CMD_BE        0xC7		/* 批量擦除命令 */
+#define CMD_CE        0x60		/* 擦除整个芯片 */
+#define CMD_32KBE        0x52		/* 32K批量擦除命令 */
+#define CMD_64KBE        0xD8		/* 64K批量擦除命令 */
 #define DUMMY_BYTE    0xA5		/* 哑命令，可以为任意值，用于读操作 */
+#define CMD_EN4B     0xB7    //EN4B( Enter 4-byte Mode )
+#define CMD_EX4B     0xE9    //EX4B( Exit 4-byte Mode )
 
 #define WIP_FLAG      0x01		/* 状态寄存器中的正在编程标志（WIP) */
 
 SFLASH_T g_tSF;
 
-void sf_ReadInfo(void);
-static uint8_t sf_SendByte(uint8_t _ucValue);
-static void sf_WriteEnable(void);
-static void sf_WriteStatus(uint8_t _ucValue);
-static void sf_WaitForWriteEnd(void);
-static uint8_t sf_NeedErase(uint8_t * _ucpOldBuf, uint8_t *_ucpNewBuf, uint16_t _uiLen);
-static uint8_t sf_CmpData(uint32_t _uiSrcAddr, uint8_t *_ucpTar, uint32_t _uiSize);
-static uint8_t sf_AutoWritePage(uint8_t *_ucpSrc, uint32_t _uiWrAddr, uint16_t _usWrLen);
-
-static void bsp_CfgSPIForSFlash(void);
 
 static uint8_t s_spiBuf[4*1024];	/* 用于写函数，先读出整个page，修改缓冲区后，再整个page回写 */
 
-/*
-*********************************************************************************************************
-*	函 数 名: bsp_InitSpiFlash
-*	功能说明: 初始化串行Flash硬件接口（配置STM32的SPI时钟、GPIO)
-*              只包括 SCK、 MOSI、 MISO口线的配置。不包括片选CS，
-*              也不包括外设芯片特有的INT、BUSY等
-*	形    参: 无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void bsp_InitSFlash(void)
-{
-	/***************************************************************************
-	**	串行Flash型号为 W25Q64BVSSIG (80MHz)
-	**	PA5/SPI1_SCK
-	**	PA6/SPI1_MISO
-	**	PA7/SPI1_MOSI
-	**	PA4/SPI1_CS
-     **
-	**	STM32硬件SPI接口 = SPI1
-	****************************************************************************/
-	GPIO_InitTypeDef GPIO_InitStructure;
-
-	/* 使能GPIO 时钟 */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-
-	/* 配置 SCK, MISO 、 MOSI 为复用功能 */
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_SPI1);
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_SPI1);
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_SPI1);
-
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
-	GPIO_Init(SF_CS_GPIO, &GPIO_InitStructure);
-
-	/* 配置片选口线为推挽输出模式 */
-
-	GPIO_InitStructure.GPIO_Pin = SF_CS_PIN;  
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(SF_CS_GPIO, &GPIO_InitStructure);
-
-	SF_CS_HIGH();		/* 片选置高，不选中 */
-
-}
 
 /*
 *********************************************************************************************************
-*	函 数 名: bsp_CfgSPIForSFlash
-*	功能说明: 配置STM32内部SPI硬件的工作模式、速度等参数，用于访问SPI接口的串行Flash。
-*	形    参:  无
-*	返 回 值: 无
+*	函 数 名: sf_SendByte
+*	功能说明: 向器件发送一个字节，同时从MISO口线采样器件返回的数据
+*	形    参:  _ucByte : 发送的字节值
+*	返 回 值: 从MISO口线采样器件返回的数据
 *********************************************************************************************************
 */
-static void bsp_CfgSPIForSFlash(void)
+static uint8_t sf_SendByte(uint8_t _ucValue)
 {
-	SPI_InitTypeDef  SPI_InitStructure;
+	/* 等待上个数据未发送完毕 */
+	while (SPI_I2S_GetFlagStatus(SPI_FLASH, SPI_I2S_FLAG_TXE) == RESET);
 
-	/* 打开SPI时钟 */
-	ENABLE_SPI_RCC();
+	/* 通过SPI硬件发送1个字节 */
+	SPI_I2S_SendData(SPI_FLASH, _ucValue);
 
-	/* 配置SPI硬件参数 */
-	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;	/* 数据方向：2线全双工 */
-	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;		/* STM32的SPI工作模式 ：主机模式 */
-	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;	/* 数据位长度 ： 8位 */
-	/* SPI_CPOL和SPI_CPHA结合使用决定时钟和数据采样点的相位关系、
-	   本例配置: 总线空闲是高电平,第2个边沿（上升沿采样数据)
-	*/
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;			/* 时钟上升沿采样数据 */
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;		/* 时钟的第2个边沿采样数据 */
-	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;			/* 片选控制方式：软件控制 */
+	/* 等待接收一个字节任务完成 */
+	while (SPI_I2S_GetFlagStatus(SPI_FLASH, SPI_I2S_FLAG_RXNE) == RESET);
 
-	/* 设置波特率预分频系数 */
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
-
-	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;	/* 数据位传输次序：高位先传 */
-	SPI_InitStructure.SPI_CRCPolynomial = 7;			/* CRC多项式寄存器，复位后为7。本例程不用 */
-	SPI_Init(SPI_FLASH, &SPI_InitStructure);
-
-	SPI_Cmd(SPI_FLASH, DISABLE);			/* 先禁止SPI  */
-
-	SPI_Cmd(SPI_FLASH, ENABLE);				/* 使能SPI  */
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: sf_EraseSector
-*	功能说明: 擦除指定的扇区
-*	形    参:  _uiSectorAddr : 扇区地址
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void sf_EraseSector(uint32_t _uiSectorAddr)
-{
-	sf_WriteEnable();								/* 发送写使能命令 */
-
-	/* 擦除扇区操作 */
-	SF_CS_LOW();									/* 使能片选 */
-	sf_SendByte(CMD_SE);								/* 发送擦除命令 */
-	sf_SendByte((_uiSectorAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
-	sf_SendByte((_uiSectorAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
-	sf_SendByte(_uiSectorAddr & 0xFF);				/* 发送扇区地址低8bit */
-	SF_CS_HIGH();									/* 禁能片选 */
-
-	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: sf_EraseChip
-*	功能说明: 擦除整个芯片
-*	形    参:  无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void sf_EraseChip(void)
-{
-	sf_WriteEnable();								/* 发送写使能命令 */
-
-	/* 擦除扇区操作 */
-	SF_CS_LOW();									/* 使能片选 */
-	sf_SendByte(CMD_BE);							/* 发送整片擦除命令 */
-	SF_CS_HIGH();									/* 禁能片选 */
-
-	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: sf_PageWrite
-*	功能说明: 向一个page内写入若干字节。字节个数不能超出页面大小（4K)
-*	形    参:  	_pBuf : 数据源缓冲区；
-*				_uiWriteAddr ：目标区域首地址
-*				_usSize ：数据个数，不能超过页面大小
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void sf_PageWrite(uint8_t * _pBuf, uint32_t _uiWriteAddr, uint16_t _usSize)
-{
-	uint32_t i, j;
-
-	if (g_tSF.ChipID == SST25VF016B_ID)
-	{
-		/* AAI指令要求传入的数据个数是偶数 */
-		if ((_usSize < 2) && (_usSize % 2))
-		{
-			return ;
-		}
-
-		sf_WriteEnable();								/* 发送写使能命令 */
-
-		SF_CS_LOW();									/* 使能片选 */
-		sf_SendByte(CMD_AAI);							/* 发送AAI命令(地址自动增加编程) */
-		sf_SendByte((_uiWriteAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
-		sf_SendByte((_uiWriteAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
-		sf_SendByte(_uiWriteAddr & 0xFF);				/* 发送扇区地址低8bit */
-		sf_SendByte(*_pBuf++);							/* 发送第1个数据 */
-		sf_SendByte(*_pBuf++);							/* 发送第2个数据 */
-		SF_CS_HIGH();									/* 禁能片选 */
-
-		sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
-
-		_usSize -= 2;									/* 计算剩余字节数 */
-
-		for (i = 0; i < _usSize / 2; i++)
-		{
-			SF_CS_LOW();								/* 使能片选 */
-			sf_SendByte(CMD_AAI);						/* 发送AAI命令(地址自动增加编程) */
-			sf_SendByte(*_pBuf++);						/* 发送数据 */
-			sf_SendByte(*_pBuf++);						/* 发送数据 */
-			SF_CS_HIGH();								/* 禁能片选 */
-			sf_WaitForWriteEnd();						/* 等待串行Flash内部写操作完成 */
-		}
-
-		/* 进入写保护状态 */
-		SF_CS_LOW();
-		sf_SendByte(CMD_DISWR);
-		SF_CS_HIGH();
-
-		sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
-	}
-	else	/* for MX25L1606E 、 W25Q64BV */
-	{
-		for (j = 0; j < _usSize / 256; j++)
-		{
-			sf_WriteEnable();								/* 发送写使能命令 */
-
-			SF_CS_LOW();									/* 使能片选 */
-			sf_SendByte(0x02);								/* 发送AAI命令(地址自动增加编程) */
-			sf_SendByte((_uiWriteAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
-			sf_SendByte((_uiWriteAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
-			sf_SendByte(_uiWriteAddr & 0xFF);				/* 发送扇区地址低8bit */
-
-			for (i = 0; i < 256; i++)
-			{
-				sf_SendByte(*_pBuf++);					/* 发送数据 */
-			}
-
-			SF_CS_HIGH();								/* 禁止片选 */
-
-			sf_WaitForWriteEnd();						/* 等待串行Flash内部写操作完成 */
-
-			_uiWriteAddr += 256;
-		}
-
-		/* 进入写保护状态 */
-		SF_CS_LOW();
-		sf_SendByte(CMD_DISWR);
-		SF_CS_HIGH();
-
-		sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
-	}
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: sf_ReadBuffer
-*	功能说明: 连续读取若干字节。字节个数不能超出芯片容量。
-*	形    参:  	_pBuf : 数据源缓冲区；
-*				_uiReadAddr ：首地址
-*				_usSize ：数据个数, 可以大于PAGE_SIZE,但是不能超出芯片总容量
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void sf_ReadBuffer(uint8_t * _pBuf, uint32_t _uiReadAddr, uint32_t _uiSize)
-{
-	/* 如果读取的数据长度为0或者超出串行Flash地址空间，则直接返回 */
-	if ((_uiSize == 0) ||(_uiReadAddr + _uiSize) > g_tSF.TotalSize)
-	{
-		return;
-	}
-
-	/* 擦除扇区操作 */
-	SF_CS_LOW();									/* 使能片选 */
-	sf_SendByte(CMD_READ);							/* 发送读命令 */
-	sf_SendByte((_uiReadAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
-	sf_SendByte((_uiReadAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
-	sf_SendByte(_uiReadAddr & 0xFF);				/* 发送扇区地址低8bit */
-	while (_uiSize--)
-	{
-		*_pBuf++ = sf_SendByte(DUMMY_BYTE);			/* 读一个字节并存储到pBuf，读完后指针自加1 */
-	}
-	SF_CS_HIGH();									/* 禁能片选 */
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: sf_CmpData
-*	功能说明: 比较Flash的数据.
-*	形    参:  	_ucpTar : 数据缓冲区
-*				_uiSrcAddr ：Flash地址
-*				_uiSize ：数据个数, 可以大于PAGE_SIZE,但是不能超出芯片总容量
-*	返 回 值: 0 = 相等, 1 = 不等
-*********************************************************************************************************
-*/
-static uint8_t sf_CmpData(uint32_t _uiSrcAddr, uint8_t *_ucpTar, uint32_t _uiSize)
-{
-	uint8_t ucValue;
-
-	/* 如果读取的数据长度为0或者超出串行Flash地址空间，则直接返回 */
-	if ((_uiSrcAddr + _uiSize) > g_tSF.TotalSize)
-	{
-		return 1;
-	}
-
-	if (_uiSize == 0)
-	{
-		return 0;
-	}
-
-	SF_CS_LOW();									/* 使能片选 */
-	sf_SendByte(CMD_READ);							/* 发送读命令 */
-	sf_SendByte((_uiSrcAddr & 0xFF0000) >> 16);		/* 发送扇区地址的高8bit */
-	sf_SendByte((_uiSrcAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
-	sf_SendByte(_uiSrcAddr & 0xFF);					/* 发送扇区地址低8bit */
-	while (_uiSize--)
-	{
-		/* 读一个字节 */
-		ucValue = sf_SendByte(DUMMY_BYTE);
-		if (*_ucpTar++ != ucValue)
-		{
-			SF_CS_HIGH();
-			return 1;
-		}
-	}
-	SF_CS_HIGH();
-	return 0;
+	/* 返回从SPI总线读到的数据 */
+	return SPI_I2S_ReceiveData(SPI_FLASH);
 }
 
 /*
@@ -437,6 +161,205 @@ static uint8_t sf_NeedErase(uint8_t * _ucpOldBuf, uint8_t *_ucpNewBuf, uint16_t 
 
 /*
 *********************************************************************************************************
+*	函 数 名: sf_CmpData
+*	功能说明: 比较Flash的数据.
+*	形    参:  	_ucpTar : 数据缓冲区
+*				_uiSrcAddr ：Flash地址
+*				_uiSize ：数据个数, 可以大于PAGE_SIZE,但是不能超出芯片总容量
+*	返 回 值: 0 = 相等, 1 = 不等
+*********************************************************************************************************
+*/
+static uint8_t sf_CmpData(uint32_t _uiSrcAddr, uint8_t *_ucpTar, uint32_t _uiSize)
+{
+	uint8_t ucValue;
+
+	/* 如果读取的数据长度为0或者超出串行Flash地址空间，则直接返回 */
+	if ((_uiSrcAddr + _uiSize) > g_tSF.TotalSize)
+	{
+		return 1;
+	}
+
+	if (_uiSize == 0)
+	{
+		return 0;
+	}
+
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_READ);							/* 发送读命令 */
+    if(g_tSF.ChipID == MX25L25645G_ID)
+        sf_SendByte((_uiSrcAddr & 0xFF000000) >> 24);		/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiSrcAddr & 0xFF0000) >> 16);		/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiSrcAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+	sf_SendByte(_uiSrcAddr & 0xFF);					/* 发送扇区地址低8bit */
+	while (_uiSize--)
+	{
+		/* 读一个字节 */
+		ucValue = sf_SendByte(DUMMY_BYTE);
+		if (*_ucpTar++ != ucValue)
+		{
+			SF_CS_HIGH();
+			return 1;
+		}
+	}
+	SF_CS_HIGH();
+	return 0;
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_WriteEnable
+*	功能说明: 向器件发送写使能命令
+*	形    参:  无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+static void sf_WriteEnable(void)
+{
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_WREN);								/* 发送命令 */
+	SF_CS_HIGH();									/* 禁能片选 */
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_WaitForWriteEnd
+*	功能说明: 采用循环查询的方式等待器件内部写操作完成
+*	形    参:  无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+static void sf_WaitForWriteEnd(void)
+{
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_RDSR);							/* 发送命令， 读状态寄存器 */
+	while((sf_SendByte(DUMMY_BYTE) & WIP_FLAG) == SET);	/* 判断状态寄存器的忙标志位 */
+	SF_CS_HIGH();									/* 禁能片选 */
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_WriteStatus
+*	功能说明: 写状态寄存器
+*	形    参:  _ucValue : 状态寄存器的值
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+static void sf_WriteStatus(uint8_t _ucValue)
+{
+
+	if (g_tSF.ChipID == SST25VF016B_ID)
+	{
+		/* 第1步：先使能写状态寄存器 */
+		SF_CS_LOW();									/* 使能片选 */
+		sf_SendByte(CMD_EWRSR);							/* 发送命令， 允许写状态寄存器 */
+		SF_CS_HIGH();									/* 禁能片选 */
+
+		/* 第2步：再写状态寄存器 */
+		SF_CS_LOW();									/* 使能片选 */
+		sf_SendByte(CMD_WRSR);							/* 发送命令， 写状态寄存器 */
+		sf_SendByte(_ucValue);							/* 发送数据：状态寄存器的值 */
+		SF_CS_HIGH();									/* 禁能片选 */
+	}
+	else
+	{
+		SF_CS_LOW();									/* 使能片选 */
+		sf_SendByte(CMD_WRSR);							/* 发送命令， 写状态寄存器 */
+		sf_SendByte(_ucValue);							/* 发送数据：状态寄存器的值 */
+		SF_CS_HIGH();									/* 禁能片选 */
+	}
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_PageWrite
+*	功能说明: 向一个page内写入若干字节。字节个数不能超出页面大小（4K)
+*	形    参:  	_pBuf : 数据源缓冲区；
+*				_uiWriteAddr ：目标区域首地址
+*				_usSize ：数据个数，不能超过页面大小
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void sf_PageWrite(uint8_t * _pBuf, uint32_t _uiWriteAddr, uint16_t _usSize)
+{
+	uint32_t i, j;
+
+    if (g_tSF.ChipID == SST25VF016B_ID)
+	{
+		/* AAI指令要求传入的数据个数是偶数 */
+		if ((_usSize < 2) && (_usSize % 2))
+		{
+			return ;
+		}
+
+		sf_WriteEnable();								/* 发送写使能命令 */
+
+		SF_CS_LOW();									/* 使能片选 */
+		sf_SendByte(CMD_AAI);							/* 发送AAI命令(地址自动增加编程) */
+		sf_SendByte((_uiWriteAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+		sf_SendByte((_uiWriteAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+		sf_SendByte(_uiWriteAddr & 0xFF);				/* 发送扇区地址低8bit */
+		sf_SendByte(*_pBuf++);							/* 发送第1个数据 */
+		sf_SendByte(*_pBuf++);							/* 发送第2个数据 */
+		SF_CS_HIGH();									/* 禁能片选 */
+
+		sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
+
+		_usSize -= 2;									/* 计算剩余字节数 */
+
+		for (i = 0; i < _usSize / 2; i++)
+		{
+			SF_CS_LOW();								/* 使能片选 */
+			sf_SendByte(CMD_AAI);						/* 发送AAI命令(地址自动增加编程) */
+			sf_SendByte(*_pBuf++);						/* 发送数据 */
+			sf_SendByte(*_pBuf++);						/* 发送数据 */
+			SF_CS_HIGH();								/* 禁能片选 */
+			sf_WaitForWriteEnd();						/* 等待串行Flash内部写操作完成 */
+		}
+
+		/* 进入写保护状态 */
+		SF_CS_LOW();
+		sf_SendByte(CMD_DISWR);
+		SF_CS_HIGH();
+
+		sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
+	}
+	else	/* for MX25L1606E 、 W25Q64BV */
+	{
+		for (j = 0; j < _usSize / 256; j++)
+		{
+			sf_WriteEnable();								/* 发送写使能命令 */
+
+			SF_CS_LOW();									/* 使能片选 */
+			sf_SendByte(CMD_WRPP);								/* 发送AAI命令(地址自动增加编程) */
+            if(g_tSF.ChipID == MX25L25645G_ID)
+                   sf_SendByte((_uiWriteAddr & 0xFF000000) >> 24);
+            sf_SendByte((_uiWriteAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+			sf_SendByte((_uiWriteAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+			sf_SendByte(_uiWriteAddr & 0xFF);				/* 发送扇区地址低8bit */
+
+			for (i = 0; i < 256; i++)
+			{
+				sf_SendByte(*_pBuf++);					/* 发送数据 */
+			}
+
+			SF_CS_HIGH();								/* 禁止片选 */
+
+			sf_WaitForWriteEnd();						/* 等待串行Flash内部写操作完成 */
+
+			_uiWriteAddr += 256;
+		}
+
+		/* 进入写保护状态 */
+		SF_CS_LOW();
+		sf_SendByte(CMD_DISWR);
+		SF_CS_HIGH();
+
+		sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
+	}
+}
+
+/*
+*********************************************************************************************************
 *	函 数 名: sf_AutoWritePage
 *	功能说明: 写1个PAGE并校验,如果不正确则再重写两次。本函数自动完成擦除操作。
 *	形    参:  	_pBuf : 数据源缓冲区；
@@ -466,7 +389,7 @@ static uint8_t sf_AutoWritePage(uint8_t *_ucpSrc, uint32_t _uiWrAddr, uint16_t _
 	}
 
 	/* 如果数据长度大于扇区容量，则退出 */
-	if (_usWrLen > g_tSF.PageSize)
+	if (_usWrLen > g_tSF.SectorSize)
 	{
 		return 0;
 	}
@@ -486,11 +409,11 @@ static uint8_t sf_AutoWritePage(uint8_t *_ucpSrc, uint32_t _uiWrAddr, uint16_t _
 		ucNeedErase = 1;
 	}
 
-	uiFirstAddr = _uiWrAddr & (~(g_tSF.PageSize - 1));
+	uiFirstAddr = _uiWrAddr & (~(g_tSF.SectorSize - 1));
 
-	if (_usWrLen == g_tSF.PageSize)		/* 整个扇区都改写 */
+	if (_usWrLen == g_tSF.SectorSize)		/* 整个扇区都改写 */
 	{
-		for	(i = 0; i < g_tSF.PageSize; i++)
+		for	(i = 0; i < g_tSF.SectorSize; i++)
 		{
 			s_spiBuf[i] = _ucpSrc[i];
 		}
@@ -498,10 +421,10 @@ static uint8_t sf_AutoWritePage(uint8_t *_ucpSrc, uint32_t _uiWrAddr, uint16_t _
 	else						/* 改写部分数据 */
 	{
 		/* 先将整个扇区的数据读出 */
-		sf_ReadBuffer(s_spiBuf, uiFirstAddr, g_tSF.PageSize);
+		sf_ReadBuffer(s_spiBuf, uiFirstAddr, g_tSF.SectorSize);
 
 		/* 再用新数据覆盖 */
-		i = _uiWrAddr & (g_tSF.PageSize - 1);
+		i = _uiWrAddr & (g_tSF.SectorSize - 1);
 		memcpy(&s_spiBuf[i], _ucpSrc, _usWrLen);
 	}
 
@@ -516,8 +439,8 @@ static uint8_t sf_AutoWritePage(uint8_t *_ucpSrc, uint32_t _uiWrAddr, uint16_t _
 			sf_EraseSector(uiFirstAddr);		/* 擦除1个扇区 */
 		}
 
-		/* 编程一个PAGE */
-		sf_PageWrite(s_spiBuf, uiFirstAddr, g_tSF.PageSize);
+		/* 编程一个SECTOR */
+		sf_PageWrite(s_spiBuf, uiFirstAddr, g_tSF.SectorSize);
 
 		if (sf_CmpData(_uiWrAddr, _ucpSrc, _usWrLen) == 0)
 		{
@@ -554,10 +477,10 @@ uint8_t sf_WriteBuffer(uint8_t* _pBuf, uint32_t _uiWriteAddr, uint16_t _usWriteS
 {
 	uint16_t NumOfPage = 0, NumOfSingle = 0, Addr = 0, count = 0, temp = 0;
 
-	Addr = _uiWriteAddr % g_tSF.PageSize;
-	count = g_tSF.PageSize - Addr;
-	NumOfPage =  _usWriteSize / g_tSF.PageSize;
-	NumOfSingle = _usWriteSize % g_tSF.PageSize;
+	Addr = _uiWriteAddr % g_tSF.SectorSize;
+	count = g_tSF.SectorSize - Addr;
+	NumOfPage =  _usWriteSize / g_tSF.SectorSize;
+	NumOfSingle = _usWriteSize % g_tSF.SectorSize;
 
 	if (Addr == 0) /* 起始地址是页面首地址  */
 	{
@@ -572,12 +495,12 @@ uint8_t sf_WriteBuffer(uint8_t* _pBuf, uint32_t _uiWriteAddr, uint16_t _usWriteS
 		{
 			while (NumOfPage--)
 			{
-				if (sf_AutoWritePage(_pBuf, _uiWriteAddr, g_tSF.PageSize) == 0)
+				if (sf_AutoWritePage(_pBuf, _uiWriteAddr, g_tSF.SectorSize) == 0)
 				{
 					return 0;
 				}
-				_uiWriteAddr +=  g_tSF.PageSize;
-				_pBuf += g_tSF.PageSize;
+				_uiWriteAddr +=  g_tSF.SectorSize;
+				_pBuf += g_tSF.SectorSize;
 			}
 			if (sf_AutoWritePage(_pBuf, _uiWriteAddr, NumOfSingle) == 0)
 			{
@@ -617,8 +540,8 @@ uint8_t sf_WriteBuffer(uint8_t* _pBuf, uint32_t _uiWriteAddr, uint16_t _usWriteS
 		else	/* 数据长度大于等于页面大小 */
 		{
 			_usWriteSize -= count;
-			NumOfPage =  _usWriteSize / g_tSF.PageSize;
-			NumOfSingle = _usWriteSize % g_tSF.PageSize;
+			NumOfPage =  _usWriteSize / g_tSF.SectorSize;
+			NumOfSingle = _usWriteSize % g_tSF.SectorSize;
 
 			if (sf_AutoWritePage(_pBuf, _uiWriteAddr, count) == 0)
 			{
@@ -630,12 +553,12 @@ uint8_t sf_WriteBuffer(uint8_t* _pBuf, uint32_t _uiWriteAddr, uint16_t _usWriteS
 
 			while (NumOfPage--)
 			{
-				if (sf_AutoWritePage(_pBuf, _uiWriteAddr, g_tSF.PageSize) == 0)
+				if (sf_AutoWritePage(_pBuf, _uiWriteAddr, g_tSF.SectorSize) == 0)
 				{
 					return 0;
 				}
-				_uiWriteAddr +=  g_tSF.PageSize;
-				_pBuf += g_tSF.PageSize;
+				_uiWriteAddr +=  g_tSF.SectorSize;
+				_pBuf += g_tSF.SectorSize;
 			}
 
 			if (NumOfSingle != 0)
@@ -648,6 +571,135 @@ uint8_t sf_WriteBuffer(uint8_t* _pBuf, uint32_t _uiWriteAddr, uint16_t _usWriteS
 		}
 	}
 	return 1;	/* 成功 */
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_EraseSector
+*	功能说明: 擦除指定的扇区
+*	形    参:  _uiSectorAddr : 扇区地址
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void sf_EraseSector(uint32_t _uiSectorAddr)
+{
+	sf_WriteEnable();								/* 发送写使能命令 */
+
+	/* 擦除扇区操作 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_SE);								/* 发送擦除命令 */
+    if(g_tSF.ChipID == MX25L25645G_ID)
+        sf_SendByte((_uiSectorAddr & 0xFF000000) >> 24);
+	sf_SendByte((_uiSectorAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiSectorAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+	sf_SendByte(_uiSectorAddr & 0xFF);				/* 发送扇区地址低8bit */
+	SF_CS_HIGH();									/* 禁能片选 */
+
+	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
+}
+
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_Erase32KBlock
+*	功能说明: 擦除32K BLOCK
+*	形    参:  _uiSectorAddr : 扇区地址
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void sf_Erase32KBlock(uint32_t _uiSectorAddr)
+{
+	sf_WriteEnable();								/* 发送写使能命令 */
+
+	/* 擦除扇区操作 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_32KBE);								/* 发送擦除命令 */
+    if(g_tSF.ChipID == MX25L25645G_ID)
+        sf_SendByte((_uiSectorAddr & 0xFF000000) >> 24);
+	sf_SendByte((_uiSectorAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiSectorAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+	sf_SendByte(_uiSectorAddr & 0xFF);				/* 发送扇区地址低8bit */
+	SF_CS_HIGH();									/* 禁能片选 */
+
+	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_Erase64KBlock
+*	功能说明: 擦除64K BLOCK
+*	形    参:  _uiSectorAddr : 扇区地址
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void sf_Erase64KBlock(uint32_t _uiSectorAddr)
+{
+	sf_WriteEnable();								/* 发送写使能命令 */
+
+	/* 擦除扇区操作 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_64KBE);								/* 发送擦除命令 */
+    if(g_tSF.ChipID == MX25L25645G_ID)
+        sf_SendByte((_uiSectorAddr & 0xFF000000) >> 24);
+	sf_SendByte((_uiSectorAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiSectorAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+	sf_SendByte(_uiSectorAddr & 0xFF);				/* 发送扇区地址低8bit */
+	SF_CS_HIGH();									/* 禁能片选 */
+
+	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_EraseChip
+*	功能说明: 擦除整个芯片
+*	形    参:  无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void sf_EraseChip(void)
+{
+	sf_WriteEnable();								/* 发送写使能命令 */
+
+	/* 擦除扇区操作 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_CE);							/* 发送整片擦除命令 */
+	SF_CS_HIGH();									/* 禁能片选 */
+
+	sf_WaitForWriteEnd();							/* 等待串行Flash内部写操作完成 */
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: sf_ReadBuffer
+*	功能说明: 连续读取若干字节。字节个数不能超出芯片容量。
+*	形    参:  	_pBuf : 数据源缓冲区；
+*				_uiReadAddr ：首地址
+*				_usSize ：数据个数, 可以大于PAGE_SIZE,但是不能超出芯片总容量
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void sf_ReadBuffer(uint8_t * _pBuf, uint32_t _uiReadAddr, uint32_t _uiSize)
+{
+	/* 如果读取的数据长度为0或者超出串行Flash地址空间，则直接返回 */
+	if ((_uiSize == 0) ||(_uiReadAddr + _uiSize) > g_tSF.TotalSize)
+	{
+		return;
+	}
+
+	/* 擦除扇区操作 */
+	SF_CS_LOW();									/* 使能片选 */
+	sf_SendByte(CMD_READ);							/* 发送读命令 */
+    if(g_tSF.ChipID == MX25L25645G_ID)
+        sf_SendByte((_uiReadAddr & 0xFF000000) >> 24);
+	sf_SendByte((_uiReadAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
+	sf_SendByte((_uiReadAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */
+	sf_SendByte(_uiReadAddr & 0xFF);				/* 发送扇区地址低8bit */
+	while (_uiSize--)
+	{
+		*_pBuf++ = sf_SendByte(DUMMY_BYTE);			/* 读一个字节并存储到pBuf，读完后指针自加1 */
+	}
+	SF_CS_HIGH();									/* 禁能片选 */
 }
 
 /*
@@ -694,116 +746,221 @@ void sf_ReadInfo(void)
 			case SST25VF016B_ID:
 				strcpy(g_tSF.ChipName, "SST25VF016B");
 				g_tSF.TotalSize = 2 * 1024 * 1024;	/* 总容量 = 2M */
-				g_tSF.PageSize = 4 * 1024;			/* 页面大小 = 4K */
+				g_tSF.SectorSize = 4 * 1024;			/* 页面大小 = 4K */
 				break;
 
 			case MX25L1606E_ID:
 				strcpy(g_tSF.ChipName, "MX25L1606E");
 				g_tSF.TotalSize = 2 * 1024 * 1024;	/* 总容量 = 2M */
-				g_tSF.PageSize = 4 * 1024;			/* 页面大小 = 4K */
+				g_tSF.SectorSize = 4 * 1024;			/* 页面大小 = 4K */
 				break;
 
 			case W25Q64BV_ID:
 				strcpy(g_tSF.ChipName, "W25Q64BV");
 				g_tSF.TotalSize = 8 * 1024 * 1024;	/* 总容量 = 8M */
-				g_tSF.PageSize = 4 * 1024;			/* 页面大小 = 4K */
+				g_tSF.SectorSize = 4 * 1024;			/* 页面大小 = 4K */
+				break;
+
+            case MX25L25645G_ID:
+                strcpy(g_tSF.ChipName, "MX25L25645G");
+				g_tSF.TotalSize = 28 * 1024 * 1024;	/* 总容量 = 28M */
+				g_tSF.SectorSize = 4 * 1024;			/* 页面大小 = 4K */
 				break;
 
 			default:
 				strcpy(g_tSF.ChipName, "Unknow Flash");
 				g_tSF.TotalSize = 2 * 1024 * 1024;
-				g_tSF.PageSize = 4 * 1024;
+				g_tSF.SectorSize = 4 * 1024;
 				break;
 		}
 	}
 }
 
-/*
-*********************************************************************************************************
-*	函 数 名: sf_SendByte
-*	功能说明: 向器件发送一个字节，同时从MISO口线采样器件返回的数据
-*	形    参:  _ucByte : 发送的字节值
-*	返 回 值: 从MISO口线采样器件返回的数据
-*********************************************************************************************************
-*/
-static uint8_t sf_SendByte(uint8_t _ucValue)
-{
-	/* 等待上个数据未发送完毕 */
-	while (SPI_I2S_GetFlagStatus(SPI_FLASH, SPI_I2S_FLAG_TXE) == RESET);
-
-	/* 通过SPI硬件发送1个字节 */
-	SPI_I2S_SendData(SPI_FLASH, _ucValue);
-
-	/* 等待接收一个字节任务完成 */
-	while (SPI_I2S_GetFlagStatus(SPI_FLASH, SPI_I2S_FLAG_RXNE) == RESET);
-
-	/* 返回从SPI总线读到的数据 */
-	return SPI_I2S_ReceiveData(SPI_FLASH);
-}
 
 /*
 *********************************************************************************************************
-*	函 数 名: sf_WriteEnable
-*	功能说明: 向器件发送写使能命令
+*	函 数 名: bsp_CfgSPIForSFlash
+*	功能说明: 配置STM32内部SPI硬件的工作模式、速度等参数，用于访问SPI接口的串行Flash。
 *	形    参:  无
 *	返 回 值: 无
 *********************************************************************************************************
 */
-static void sf_WriteEnable(void)
+static void bsp_CfgSPIForSFlash(void)
 {
-	SF_CS_LOW();									/* 使能片选 */
-	sf_SendByte(CMD_WREN);								/* 发送命令 */
-	SF_CS_HIGH();									/* 禁能片选 */
+	SPI_InitTypeDef  SPI_InitStructure;
+
+	/* 打开SPI时钟 */
+	ENABLE_SPI_RCC();
+
+	/* 配置SPI硬件参数 */
+	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;	/* 数据方向：2线全双工 */
+	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;		/* STM32的SPI工作模式 ：主机模式 */
+	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;	/* 数据位长度 ： 8位 */
+	/* SPI_CPOL和SPI_CPHA结合使用决定时钟和数据采样点的相位关系、
+	   本例配置: 总线空闲是高电平,第2个边沿（上升沿采样数据)
+	*/
+	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;			/* 时钟上升沿采样数据 */
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;		/* 时钟的第2个边沿采样数据 */
+	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;			/* 片选控制方式：软件控制 */
+
+	/* 设置波特率预分频系数 */
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
+
+	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;	/* 数据位传输次序：高位先传 */
+	SPI_InitStructure.SPI_CRCPolynomial = 7;			/* CRC多项式寄存器，复位后为7。本例程不用 */
+	SPI_Init(SPI_FLASH, &SPI_InitStructure);
+
+	SPI_Cmd(SPI_FLASH, DISABLE);			/* 先禁止SPI  */
+
+	SPI_Cmd(SPI_FLASH, ENABLE);				/* 使能SPI  */
 }
 
 /*
 *********************************************************************************************************
-*	函 数 名: sf_WriteStatus
-*	功能说明: 写状态寄存器
-*	形    参:  _ucValue : 状态寄存器的值
+*	函 数 名: bsp_InitSpiFlash
+*	功能说明: 初始化串行Flash硬件接口（配置STM32的SPI时钟、GPIO)
+*              只包括 SCK、 MOSI、 MISO口线的配置。不包括片选CS，
+*              也不包括外设芯片特有的INT、BUSY等
+*	形    参: 无
 *	返 回 值: 无
 *********************************************************************************************************
 */
-static void sf_WriteStatus(uint8_t _ucValue)
+void bsp_InitSFlash(void)
 {
+	/***************************************************************************
+	**	串行Flash型号为 W25Q64BVSSIG (80MHz)
+	**	PA5/SPI1_SCK
+	**	PA6/SPI1_MISO
+	**	PA7/SPI1_MOSI
+	**	PA4/SPI1_CS
+     **
+	**	STM32硬件SPI接口 = SPI1
+	****************************************************************************/
+	GPIO_InitTypeDef GPIO_InitStructure;
 
-	if (g_tSF.ChipID == SST25VF016B_ID)
-	{
-		/* 第1步：先使能写状态寄存器 */
-		SF_CS_LOW();									/* 使能片选 */
-		sf_SendByte(CMD_EWRSR);							/* 发送命令， 允许写状态寄存器 */
-		SF_CS_HIGH();									/* 禁能片选 */
+	/* 使能GPIO 时钟 */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
-		/* 第2步：再写状态寄存器 */
-		SF_CS_LOW();									/* 使能片选 */
-		sf_SendByte(CMD_WRSR);							/* 发送命令， 写状态寄存器 */
-		sf_SendByte(_ucValue);							/* 发送数据：状态寄存器的值 */
-		SF_CS_HIGH();									/* 禁能片选 */
-	}
-	else
-	{
-		SF_CS_LOW();									/* 使能片选 */
-		sf_SendByte(CMD_WRSR);							/* 发送命令， 写状态寄存器 */
-		sf_SendByte(_ucValue);							/* 发送数据：状态寄存器的值 */
-		SF_CS_HIGH();									/* 禁能片选 */
-	}
+	/* 配置 SCK, MISO 、 MOSI 为复用功能 */
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource5, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_SPI1);
+
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+	/* 配置片选口线为推挽输出模式 */
+
+	GPIO_InitStructure.GPIO_Pin = SF_CS_PIN;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(SF_CS_GPIO, &GPIO_InitStructure);
+
+	SF_CS_HIGH();		/* 片选置高，不选中 */
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// 字库存储位置说明
+// 0x01FB F000 - 0x01FD F000(SECTOR = 8127 - 8159) 存放 UtoG 128kb
+// 0x01FD F000 - 0x01FF FFFF(SECTOR = 8159 - 8191) 存放 GtoU 128kb
+
+// 0x18000 ~  0xd3800 存放  12x12.ttf 750kb
+// 0xd3c00 ~  0x18f400 存放  16x16.ttf 750kb
+
+//各文件基址,最后的256KB空间存储CC936转码数组
+#define CODE_UtoG_BASE (0x01FBF000) //unicode转GBK码表
+#define CODE_GtoU_BASE (0x01FDF000) //GBK转unicode码表
+
+//#define FONT_12X12_BASE (0x18000) //12x12GBK字库
+//#define FONT_16X16_BASE (0xd3c00) //16x16GBK字库
+
+/*
+************************************************************************************************************************
+* 函数 :  u16 GBKtoUNICODE(u16 GBKCode)
+* 功能 :  将GBK编码转换为unicode编码
+* 参数 :  GBK
+* 返回 :  unicode
+* 依赖 :  底层读写函数
+* 作者 :
+* 时间 :  20120602
+* 最后修改时间 : 20120602
+* 说明 : 需要flash中的码表支持
+* GBK码范围,高8位:0x81~0xfe;低8位:0x40~0xfe
+************************************************************************************************************************
+*/
+uint16_t GBKtoUNICODE(uint16_t GBKCode)
+{
+    uint16_t unicode_offset;
+    uint8_t buff[2];
+    uint16_t *p;
+    uint8_t ch,cl;
+
+
+    ch = GBKCode >> 8;
+    cl = GBKCode & 0x00ff;
+
+
+    //计算偏移
+    if(cl < 0x7f)
+        unicode_offset = (ch - 0x81) * 190 + cl - 0x40;
+    if(cl > 0x80)
+        unicode_offset = (ch - 0x81) * 190 + cl - 0x41;
+    unicode_offset *= 2;
+
+    sf_ReadBuffer(buff, CODE_GtoU_BASE + unicode_offset, 2); //读取码表
+
+    p = (u16 *)buff;
+
+    return *p;
 }
 
 /*
-*********************************************************************************************************
-*	函 数 名: sf_WaitForWriteEnd
-*	功能说明: 采用循环查询的方式等待器件内部写操作完成
-*	形    参:  无
-*	返 回 值: 无
-*********************************************************************************************************
+************************************************************************************************************************
+* 函数 :  u16 UNICODEtoGBK(u16 unicode)
+* 功能 :  将unicode编码转换为GBK编码
+* 参数 :  unicode
+* 返回 :  GBK
+* 依赖 :  底层读写函数
+* 作者 :
+* 时间 :  20120602
+* 最后修改时间 : 20120602
+* 说明 : 需要flash中的码表支持
+* GBK码范围,高8位:0x81~0xfe;低8位:0x40~0xfe
+************************************************************************************************************************
 */
-static void sf_WaitForWriteEnd(void)
+uint16_t UNICODEtoGBK(uint16_t unicode) //用二分查找算法
 {
-	SF_CS_LOW();									/* 使能片选 */
-	sf_SendByte(CMD_RDSR);							/* 发送命令， 读状态寄存器 */
-	while((sf_SendByte(DUMMY_BYTE) & WIP_FLAG) == SET);	/* 判断状态寄存器的忙标志位 */
-	SF_CS_HIGH();									/* 禁能片选 */
+    uint32_t offset;
+    uint8_t temp[2];
+    uint16_t res;
+
+    if(unicode <= 0X9FA5)
+        offset = unicode - 0X4E00;
+    else if(unicode > 0X9FA5)//是标点符号
+    {
+        if(unicode < 0XFF01 || unicode > 0XFF61)
+            return 0;//没有对应编码
+        offset = unicode - 0XFF01 + 0X9FA6 - 0X4E00;
+    }
+
+    sf_ReadBuffer(temp, offset * 2 + CODE_UtoG_BASE, 2);//得到GBK码
+
+    res = temp[0];
+    res <<= 8;
+    res += temp[1];
+
+    return res ; //返回找到的编码
 }
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -815,6 +972,8 @@ DSTATUS SPI_disk_status(void)
 
 DSTATUS SPI_disk_initialize(void)
 {
+    if(g_tSF.DiskInitFlag)
+        return RES_OK;
 
     bsp_InitSFlash();
 
@@ -831,6 +990,14 @@ DSTATUS SPI_disk_initialize(void)
 
     sf_WriteStatus(0);			/* 解除所有BLOCK的写保护 */
 
+    if(g_tSF.ChipID == MX25L25645G_ID)
+    {
+        SF_CS_LOW();				/* 软件方式，使能串行Flash片选 */
+        sf_SendByte(CMD_EN4B);	/* 发送使能32位地址模式 */
+        SF_CS_HIGH();			/* 软件方式，禁能串行Flash片选 */
+    }
+
+    g_tSF.DiskInitFlag = 1;
     return RES_OK;
 }
 
@@ -849,10 +1016,10 @@ DRESULT SPI_disk_write(
 	uint32_t count	)	/* Number of sectors to read */
 {
     uint8_t i;
-				
+
     for(i = 0; i < count; i++)
     {
-    	sf_WriteBuffer((uint8_t *)buff, sector << 12, 4096);	
+    	sf_WriteBuffer((uint8_t *)buff, sector << 12, g_tSF.SectorSize);
     }
 
     return RES_OK;
@@ -865,25 +1032,25 @@ DRESULT SPI_disk_ioctl(
     switch(cmd)
     {
     	/* SPI Flash不需要同步 */
-    	case CTRL_SYNC :  
+    	case CTRL_SYNC :
     		return RES_OK;
-    	
+
     	/* 返回SPI Flash扇区大小 */
     	case GET_SECTOR_SIZE:
-    		*((WORD *)buff) = 4096;  
+    		*((WORD *)buff) = g_tSF.SectorSize;
     		return RES_OK;
-    	
+
     	/* 返回SPI Flash扇区数 */
     	case GET_SECTOR_COUNT:
-    		*((DWORD *)buff) = 2048;    
+    		*((DWORD *)buff) = g_tSF.TotalSize / g_tSF.SectorSize;
     		return RES_OK;
-    	
+
     	/* 下面这两项暂时未用 */
-    	case GET_BLOCK_SIZE:   
+    	case GET_BLOCK_SIZE:
     		return RES_OK;
-    	
-    	case CTRL_ERASE_SECTOR:
-    		return RES_OK;       
+
+    	case CTRL_TRIM:
+    		return RES_OK;
     }
     return RES_OK;
 }

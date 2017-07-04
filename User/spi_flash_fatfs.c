@@ -25,18 +25,8 @@
 #define BUF_SIZE				(4*1024)		/* 每次读写SD卡的最大数据长度 */
 uint8_t g_TestBuf[BUF_SIZE];
 
-/* 仅允许本文件内调用的函数声明 */
-static void FileFormat(void);
-static void DispMenu(void);
-static void ViewRootDir(void);
-static void CreateNewFile(void);
-static void ReadFileData(void);
-static void CreateDir(void);
-static void DeleteDirFile(void);
-static void WriteFileTest(void);
-
 /* FatFs API的返回值 */
-static const char * FR_Table[]= 
+static const char * FR_Table[]=
 {
 	"FR_OK：成功",				                             /* (0) Succeeded */
 	"FR_DISK_ERR：底层硬件错误",			                 /* (1) A hard error occurred in the low level disk I/O layer */
@@ -61,121 +51,60 @@ static const char * FR_Table[]=
 };
 
 /*
-*********************************************************************************************************
-*	函 数 名: DemoFatFS
-*	功能说明: FatFS文件系统演示主程序
-*	形    参：无
-*	返 回 值: 无
-*********************************************************************************************************
+********************************************************************************
+  * @brief  Receive byte from sender
+  * @param  c: Character
+  * @param  timeout: Timeout
+  * @retval 0: Byte received
+  *        -1: Timeout
+********************************************************************************
 */
-void DemoFatFS(void)
+int32_t Recv_Byte (COM_PORT_E _ucPort, uint8_t *_pByte, uint32_t timeout)
 {
-	uint8_t cmd;
-	
-	/* 打印命令列表，用户可以通过串口操作指令 */
-	DispMenu();
-	bsp_StartAutoTimer(1, 100);
-	while(1)
-	{
-		bsp_Idle();		/* 这个函数在bsp.c文件。用户可以修改这个函数实现CPU休眠和喂狗 */
-		
-		if(bsp_CheckTimer(1))
-		{
-			bsp_LedToggle(1);
-		}
+#if USING_FIFO_EN == 1
+    while (timeout-- > 0)
+    {
+        if(comGetChar(_ucPort, _pByte) == 1)
+        {
+            return 0;
+        }
+    }
+#else
+#if 1
+    while (timeout-- > 0)
+    {
+        if (SerialKeyPressed(_ucPort, _pByte) == 1)
+        {
+            return 0;
+        }
+    }
+#else
+    while(!SerialKeyPressed(_ucPort, _pByte)) {};
+    return 0;
+#endif
+#endif
 
-		if (comGetChar(COM1, &cmd))	/* 从串口读入一个字符(非阻塞方式) */
-		{
-			printf("\r\n");
-			switch (cmd)
-			{
-				case '0':
-					printf("【0 - FileFormat】\r\n");
-					FileFormat();		/* 显示SD卡根目录下的文件名 */
-					break;
-				
-				case '1':
-					printf("【1 - ViewRootDir】\r\n");
-					ViewRootDir();		/* 显示SD卡根目录下的文件名 */
-					break;
-
-				case '2':
-					printf("【2 - CreateNewFile】\r\n");
-					CreateNewFile();		/* 创建一个新文件,写入一个字符串 */
-					break;
-
-				case '3':
-					printf("【3 - ReadFileData】\r\n");
-					ReadFileData();		/* 读取根目录下armfly.txt的内容 */
-					break;
-
-				case '4':
-					printf("【4 - CreateDir】\r\n");
-					CreateDir();		/* 创建目录 */
-					break;
-
-				case '5':
-					printf("【5 - DeleteDirFile】\r\n");
-					DeleteDirFile();	/* 删除目录和文件 */
-					break;
-
-				case '6':
-					printf("【6 - TestSpeed】\r\n");
-					WriteFileTest();	/* 速度测试 */
-					break;
-
-				default:
-					DispMenu();
-					break;
-			}
-		}
-
-		/* 按键滤波和检测由后台systick中断服务程序实现，我们只需要调用bsp_GetKey读取键值即可。 */
-		switch (bsp_GetKey())	/* bsp_GetKey()读取键值, 无键按下时返回 KEY_NONE = 0 */
-		{
-			case KEY_DOWN_K1:			/* K1键按下 */
-				break;
-
-			case KEY_UP_K1:				/* K1键弹起 */
-				break;
-
-			case KEY_DOWN_K2:			/* K2键按下 */
-				break;
-
-			case KEY_UP_K2:				/* K2键弹起 */
-				break;
-
-			case KEY_DOWN_K3:			/* K3键按下 */
-				break;
-
-			case KEY_UP_K3:				/* K3键弹起 */
-				break;
-
-			case JOY_DOWN_U:			/* 摇杆UP键按下 */
-				break;
-
-			case JOY_DOWN_D:			/* 摇杆DOWN键按下 */
-				break;
-
-			case JOY_DOWN_L:			/* 摇杆LEFT键按下 */
-				break;
-
-			case JOY_DOWN_R:			/* 摇杆RIGHT键按下 */
-				break;
-
-			case JOY_DOWN_OK:			/* 摇杆OK键按下 */
-				break;
-
-			case JOY_UP_OK:				/* 摇杆OK键弹起 */
-				break;
-
-			case KEY_NONE:				/* 无键按下 */
-			default:
-				/* 其它的键值不处理 */
-				break;
-		}
-	}
+    return -1;
 }
+
+/*
+********************************************************************************
+  * @brief  Send a byte
+  * @param  c: Character
+  * @retval 0: Byte sent
+********************************************************************************
+*/
+uint32_t Send_Byte (COM_PORT_E _ucPort, uint8_t _pByte)
+{
+#if USING_FIFO_EN == 1
+    comSendChar(_ucPort, _pByte);
+#else
+    SerialPutChar(_ucPort, _pByte);
+#endif
+
+    return 0;
+}
+
 
 /*
 *********************************************************************************************************
@@ -192,12 +121,41 @@ static void DispMenu(void)
 	printf("请选择操作命令:\r\n");
 	printf("0 - 对SPI_Flash进行文件系统格式化\r\n");
 	printf("1 - 显示根目录下的文件列表\r\n");
-	printf("2 - 创建一个新文件armfly.txt\r\n");
-	printf("3 - 读armfly.txt文件的内容\r\n");
-	printf("4 - 创建目录\r\n");
-	printf("5 - 删除文件和目录\r\n");
-	printf("6 - 读写文件速度测试\r\n");
+	printf("2 - 创建armfly.txt,并读出文件的内容\r\n");
+	printf("3 - 创建目录\r\n");
+	printf("4 - 删除文件和目录\r\n");
+	printf("5 - 读写文件速度测试\r\n");
+    printf("6 - 获取磁盘信息\r\n");
+    printf("7 - 使用Ymodem协议下载文件\r\n");
+    printf("8 - 使用Ymodem协议上传文件\r\n");
+    printf("9 - 升级Firmware到指定的地址\r\n");
 }
+
+/*
+*********************************************************************************************************
+*	函 数 名: MountFS
+*	功能说明: 文件系统格式化
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void MountFS(FATFS *fs, uint8_t opt)
+{
+    /* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
+	FRESULT result;
+
+	/* 挂载文件系统 */
+	result = f_mount(fs, "0:", opt);
+	if (result != FR_OK)
+	{
+		printf("%s文件系统失败 (%s)\r\n",(fs)? "挂载" : "卸载"  ,FR_Table[result]);
+	}
+	//else
+	//{
+	//	printf("%s文件系统成功 (%s)\r\n",(fs)? "挂载" : "卸载" ,FR_Table[result]);
+	//}
+}
+
 
 /*
 *********************************************************************************************************
@@ -212,20 +170,14 @@ static void FileFormat(void)
 	/* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
 	FRESULT result;
 	FATFS fs;
+    BYTE work[_MAX_SS]; /* Work area (larger is better for processing time) */
 
 	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);	
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n", FR_Table[result]);
-	}
-	else
-	{
-		printf("挂载文件系统成功 (%s)\r\n", FR_Table[result]);
-	}
-	
+    MountFS(&fs, 0);
+
 	/* 第一次使用必须进行格式化 */
-	result = f_mkfs("0:",0,0);
+	//result = f_mkfs("0:",0,0);
+    result = f_mkfs("0:", FM_ANY, 0, work, _MAX_SS);
 	if (result != FR_OK)
 	{
 		printf("格式化失败 (%s)\r\n", FR_Table[result]);
@@ -236,15 +188,7 @@ static void FileFormat(void)
 	}
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
-	if (result != FR_OK)
-	{
-		printf("卸载文件系统失败 (%s)\r\n", FR_Table[result]);
-	}
-	else
-	{
-		printf("卸载文件系统成功 (%s)\r\n", FR_Table[result]);
-	}
+	MountFS(NULL, 0);
 }
 
 /*
@@ -263,19 +207,12 @@ static void ViewRootDir(void)
 	DIR DirInf;
 	FILINFO FileInf;
 	uint32_t cnt = 0;
-	char lfname[256];
+	//char Path[_MAX_LFN+1] = {0};
+
 
 	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);	
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n", FR_Table[result]);
-	}
-	else
-	{
-		printf("挂载文件系统成功 (%s)\r\n", FR_Table[result]);
-	}
-	
+	MountFS(&fs, 0);
+
 	/* 打开根文件夹 */
 	result = f_opendir(&DirInf, "0:/"); /* 如果不带参数，则从当前目录开始 */
 	if (result != FR_OK)
@@ -285,27 +222,18 @@ static void ViewRootDir(void)
 	}
 
 	/* 读取当前文件夹下的文件和目录 */
-	FileInf.lfname = lfname;
-	FileInf.lfsize = 256;
-
-	printf("属性        |  文件大小 | 短文件名 | 长文件名\r\n");
+	printf("属性        |  文件大小 |  文件名\r\n");
 	for (cnt = 0; ;cnt++)
 	{
-		result = f_readdir(&DirInf,&FileInf); 		/* 读取目录项，索引会自动下移 */
-		if (result != FR_OK || FileInf.fname[0] == 0)
-		{
-			break;
-		}
-
-		if (FileInf.fname[0] == '.')
-		{
-			continue;
-		}
+		result = f_readdir(&DirInf, &FileInf); 		/* 读取目录项，索引会自动下移 */
+		if (result != FR_OK || FileInf.fname[0] == 0)  break;
+		if (FileInf.fname[0] == '.')  	continue;
 
 		/* 判断是文件还是子目录 */
 		if (FileInf.fattrib & AM_DIR)
 		{
 			printf("(0x%02d)目录  ", FileInf.fattrib);
+            //sprintf(Path,"%s",FileInf.fname);
 		}
 		else
 		{
@@ -314,22 +242,13 @@ static void ViewRootDir(void)
 
 		/* 打印文件大小, 最大4G */
 		printf(" %10d", FileInf.fsize);
-
-		printf("  %s |", FileInf.fname);	/* 短文件名 */
-
-		printf("  %s\r\n", (char *)FileInf.lfname);	/* 长文件名 */
+        printf("    %s\r\n",(char *)FileInf.fname);	/* 长文件名 */
+		//printf("  %s/%s\r\n", Path, (char *)FileInf.fname);	/* 长文件名 */
+        //mem_set(Path, 0x00, _MAX_LFN);
 	}
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
-	if (result != FR_OK)
-	{
-		printf("卸载文件系统失败 (%s)\r\n", FR_Table[result]);
-	}
-	else
-	{
-		printf("卸载文件系统成功 (%s)\r\n", FR_Table[result]);
-	}
+	MountFS(NULL, 0);
 }
 
 /*
@@ -350,11 +269,7 @@ static void CreateNewFile(void)
 	uint32_t bw;
 
  	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n",  FR_Table[result]);
-	}
+	MountFS(&fs, 0);
 
 	/* 打开根文件夹 */
 	result = f_opendir(&DirInf, "0:/"); /* 如果不带参数，则从当前目录开始 */
@@ -382,7 +297,7 @@ static void CreateNewFile(void)
 	f_close(&file);
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
+	MountFS(NULL, 0);
 }
 
 /*
@@ -404,11 +319,7 @@ static void ReadFileData(void)
 	char buf[128];
 
  	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败(%s)\r\n",  FR_Table[result]);
-	}
+	MountFS(&fs, 0);
 
 	/* 打开根文件夹 */
 	result = f_opendir(&DirInf, "/"); /* 如果不带参数，则从当前目录开始 */
@@ -442,7 +353,7 @@ static void ReadFileData(void)
 	f_close(&file);
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
+	MountFS(NULL, 0);
 }
 
 /*
@@ -459,12 +370,7 @@ static void CreateDir(void)
 	FRESULT result;
 	FATFS fs;
 
- 	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n",  FR_Table[result]);
-	}
+ 	MountFS(&fs, 0);
 
 	/* 创建目录/Dir1 */
 	result = f_mkdir("/Dir1");
@@ -515,7 +421,7 @@ static void CreateDir(void)
 	}
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
+	MountFS(NULL, 0);
 }
 
 /*
@@ -535,11 +441,7 @@ static void DeleteDirFile(void)
 	uint8_t i;
 
  	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n",  FR_Table[result]);
-	}
+	MountFS(&fs, 0);
 
 	#if 0
 	/* 打开根文件夹 */
@@ -646,7 +548,7 @@ static void DeleteDirFile(void)
 	}
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
+	MountFS(NULL, 0);
 }
 
 /*
@@ -677,11 +579,7 @@ static void WriteFileTest(void)
 	}
 
   	/* 挂载文件系统 */
-	result = f_mount(&fs, "0:", 0);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("挂载文件系统失败 (%s)\r\n",  FR_Table[result]);
-	}
+	MountFS(&fs, 0);
 
 	/* 打开根文件夹 */
 	result = f_opendir(&DirInf, "/"); /* 如果不带参数，则从当前目录开始 */
@@ -784,7 +682,422 @@ static void WriteFileTest(void)
 	f_close(&file);
 
 	/* 卸载文件系统 */
-	result  = f_mount(NULL, "0:", 0);
+	MountFS(NULL, 0);
+}
+
+void GetDiskInfo(void)
+{
+	/* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
+	FRESULT result;
+	FATFS *fs;
+    DWORD fre_clust, fre_sect, tot_sect;
+
+	/* 挂载文件系统 */
+	MountFS(fs, 0);
+
+    /* Get volume information and free clusters of drive 1 */
+    result = f_getfree("0:", &fre_clust, &fs);
+    if (result != FR_OK)
+	{
+		printf("获取磁盘信息失败(%s)\r\n",  FR_Table[result]);
+	}
+
+    /* Get total sectors and free sectors */
+    tot_sect = (fs->n_fatent - 2) * fs->csize;
+    fre_sect = fre_clust * fs->csize;
+
+    /* Print the free space (assuming 512 bytes/sector) */
+    printf("fs_type:%d drv:%d csize:%d n_fats:%d id:%d\r\n\
+            ssize:%d last_clust:%d free_clust:%d fsize:%d\r\n\
+            volbase:%d fatbase:%d dirbase:%d datbase:%d\r\n",
+        fs->fs_type,		/* FAT sub-type (0:Not mounted) */
+	    fs->drv,			/* Physical drive number */
+	    fs->csize,			/* Sectors per cluster (1,2,4...128) */
+	    fs->n_fats,			/* Number of FAT copies (1 or 2) */
+	    fs->id,				/* File system mount ID */
+	    fs->ssize,			/* Bytes per sector (512, 1024, 2048 or 4096) */
+	    fs->last_clst,		/* Last allocated cluster */
+	    fs->free_clst,		/* Number of free clusters */
+	    fs->fsize,			/* Sectors per FAT */
+	    fs->volbase,		/* Volume start sector */
+	    fs->fatbase,		/* FAT start sector */
+	    fs->dirbase,		/* Root directory start sector (FAT32:Cluster#) */
+	    fs->database		/* Data start sector */
+    );
+    printf("%10lu KiB Total.\r\n%10lu KiB Available.\r\n",
+           tot_sect / 2, fre_sect / 2);
+
+    /* 卸载文件系统 */
+	MountFS(NULL, 0);
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: DownloadFile
+*	功能说明: FatFS文件系统演示主程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void DownloadFile(void)
+{
+    /* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
+	FRESULT result;
+	FATFS fs;
+	FIL RecvFile;
+	DIR DirInf;
+	uint32_t ByteWrite;
+    uint16_t i = 0;
+
+    char ErrorNum=0;            //错误计数
+    char YmodemState=0;
+    //uint8_t Timeout_TryCount = 0;
+    uint16_t NextPackNum = 0;
+    unsigned char TempChar=0;   //接收数据
+    int CrcValue=0;
+    int PacketLen=0;
+
+    //int count=0;
+    COM_PORT_E _ucPort=COM1;
+    char FileName[128] = {0};
+
+    int32_t FileSize = 0;
+    uint8_t Transfer_End = 0;
+    char target_path[32]="0:/";
+    uint8_t UserBuf[PACKET_1K_SIZE + PACKET_OVERHEAD] = {0};
+
+	/* 挂载文件系统 */
+	MountFS(&fs, 0);
+    //Send_Byte(COM1, MODEM_C);
+    //Recv_Byte(COM1, &i, NAK_TIMEOUT);
+    //printf("recv data:%c \r\n",i);
+
+    /* 打开根文件夹 */
+    //printf("Please input the path:");
+    //scanf("%s",target_path);
+    //printf("Open director: %s\r\n",target_path);
+	result = f_opendir(&DirInf, target_path); /* 如果不带参数，则从当前目录开始 */
+	if (result != FR_OK)
+	{
+		printf("打开根目录失败 (%s)\r\n",  FR_Table[result]);
+		return;
+	}
+
+#if 1
+
+    while(1) {
+        //vTaskDelay(50);
+        bsp_DelayMS(50);
+        if(Transfer_End != 0) break;
+        switch(YmodemState) {
+            case YMODEM_START: //通信起始阶段
+                //printf("YMODEM_START\r\n");
+                Send_Byte(_ucPort, MODEM_C);                //发起始信号
+                //每次等待0.2s钟，发生超时重发“C”
+                if(Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT) == 0) {
+                    if(TempChar==MODEM_SOH )
+                    {
+                        Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                        if(TempChar != 0x00) { //不是00序号。
+                            Transfer_End = 0x03 ;
+                            continue;
+                        }
+                        Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                        if ( TempChar != 0xFF ) {     //不是00序号补码。
+                            Transfer_End = 0x03 ;
+                            continue;
+                        }
+                        for ( i=0; i<128; i++ )
+                        {                                //接收数据包0，共128字节
+                            Recv_Byte(_ucPort, (UserBuf+i), NAK_TIMEOUT);
+                        }
+                        Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                        Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);  //丢弃CRC校验，暂时不想实现。
+
+                        Send_Byte(_ucPort, MODEM_ACK);             //发送确认信号。
+                        YmodemState = YMODEM_DATATRANS;  //状态切换到数据传输状态
+                        //for ( i=0; i<128; i++ )
+                        //{                        //接收数据包0，共128字节
+                        //    FileName[i]=0;
+                        //}
+                        for ( i=0; (i<128)&&(UserBuf[i]); i++ )
+                        {                          //接收数据包0，共128字节
+                            FileName[i]=UserBuf[i];
+                        }
+                        Str2Int((UserBuf+i+1), &FileSize);
+                        //Serial_PutString(_ucPort, FileName);
+                        //Serial_PutString(_ucPort, &FileSize);
+
+                        result = f_open( &RecvFile, (const char *)FileName,
+                                        FA_READ | FA_WRITE| FA_CREATE_ALWAYS);
+                        NextPackNum = 1;
+                        //printf("FileName: %s FileSize:%d \r\n",FileName, FileSize);
+                        //printf("YMODEM_DATATRANS\r\n");
+                        Send_Byte(_ucPort, MODEM_C);   //再发一个C，正式启动数据传输
+                    }
+                }
+                break;
+            case YMODEM_DATATRANS:        //数据传输阶段
+                Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                switch(TempChar)
+                {
+                    case MODEM_EOT:
+                        YmodemState = YMODEM_ENDOFTRANS;
+                        Send_Byte(_ucPort, MODEM_ACK);
+                        continue;
+                    case MODEM_SOH:
+                        PacketLen = 128;
+                        break;
+                    case MODEM_STX:
+                        PacketLen = 1024;
+                        break;
+                    case USER_ABORT1:
+                    case USER_ABORT2:
+                    case MODEM_CAN:
+                        Send_Byte(_ucPort, MODEM_CAN);
+                        Send_Byte(_ucPort, MODEM_CAN);
+                        f_unlink(FileName);
+                        printf("User cancel transfer data \r\n");
+                        Transfer_End = 0x02 ;
+                        continue;
+                    default:
+                        printf("Unknow StartCode: %d packSeq: %d\r\n",TempChar,NextPackNum);
+                        continue;
+                }  //end of switch (StartChar)
+                Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                //if(NextPackNum != TempChar) {
+                  //  Transfer_End = 0x03 ;
+                    //ErrorNum++;
+                    //printf("NextPackNum: %d TempChar:%d\r\n",NextPackNum,TempChar);
+                    //continue;
+                //}
+                Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                for(i = 0; i < PacketLen; i++)
+                {      //接收整个数据包
+                    Recv_Byte(_ucPort, (UserBuf+i), NAK_TIMEOUT);
+                }
+                //CRC桥验
+                Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                CrcValue = TempChar;
+                CrcValue <<= 8;
+                Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                CrcValue |= TempChar;
+
+                if(Cal_CRC16(UserBuf, PacketLen) != CrcValue)
+                {
+                    ErrorNum++;;
+                    printf("CrcValue: %d CRC:%d packsize: %d\r\n",
+                        CrcValue,Cal_CRC16(UserBuf,PacketLen),PacketLen);
+                }
+
+                if(ErrorNum==0)
+                {
+                    result = f_write ( &RecvFile, (void *)UserBuf,
+                        PacketLen, &ByteWrite );//将接收到得数据写入文件
+                    NextPackNum++;
+                    Send_Byte(_ucPort, MODEM_ACK);
+                }
+                else
+                {
+                    Send_Byte(_ucPort, MODEM_NAK);//接收发现错误，要求重发。
+                    printf("Err(%d)\r\n",ErrorNum);
+                    ErrorNum--;
+                }
+                break;
+            case YMODEM_ENDOFTRANS:   //结束传输阶段
+                //printf("YMODEM_ENDOFTRANS\r\n");
+                Send_Byte(_ucPort, MODEM_C);
+                Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);//接收起始字符。
+                if(TempChar==MODEM_SOH)
+                {
+                    Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                    if(TempChar != 0x00) { //不是00序号。
+                        Transfer_End = 0x03 ;
+                        continue;
+                    }
+                    Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                    if ( TempChar != 0xFF ) {     //不是00序号补码。
+                        Transfer_End = 0x03 ;
+                        continue;
+                    }
+                    for(i=0;i<128;i++)
+                    {
+                        Recv_Byte(_ucPort, (UserBuf+i), NAK_TIMEOUT);
+                    }
+                    //CRC桥验
+                    Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                    CrcValue = TempChar;
+                    CrcValue <<= 8;
+                    Recv_Byte(_ucPort, &TempChar, NAK_TIMEOUT);
+                    CrcValue |= TempChar;
+
+					if(Cal_CRC16(UserBuf,128)!=CrcValue)
+                    {
+                        ErrorNum += 1;
+                    }
+                    if(ErrorNum==0)
+                    {
+                        f_lseek ( &RecvFile, FileSize );
+				        f_truncate ( &RecvFile );
+				        f_close( &RecvFile );
+                        Send_Byte(_ucPort, MODEM_ACK);
+                        Transfer_End = 0x04 ;
+                        continue;
+                    }
+                    else Send_Byte(_ucPort, MODEM_NAK);//接收发现错误，要求重发。
+                }
+                Transfer_End = 0x04 ;
+                break;
+            default:
+                Transfer_End = 0x01 ;
+                break ;
+        }
+    }
+#endif
+    /* 卸载文件系统 */
+    printf("\r\nDownload file Success! \r\n");
+    printf("FileName: %s FileSize:%d \r\n",FileName, FileSize);
+	MountFS(NULL, 0);
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: UploadFile
+*	功能说明: FatFS文件系统演示主程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void UploadFile(void)
+{
+    /* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
+	//FRESULT result;
+	FATFS fs;
+
+	/* 挂载文件系统 */
+	MountFS(&fs, 0);
+
+    printf("\r\nWaiting for the file to be sent ... (press 'a' to abort)\n\r");
+
+
+    /* 卸载文件系统 */
+	MountFS(NULL, 0);
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: DownloadFile
+*	功能说明: FatFS文件系统演示主程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void UpdateFirmware(void)
+{
+    /* 本函数使用的局部变量占用较多，请修改启动文件，保证堆栈空间够用 */
+	//FRESULT result;
+	FATFS fs;
+
+	/* 挂载文件系统 */
+	MountFS(&fs, 0);
+
+    printf("\r\nWaiting for the file to be sent ... (press 'a' to abort)\n\r");
+
+
+    /* 卸载文件系统 */
+	MountFS(NULL, 0);
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: DemoFatFS
+*	功能说明: FatFS文件系统演示主程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void DemoFatFS(void)
+{
+	uint8_t cmd;
+    const portTickType xDelay = pdMS_TO_TICKS(100);
+
+	/* 打印命令列表，用户可以通过串口操作指令 */
+	DispMenu();
+
+	while(1)
+	{
+		bsp_Idle();		/* 这个函数在bsp.c文件。用户可以修改这个函数实现CPU休眠和喂狗 */
+
+        vTaskDelay(xDelay);
+        //bsp_DelayMS(50);
+
+		if (comGetChar(COM1, &cmd))	/* 从串口读入一个字符(非阻塞方式) */
+		{
+			printf("\r\n");
+			switch (cmd)
+			{
+				case '0':
+					printf("【0 - FileFormat】\r\n");
+					FileFormat();		/* 显示SD卡根目录下的文件名 */
+					break;
+#if 1
+
+				case '1':
+					printf("【1 - ViewRootDir】\r\n");
+					ViewRootDir();		/* 显示SD卡根目录下的文件名 */
+					break;
+
+				case '2':
+					printf("【2 - CreateNewFile】\r\n");
+					CreateNewFile();		/* 创建一个新文件,写入一个字符串 */
+					printf("【2 - ReadFileData】\r\n");
+					ReadFileData();		/* 读取根目录下armfly.txt的内容 */
+                    break;
+
+				case '3':
+					printf("【3 - CreateDir】\r\n");
+					CreateDir();		/* 创建目录 */
+					break;
+
+				case '4':
+					printf("【4 - DeleteDirFile】\r\n");
+					DeleteDirFile();	/* 删除目录和文件 */
+					break;
+
+				case '5':
+					printf("【5 - TestSpeed】\r\n");
+					WriteFileTest();	/* 速度测试 */
+					break;
+
+                case '6':
+                    printf("【6 - DiskInfo】\r\n");
+                    GetDiskInfo();
+                    break;
+
+                case '7':
+                    printf("【7 - Download File】\r\n");
+                    DownloadFile();
+                    break;
+
+                case '8':
+                    printf("【8 - Upoad File】\r\n");
+                    UploadFile();
+                    break;
+
+                case '9':
+                    printf("【9 - Update Firmware】\r\n");
+                    UpdateFirmware();
+                    break;
+#endif
+                case 0x0D:
+                    DispMenu();
+					break;
+				default:
+					//DispMenu();
+					break;
+			}
+		}
+	}
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

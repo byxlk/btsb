@@ -17,8 +17,8 @@
 *                   vTaskLED        B       3       484     3
 *                   vTaskStart      B       5       490     5
 *                   vTaskMsgPro     S       4       480     4
-*                   
-*                   
+*
+*
 *                   任务名       运行计数         使用率
 *                   vTaskUserIF     4611            <1%
 *                   vTaskGUI        152759          14%
@@ -29,7 +29,7 @@
 *                  串口软件建议使用SecureCRT（V4光盘里面有此软件）查看打印信息。
 *                  各个任务实现的功能如下：
 *                   vTaskGUI        任务: emWin任务
-*                   vTaskTaskUserIF 任务: 接口消息处理	
+*                   vTaskTaskUserIF 任务: 接口消息处理
 *                   vTaskLED        任务: LED闪烁
 *                   vTaskMsgPro     任务: 实现截图功能，将图片以BMP格式保存到SD卡中
 *                   vTaskStart      任务: 启动任务，也就是最高优先级任务，这里实现按键扫描和触摸检测
@@ -50,7 +50,7 @@
 *                                        2. BSP驱动包V1.2
 *                                        3. FreeRTOS版本V8.2.3
 *                                        4. FatFS版本V0.11
-*                                        5. STemWin版本V5.28    
+*                                        5. STemWin版本V5.28
 *
 *	Copyright (C), 2016-2020, 安富莱电子 www.armfly.com
 *
@@ -58,7 +58,6 @@
 */
 #include <includes.h>
 #include "MainTask.h"
-#include "guitasktest.h"
 #include "spi_flash_fatfs.h"
 /*
 **********************************************************************************************************
@@ -72,10 +71,10 @@
 											变量声明
 **********************************************************************************************************
 */
-//static TaskHandle_t xHandleTaskUserIF = NULL;
-//static TaskHandle_t xHandleTaskLED = NULL;
+static TaskHandle_t xHandleTaskUserKeyIF = NULL;
+static TaskHandle_t xHandleTaskFsDebug = NULL;
 //static TaskHandle_t xHandleTaskMsgPro = NULL;
-//static TaskHandle_t xHandleTaskStart = NULL;
+static TaskHandle_t xHandleTaskStart = NULL;
 static TaskHandle_t xHandleTaskAdcProc = NULL;
 
 static SemaphoreHandle_t  xMutex = NULL;
@@ -93,9 +92,10 @@ SLEEP_DATA_T gSleep_Data;
 */
 static void vTaskGUI(void *pvParameters)
 {
-	while (1) 
+    printf("Main GUI Thread start.\r\n");
+	while (1)
 	{
-		//MainTask();
+		MainTask();
 		vTaskDelay(1000);
 	}
 }
@@ -103,10 +103,10 @@ static void vTaskGUI(void *pvParameters)
 /*
 *********************************************************************************************************
 *	函 数 名: vTaskAdcProc
-*	功能说明: AD转换处理		
+*	功能说明: AD转换处理
 *	形    参: pvParameters 是在创建该任务时传递的形参
 *	返 回 值: 无
-*   优 先 级: 2 
+*   优 先 级: 2
 *********************************************************************************************************
 */
 static void vTaskAdcProc(void *pvParameters)
@@ -115,7 +115,7 @@ static void vTaskAdcProc(void *pvParameters)
     //float uwVBATVoltage;    /* 板载电子电压 */
     //float ufVoltage_PA0;    /* PA0引脚电压  */
     //float ufVoltage_PC0;    /* PC0引脚电压  */
-
+    printf("ADC capture Thread start.\r\n");
     while(1)
     {
         vTaskDelay(1000);
@@ -128,15 +128,191 @@ static void vTaskAdcProc(void *pvParameters)
 
 /*
 *********************************************************************************************************
-*	函 数 名: vTaskAdcProc
-*	功能说明: AD转换处理		
+*	函 数 名: vTaskTaskUserIF
+*	功能说明: 按键消息处理
 *	形    参: pvParameters 是在创建该任务时传递的形参
 *	返 回 值: 无
-*   优 先 级: 2 
+*   优 先 级: 2
+*********************************************************************************************************
+*/
+extern WM_HWIN  hWinMain;
+static void vTaskTaskUserKeyIF(void *pvParameters)
+{
+	uint8_t ucKeyCode;
+	uint8_t pcWriteBuffer[500];
+
+    printf("User Key Process Thread start.\r\n");
+
+    while(1)
+    {
+        /* 按键滤波和检测由后台systick中断服务程序实现，我们只需要调用bsp_GetKey读取键值即可。 */
+		ucKeyCode = bsp_GetKey();  /* bsp_GetKey()读取键值, 无键按下时返回 KEY_NONE = 0 */
+
+		if (ucKeyCode != KEY_NONE)
+		{
+		    //printf("\r\nPress Key Value %04x   ",ucKeyCode);
+			switch (ucKeyCode)
+			{
+				/* K1键按下 打印任务执行情况 */
+                case KEY_DOWN_DEBUG_LONG:
+                    printf("Press Key: DEBUG LONG \r\n");
+                    //GUI_SendKeyMsg(GUI_KEY_F2, 1);
+                    //break;
+				case KEY_DOWN_DEBUG:
+                    if(ucKeyCode == KEY_DOWN_DEBUG)
+                        printf("Press Key: DEBUG \r\n");
+					printf("=================================================\r\n");
+					printf("任务名      任务状态 优先级   剩余栈 任务序号\r\n");
+					vTaskList((char *)&pcWriteBuffer);
+					printf("%s\r\n", pcWriteBuffer);
+
+					printf("\r\n任务名       运行计数         使用率\r\n");
+					vTaskGetRunTimeStats((char *)&pcWriteBuffer);
+					printf("%s\r\n", pcWriteBuffer);
+					printf("当前动态内存剩余大小 = %d字节\r\n", xPortGetFreeHeapSize());
+                    //GUI_SendKeyMsg(GUI_KEY_F2, 1);
+					break;
+
+				case KEY_DOWN_MUX:/* 锁屏 */
+                    printf("Press Key: MUX \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_LockScreen, 1);
+                    break;
+
+                case KEY_DOWN_MUX_LONG:/* 解锁 */
+                    printf("Press Key: MUX LONG\r\n");
+                    GUI_SendKeyMsg(GUI_KEY_UnLock, 1);
+                    break;
+
+				/* K2键按下，实现截图功能，将图片以BMP格式保存到SD卡中 */
+				case KEY_DOWN_VOL_DOWN:
+                    printf("Press Key: VOL- \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_Vol_Dec, 1);
+                    break;
+
+                case KEY_DOWN_VOL_UP:
+                    printf("Press Key: VOL+ \r\n");
+					GUI_SendKeyMsg(GUI_KEY_Vol_Plus, 1);
+					break;
+
+                case KEY_DOWN_PLAY_PAUSE:/* 播放、确认 */
+                    printf("Press Key: PLAY/PAUSE \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_PlayPause, 1);
+                    break;
+
+                case KEY_DOWN_PLAY_PAUSE_LONG:/* 选择功能 */
+                    printf("Press Key: PLAY/PAUSE LONG\r\n");
+                    GUI_SendKeyMsg(GUI_KEY_PlayPause_Long, 1);
+                    break;
+
+                case KEY_DOWN_MENU:/* 菜单 */
+                    printf("Press Key: MENU \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_Menu, 1);
+                    break;
+
+                case KEY_DOWN_MENU_LONG:/* 直接进入睡眠模式 */
+                    printf("Press Key: MENU LONG\r\n");
+                    GUI_SendKeyMsg(GUI_KEY_Menu_Long, 1);
+                    break;
+
+                case KEY_DOWN_UP:/* 上一曲 */
+                    printf("Press Key: UP \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_Direction_Up, 1);
+                    break;
+
+                case KEY_DOWN_UP_LONG:/* 快退 */
+                    printf("Press Key: UP LONG\r\n");
+                    GUI_SendKeyMsg(GUI_KEY_Direction_Left, 1);
+                    break;
+
+                case KEY_DOWN_DOWN:/* 下一曲 */
+                    printf("Press Key: DOWN \r\n");
+                    GUI_SendKeyMsg(GUI_KEY_Direction_Down, 1);
+                    break;
+
+                case KEY_DOWN_DOWN_LONG:/* 快进 */
+                    printf("Press Key: DOWN LONG\r\n");
+                    GUI_SendKeyMsg(GUI_KEY_Direction_Right, 1);
+                    break;
+
+				/* 其他的键值不处理 */
+				default:
+				    printf("Press Key: UNKNOW \r\n");
+					break;
+			}
+		}
+
+		vTaskDelay(20);
+	}
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: vTaskStart
+*	功能说明: 启动任务，也就是最高优先级任务。主要实现按键检测和触摸检测。
+*	形    参: pvParameters 是在创建该任务时传递的形参
+*	返 回 值: 无
+*   优 先 级: 5
+*********************************************************************************************************
+*/
+static void vTaskStart(void *pvParameters)
+{
+    TickType_t tick_current = 0;
+    TickType_t tick_backup = 0;
+    TickType_t td_tick_backup = 0;
+
+    printf("vTaskStart Thread start.\r\n");
+
+    tick_backup = xTaskGetTickCount();
+    while(1)
+    {
+        tick_current = xTaskGetTickCount();
+		/* 10ms一次按键检测 */
+
+		if(tick_current - tick_backup >= 10)
+		{
+		    tick_backup = tick_current;
+            WM_Exec();
+		}
+
+        if(tick_current - td_tick_backup >= 250)
+		{
+		    td_tick_backup = tick_current;
+			bsp_RTC_GetClock();
+		}
+
+		vTaskDelay(50);
+	}
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: vTaskFsDebug
+*	功能说明: FatFs调试
+*	形    参: pvParameters 是在创建该任务时传递的形参
+*	返 回 值: 无
+*   优 先 级: 2
+*********************************************************************************************************
+*/
+static void vTaskFsDebug(void *pvParameters)
+{
+    printf("vTaskFsDebug Thread start.\r\n");
+
+    DemoFatFS();
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: vTaskAdcProc
+*	功能说明: AD转换处理
+*	形    参: pvParameters 是在创建该任务时传递的形参
+*	返 回 值: 无
+*   优 先 级: 2
 *********************************************************************************************************
 */
 static void vTaskTest(void *pvParameters)
 {
+    printf("vTaskTest Thread start.\r\n");
+
     while(1)
     {
         vTaskDelay(100);
@@ -145,10 +321,8 @@ static void vTaskTest(void *pvParameters)
         vTaskDelay(1000);
         LCD_Fill_Rect(0, 0, 320, 240, CL_YELLOW);
    #endif
-        GuiTaskTest();
-        //bsp_RTC_Test();
-        //DemoFatFS();
-    }  
+        //GuiTaskTest();
+    }
 }
 /*
 *********************************************************************************************************
@@ -169,20 +343,20 @@ static void AppTaskCreate (void)
                   NULL );               /* 任务句柄  */
 
     /* 按键事件处理 */
-    //xTaskCreate( vTaskTaskUserIF,   	/* 任务函数  */
-    //             "vTaskUserIF",     	/* 任务名    */
-    //             512,               	/* 任务栈大小，单位word，也就是4字节 */
-    //             NULL,              	/* 任务参数  */
-    //             2,                 	/* 任务优先级*/
-    //             &xHandleTaskUserIF );  /* 任务句柄  */
-	
-	
-	//xTaskCreate( vTaskLED,    		/* 任务函数  */
-        //         "vTaskLED",  		/* 任务名    */
-        //         512,         		/* stack大小，单位word，也就是4字节 */
-        //         NULL,        		/* 任务参数  */
-        //         3,           		/* 任务优先级*/
-        //         &xHandleTaskLED ); /* 任务句柄  */
+    xTaskCreate( vTaskTaskUserKeyIF,   	/* 任务函数  */
+                 "vTaskUserKeyIF",     	/* 任务名    */
+                 512,               	/* 任务栈大小，单位word，也就是4字节 */
+                 NULL,              	/* 任务参数  */
+                 2,                 	/* 任务优先级*/
+                 &xHandleTaskUserKeyIF );  /* 任务句柄  */
+
+
+	xTaskCreate( vTaskFsDebug,    		/* 任务函数  */
+                 "vTaskFsDebug",  		/* 任务名    */
+                 4096,         		/* stack大小，单位word，也就是4字节 */
+                 NULL,        		/* 任务参数  */
+                 3,           		/* 任务优先级*/
+                 &xHandleTaskFsDebug ); /* 任务句柄  */
 
         /* 截图功能 */
 	//xTaskCreate( vTaskMsgPro,     		/* 任务函数  */
@@ -191,14 +365,14 @@ static void AppTaskCreate (void)
         //         NULL,           		/* 任务参数  */
         //         4,               		/* 任务优先级*/
         //         &xHandleTaskMsgPro );  /* 任务句柄  */
-	
+
 	/* 触摸和按键检测 */
-	//xTaskCreate( vTaskStart,     		/* 任务函数  */
-        //         "vTaskStart",   		/* 任务名    */
-        //         512,            		/* 任务栈大小，单位word，也就是4字节 */
-        //         NULL,           		/* 任务参数  */
-        //         5,              		/* 任务优先级*/
-        //         &xHandleTaskStart );   /* 任务句柄  */
+	xTaskCreate( vTaskStart,     		/* 任务函数  */
+                 "vTaskStart",   		/* 任务名    */
+                 512,            		/* 任务栈大小，单位word，也就是4字节 */
+                 NULL,           		/* 任务参数  */
+                 4,              		/* 任务优先级*/
+                 &xHandleTaskStart );   /* 任务句柄  */
 
     /* ADC 处理函数 */
 	xTaskCreate( vTaskAdcProc,     		/* 任务函数  */
@@ -212,7 +386,7 @@ static void AppTaskCreate (void)
                  "vTaskTest",   		/* 任务名    */
                  512,            		/* 任务栈大小，单位word，也就是4字节 */
                  NULL,           		/* 任务参数  */
-                 5,              		/* 任务优先级*/
+                 6,              		/* 任务优先级*/
                  NULL );   /* 任务句柄  */
 }
 
@@ -228,7 +402,7 @@ static void AppObjCreate (void)
 {
 	/* 创建互斥信号量 */
     xMutex = xSemaphoreCreateMutex();
-	
+
 	if(xMutex == NULL)
     {
         /* 没有创建成功，用户可以在这里加入创建失败的处理机制 */
@@ -245,7 +419,7 @@ static void AppObjCreate (void)
 */
 int main(void)
 {
-	/* 
+	/*
 	  在启动调度前，为了防止初始化STM32外设时有中断服务程序执行，这里禁止全局中断(除了NMI和HardFault)。
 	  这样做的好处是：
 	  1. 防止执行的中断服务程序中有FreeRTOS的API函数。
@@ -254,27 +428,27 @@ int main(void)
 	  在移植文件port.c中的函数prvStartFirstTask中会重新开启全局中断。通过指令cpsie i开启，__set_PRIMASK(1)
 	  和cpsie i是等效的。
      */
-	__set_PRIMASK(1);  
-	
+	__set_PRIMASK(1);
+
 	/* 硬件初始化 */
-	bsp_Init(); 
-	
+	bsp_Init();
+
 	/* 1. 初始化一个定时器中断，精度高于滴答定时器中断，这样才可以获得准确的系统信息 仅供调试目的，实际项
 		  目中不要使用，因为这个功能比较影响系统实时性。
-	   2. 为了正确获取FreeRTOS的调试信息，可以考虑将上面的关闭中断指令__set_PRIMASK(1); 注释掉。 
+	   2. 为了正确获取FreeRTOS的调试信息，可以考虑将上面的关闭中断指令__set_PRIMASK(1); 注释掉。
 	*/
 	//vSetupSysInfoTest();
-	
+
 	/* 创建任务 */
 	AppTaskCreate();
 
 	/* 创建任务通信机制 */
 	AppObjCreate();
-	
+
     /* 启动调度，开始执行任务 */
     vTaskStartScheduler();
 
-	/* 
+	/*
 	  如果系统正常启动是不会运行到这里的，运行到这里极有可能是用于定时器任务或者空闲任务的
 	  heap空间不足造成创建失败，此要加大FreeRTOSConfig.h文件中定义的heap大小：
 	  #define configTOTAL_HEAP_SIZE	      ( ( size_t ) ( 17 * 1024 ) )

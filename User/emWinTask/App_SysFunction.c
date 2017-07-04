@@ -15,6 +15,7 @@
 #include "includes.h"
 #include "MainTask.h"
 
+
 /*
 *********************************************************************************************************
 *	                                         用于SD卡
@@ -23,7 +24,6 @@
 FRESULT result;
 FIL file;
 FIL FileSave;   //专门用于图片的保存
-FILINFO finfo;
 DIR DirInf;
 UINT bw;
 FATFS fs;
