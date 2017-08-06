@@ -1,12 +1,12 @@
 /**************** Q-SYS *******************
  * PageName : AppListPage
  * Author : YourName
- * Version : 
+ * Version :
  * Base Q-Sys Version :
  * Description :
  * WebSite : Www.Q-ShareWe.Com
  ***************** Q-SYS *******************/
- 
+
 #include "User.h"
 #include "AppListPage.h"
 #include "SettingsPage.h"
@@ -28,7 +28,7 @@ typedef enum
 	ExtiKeyDown=EXTI_KEY_VALUE_START,//系统默认将外部中断按键发送到第一个键值
 	ExtiKeyUp,
 	ExtiKeyEnter,
-	
+
 	//后面的硬件版本将支持更多外部中断按键或者无线键盘，
 	//所以触摸键值从USER_KEY_VALUE_START开始，将前面的键值都留下来
 	RetMainKV=USER_KEY_VALUE_START,
@@ -50,7 +50,7 @@ typedef enum
 	PianistKV,
 	TalkKV,
 	WeatherKV,
-	
+
 	HomeKV,
 	MessageKV,
 	MusicKV,
@@ -143,12 +143,12 @@ const PAGE_ATTRIBUTE AppListPage={
 	},
 	ImgButtonCon, //touch region array
 	CharButtonCon,
-	
+
 	SystemEventHandler,
 	PeripheralsHandler,
 	Bit(Perip_KeyPress)|Bit(Perip_KeyRelease)|Bit(Perip_UartInput),
 	ButtonHandler,
-	
+
 };
 
 //-----------------------本页自定义变量声明-----------------------
@@ -163,7 +163,7 @@ typedef enum{
 	SYSOP_UseUsbOutput=1,//不能从0开始
 	SYSOP_LightTime,
 	SYSOP_LightScale,
-	
+
 	SYSOP_RtcYe,
 	SYSOP_RtcMo,
 	SYSOP_RtcDa,
@@ -210,7 +210,7 @@ static void ModifySysSettings(void *OptionsBuf)
 				DbFlag=TRUE;
 				//Q_DB_BurnToSpiFlash();//烧入数据库
 				break;
-		}					
+		}
 	}
 
 	if(DbFlag) Q_DB_BurnToSpiFlash();//烧入数据库
@@ -257,12 +257,12 @@ static void ModifyClock(void *OptionsBuf)
 				TimeFlag|=SP_IsModify(OptionsBuf,i);
 				SP_GetNumOption(OptionsBuf,i,&Val);
 				Time.sec=Val;
-				break;						
-		}					
+				break;
+		}
 	}
 
 	if(TimeFlag)
-	{	
+	{
 		Debug("RTC set!%d年%d月%d日 %d时%d分%d秒,%d\n\r",Time.year,Time.mon,Time.day,Time.hour,Time.min,Time.sec,Time.week);
 
 		if(RTC_Adjust(&Time,RtcOp_SetTime)==TRUE)
@@ -272,7 +272,7 @@ static void ModifyClock(void *OptionsBuf)
 		else
 		{
 			Debug("RTC set error!%d %d %d:%d-%d %d\n\r",Time.year,Time.mon,Time.day,Time.hour,Time.min,Time.sec);
-		}					
+		}
 	}
 }
 
@@ -312,12 +312,12 @@ static void SetAlarm(void *OptionsBuf)
 				AlarmFlag|=SP_IsModify(OptionsBuf,i);
 				SP_GetNumOption(OptionsBuf,i,&Val);
 				AlarmTime.min=Val;
-				break;				
-		}					
+				break;
+		}
 	}
 
 	if(AlarmFlag)
-	{	
+	{
 		Debug("Alarm set!%d年%d月%d日 %d时%d分\n\r",AlarmTime.year,AlarmTime.mon,AlarmTime.day,AlarmTime.hour,AlarmTime.min);
 
 		if(RTC_Adjust(&AlarmTime,RtcOp_SetAlarm)==TRUE)
@@ -327,7 +327,7 @@ static void SetAlarm(void *OptionsBuf)
 		else
 		{
 			Debug("Alarm set error!%d %d %d:%d-%d %d\n\r",AlarmTime.year,AlarmTime.mon,AlarmTime.day,AlarmTime.hour,AlarmTime.min,AlarmTime.sec);
-		}					
+		}
 	}
 }
 
@@ -342,7 +342,7 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 	{
 		case Sys_PreGotoPage:
 			break;
-		case Sys_PageInit:		//系统每次打开这个页面，会处理这个事件				
+		case Sys_PageInit:		//系统每次打开这个页面，会处理这个事件
 		case Sys_SubPageReturn:	//如果从子页面返回,就不会触发Sys_Page_Init事件,而是Sys_SubPage_Return
 
 #if 1
@@ -352,7 +352,7 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 			DrawRegion.w=240;
 			DrawRegion.h=320;
 			DrawRegion.Color=FatColor(NO_TRANS);
-			Gui_DrawImgBin("Theme/F/AppListPage/Bg/Bg.bin",&DrawRegion);	
+			Gui_DrawImgBin("Theme/F/AppListPage/Bg/Bg.bin",&DrawRegion);
 #else
 			//画背景
 			DrawRegion.x=0;
@@ -361,20 +361,20 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 			DrawRegion.h=320-21;
 			DrawRegion.Color=FatColor(0x8b8a8a);
 			Gui_FillBlock(&DrawRegion);
-			
+
 			//画标题栏
 			DrawRegion.x=DrawRegion.y=0;
 			DrawRegion.w=240;
 			DrawRegion.h=21;
 			DrawRegion.Color=FatColor(NO_TRANS);
-			Gui_FillImgArray((u8 *)gImage_StatusBar1,1,21,&DrawRegion);	
+			Gui_FillImgArray((u8 *)gImage_StatusBar1,1,21,&DrawRegion);
 			DrawTitle1(ASC14B_FONT,"Applications",(240-strlen("Applications")*GUI_ASC14B_ASCII_WIDTH)>>1,strlen("Applications"),FatColor(0xe0e0e0));//写标题
-			
+
 			//画框
-			DrawFrame1(25,291);	
-#endif			
+			DrawFrame1(25,291);
+#endif
 			break;
-		
+
 		case Sys_TouchSetOk:
 			break;
 		case Sys_TouchSetOk_SR:
@@ -396,7 +396,7 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 				}
 
 				Q_PageFree(pSysParam);//从设置页面返回必须释放当初进入时分配的内存，否则会造成泄漏
-			}	
+			}
 			else if(strcmp((void *)Q_GetPageByTrack(1)->Name,"FileListPage")==0)//从文件浏览页面返回
 			{
 				Debug("FileScan Return,Select %s\n\r",(u8 *)pSysParam);
@@ -410,20 +410,20 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 			break;
 		case Sys_PageClean:
 		case Sys_PreSubPage:
-		
+
 			break;
 		default:
 			//需要响应的事件未定义
 			Debug("%s SystemEventHandler:This System Event Handler case unfinish! SysEvent:%d\n\r",Q_GetCurrPageName(),SysEvent);
 			//while(1);
 	}
-	
+
 	return 0;
 }
 static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pParam)
-{	
+{
 	switch(PeripEvent)
-	{	
+	{
 		case Perip_KeyPress:
 			switch(IntParam){
 				case ExtiKeyEnter:
@@ -431,19 +431,19 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 				case ExtiKeyUp:
 					break;
 				case ExtiKeyDown:
-					break; 
+					break;
 			}break;
 		case Perip_KeyRelease:
 			switch(IntParam){
 				case ExtiKeyEnter:
 					//Q_GotoPage(GotoNewPage,"MainPage",-1,NULL);
 					//PrtScreen();
-					
+
 					break;
 				case ExtiKeyUp:
 					break;
-				case ExtiKeyDown:	
-					break; 
+				case ExtiKeyDown:
+					break;
 			}break;
 		case Perip_UartInput:
 			if((IntParam>>16)==1)//串口1
@@ -458,7 +458,7 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 
 //当使用者按下本页TouchRegionSet里定义的按键时，会触发这个函数里的对应事件
 static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
-{		
+{
 	switch(Key)
 	{
 		case RetMainKV:
@@ -481,7 +481,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 				RTC_TIME Time;
 				p=Q_PageMallco(1000);
 				SP_AddOptionsHeader(p,1000,"Set Clock",OSID_CLOCK);
-				RTC_GetTime(&Time);
+				RTC_GetRealTime(&Time);
 				SP_AddNumListOption(p,SYSOP_RtcYe,Time.year,1912,2035,1,"系统时间-年","设置系统实时时钟");
 				SP_AddNumListOption(p,SYSOP_RtcMo,Time.mon,1,12,1,"系统时间-月","");
 				SP_AddNumListOption(p,SYSOP_RtcDa,Time.day,1,31,1,"系统时间-日","");
@@ -497,7 +497,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 				RTC_TIME Time;
 				p=Q_PageMallco(1000);
 				SP_AddOptionsHeader(p,1000,"Set Alarm",OSID_ALARM);
-				RTC_GetTime(&Time);
+				RTC_GetRealTime(&Time);
 				SP_AddNumListOption(p,SYSOP_AlarmYe,Time.year,1912,2035,1,"定时时间-年","设置闹钟(单次有限)");
 				SP_AddNumListOption(p,SYSOP_AlarmMo,Time.mon,1,12,1,"定时时间-月","");
 				SP_AddNumListOption(p,SYSOP_AlarmDa,Time.day,1,31,1,"定时时间-日","");
@@ -545,7 +545,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 			break;
 		case TouchChkKV:
 			Q_GotoPage(GotoNewPage,"TouchCheckPage",0,NULL);
-			break;	
+			break;
 		case NewsKV:
 			{
 				QWEB_PAGE_SET QWebPageSet;
@@ -562,7 +562,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 			break;
 		case GameKV:
 			Q_GotoPage(GotoNewPage,"SnakePage",0,NULL);
-			break;		
+			break;
 		case CommandKV:
 			Q_GotoPage(GotoNewPage,"CtrlObjDemoPage",0,NULL);
 			break;
@@ -580,7 +580,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 			Debug("%s ButtonHandler:This Touch Event Handler case unfinish! Key:%d\n\r",Q_GetCurrPageName(),Key);
 			///while(1);
 	}
-	
+
 	return 0;
 }
 

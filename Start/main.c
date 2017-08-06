@@ -1,50 +1,51 @@
 /*
- * FileName:        	main.c       
- * Author:          	YuanYin  
- * Hardware Version:	QXW-Summer-V1.x  
+ * FileName:        	main.c
+ * Author:          	YuanYin
+ * Hardware Version:	QXW-Summer-V1.x
  * Date: 				2010-4-29
- * Description:			The main file of Q-OS 
+ * Description:			The main file of Q-OS
  * version:				Q-OS V1.0
  */
- 
+
 /*****************************************************
- *  酷享科技	 Q-Share We	快乐-开源-分享		
- *  						   	
- *  如果你对我们的产品有任何建议或不满，请联系我们! 	
- *						   	
- *  淘宝专营：Q-ShareWe.TaoBao.Com			
- *  技术论坛：Www.Q-ShareWe.Com				
+ *  酷享科技	 Q-Share We	快乐-开源-分享
+ *
+ *  如果你对我们的产品有任何建议或不满，请联系我们!
+ *
+ *  淘宝专营：Q-ShareWe.TaoBao.Com
+ *  技术论坛：Www.Q-ShareWe.Com
  *  酷系统交流群：37182463
  ****************************************************/
 
-#include "System.h"   
+#include "System.h"
 /*******************************************************************************
 * 用于测试的两个函数
 *******************************************************************************/
-void __asm UndefinedInstruction(void) 
-{ 
-	DCI 0xf123; 
-	DCI 0x4567; 
-	BX LR; 
-} 
+void __asm UndefinedInstruction(void)
+{
+	DCI 0xf123;
+	DCI 0x4567;
+	BX LR;
+}
 
-void __asm BadAlignedLDM(void) 
-{ 
-	MOVS r0, #1 
-	LDM r0,{r1-r2} 
-	BX LR; 
+void __asm BadAlignedLDM(void)
+{
+	MOVS r0, #1
+	LDM r0,{r1-r2}
+	BX LR;
 }
 
 /*******************************************************************************
 * 函数: void RCC_Config(void)
-* 功能: 配置系统时钟 
+* 功能: 配置系统时钟
 * 参数: 无
 * 返回: 无
 *******************************************************************************/
 void RCC_Config(void)
 {
+#if 0
 	ErrorStatus HSEStartUpStatus;//定义外部高速晶体启动状态枚举变量
-	
+
 	RCC_DeInit();//复位RCC外部设备寄存器到默认值
 	RCC_HSEConfig(RCC_HSE_ON); //打开外部高速晶振
 	HSEStartUpStatus = RCC_WaitForHSEStartUp();//等待外部高速时钟准备好
@@ -52,7 +53,7 @@ void RCC_Config(void)
   		{
 			RCC_HCLKConfig(RCC_SYSCLK_Div1);//配置AHB(HCLK)时钟等于==SYSCLK
 			RCC_PCLK2Config(RCC_HCLK_Div1); //配置APB2(PCLK2)钟==AHB时钟
-			RCC_PCLK1Config(RCC_HCLK_Div2);//配置APB1(PCLK1)钟==AHB1/2时钟			
+			RCC_PCLK1Config(RCC_HCLK_Div2);//配置APB1(PCLK1)钟==AHB1/2时钟
 		    FLASH_SetLatency(FLASH_Latency_2);//FLASH延时2个周期
 		    FLASH_PrefetchBufferCmd(FLASH_PrefetchBuffer_Enable);//使能FLASH预取缓冲区
 			RCC_PLLConfig(RCC_PLLSource_HSE_Div1, RCC_PLLMul_9);	//配置PLL时钟 == 8M*9
@@ -61,28 +62,39 @@ void RCC_Config(void)
 			while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET); //等待PLL时钟就绪
 
 		    RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);//配置系统时钟 = PLL时钟
-		
+
 		    while(RCC_GetSYSCLKSource() != 0x08); //检查PLL时钟是否作为系统时钟
 		}
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);//打开GPIOD和AFIO时钟
+#endif
 }
 void *InputHandler_Task_Handle=NULL;
 int main(void)
-{   
-	RCC_Config();
+{
+    /*
+	*************************************************************************************************
+	** 由于ST固件库的启动文件已经执行了CPU系统时钟的初始化，所以不必再次重复配置系统时钟。
+	** 启动文件配置了CPU主时钟频率、内部Flash访问速度和可选的外部SRAM FSMC初始化。
+    **
+	** 系统时钟缺省配置为72MHz，如果需要更改，可以修改 system_stm32f10x.c 文件
+	*************************************************************************************************
+	*/
+
+	/* 使能CRC校验, 用于开启STemWin的使用 */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_CRC, ENABLE);
 
 //#if !QXW_RELEASE_VER//for debug
 	COM1_Init(); //串口
 //#endif
-//	COM3_Init();	
-	
+//	COM3_Init();
+
 	OS_WrapInit();
 	//UndefinedInstruction();
 	//BadAlignedLDM();
 
 	OS_TaskCreate(InputHandler_Task,"Input",OS_MINIMAL_STACK_SIZE*8,NULL,INPUT_TASK_PRIORITY,&InputHandler_Task_Handle);
 	OS_StartRun();
-	
+
 	return (0);
 }
 

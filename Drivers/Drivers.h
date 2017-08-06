@@ -1,10 +1,10 @@
 #ifndef __DRIVERS_H__
 #define __DRIVERS_H__
 
-#include "stm32f10x.h"
+#include "stm32f2xx.h"
 
 /* ISR Priority 0(highest)-15(lowest)*/
-//数字越小优先级越高	
+//数字越小优先级越高
 #define SDIO_IRQn_Priority	1
 #define USB_LP_CAN1_RX0_IRQn_Priority 2
 #define EXTI15_10_IRQn_Priority 3	//触摸屏
@@ -12,7 +12,7 @@
 #define EXTI3_IRQn_Priority	4		//cc2500
 #define EXTI9_5_IRQn_Priority		4		//cc2500
 #define EXTI4_IRQn_Priority	5		//vs1003
-#define RTC_Priority 6		
+#define RTC_Priority 6
 #define USART1_IRQn_Priority 7
 #define USART3_IRQn_Priority 8
 #define TIME2_IRQn_Priority 9

@@ -1,7 +1,7 @@
 #ifndef __UART_H__
 #define __UART_H__
 
-#include "stm32f10x.h"
+#include "stm32f2xx.h"
 
 void COM1_Init(void);
 void COM3_Init(void);

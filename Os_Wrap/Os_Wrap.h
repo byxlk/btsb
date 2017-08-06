@@ -9,7 +9,8 @@
 #ifndef QSYS_OS_WRAP_H
 #define QSYS_OS_WRAP_H
 
-#include "stm32f10x.h"
+#include "stm32f2xx.h"
+
 #include "Q_Heap.h"
 
 #include "Os_Select.h"
@@ -41,7 +42,7 @@ typedef void * OS_MutexHandler;
 #define OS_MINIMAL_STACK_SIZE		128
 #define OS_HIGHEST_PRIORITIES		6
 #define OS_LOWEST_PRIORITIES		OS_LOWEST_PRIO+2
-#define OS_TICK_RATE_HZ			OS_TICKS_PER_SEC			
+#define OS_TICK_RATE_HZ			OS_TICKS_PER_SEC
 #define OS_TICK_RATE_MS			(1000/OS_TICKS_PER_SEC)
 #define OS_MAX_DELAY					0
 #define OS_NO_DELAY					0xffff
@@ -93,7 +94,7 @@ u32 OS_GetCurrentSysMs(void)	;
 #else
 #define OS_IntEnter()		{CPU_CRITICAL_ENTER();OSIntNesting++;CPU_CRITICAL_EXIT();}
 #endif
-#define OS_IntExit()	    OSIntExit()	
+#define OS_IntExit()	    OSIntExit()
 
 #define OS_DeclareCritical()	CPU_SR cpu_sr
 #define OS_EnterCritical 	OS_ENTER_CRITICAL
@@ -116,7 +117,7 @@ typedef void *OS_MutexHandler;
 #define ISR_HIGHEST_PRIORITIES		1
 #define ISR_LOWEST_PRIORITIES		15
 #define OS_HIGHEST_PRIORITIES		64
-#define OS_TICK_RATE_HZ				500			
+#define OS_TICK_RATE_HZ				500
 #define OS_TICK_RATE_MS				(1000/OS_TICK_RATE_HZ)
 #define OS_MAX_DELAY				0
 #define OS_NO_DELAY					0xffff
@@ -150,14 +151,14 @@ u8 OS_MutexTake(OS_MutexHandler Mutex, u16 WaitTicks);
 u8 OS_MutexGive(OS_MutexHandler Mutex);
 u32 OS_GetCurrentTick(void);
 u32 OS_GetCurrentSysMs(void);
-//os marco	   
+//os marco
 extern void vPortEnterCritical( void );
 extern void vPortExitCritical( void );
-extern void OS_IntEnter(void);		
+extern void OS_IntEnter(void);
 extern void OS_IntExit(void);
 void OS_SchedLock(void);
 void OS_SchedUnlock(void);
-#define OS_DeclareCritical()	
+#define OS_DeclareCritical()
 #define OS_EnterCritical 	vPortEnterCritical
 #define OS_ExitCritical 	vPortExitCritical
 
@@ -167,6 +168,6 @@ void OS_SchedUnlock(void);
 #define CPU_SR u32
 
 
-#endif				 
+#endif
 #endif
 

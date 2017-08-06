@@ -543,8 +543,8 @@ void InputHandler_Task( void *Task_Parameters )
 		}
 
 		//系统信息处理
-		if((SysMsg&SM_TouchOff)||(CoMsg&CO_TouchOff)) Disable_Touch_Inperrupt();
-		if((SysMsg&SM_TouchOn)||(CoMsg&CO_TouchOn)) Enable_Touch_Inperrupt();
+		//if((SysMsg&SM_TouchOff)||(CoMsg&CO_TouchOff)) Disable_Touch_Inperrupt();
+		//if((SysMsg&SM_TouchOn)||(CoMsg&CO_TouchOn)) Enable_Touch_Inperrupt();
 		
 		if((SysMsg&SM_ExtiKeyOff)||(CoMsg&CO_ExtiKeyOff)) OS_TaskSuspend(KeysHandler_Task_Handle);//挂起按键监控线程
 		if((SysMsg&SM_ExtiKeyOn)||(CoMsg&CO_ExtiKeyOn)) OS_TaskResume(KeysHandler_Task_Handle);//恢复按键监控线程

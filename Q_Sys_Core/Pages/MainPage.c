@@ -6,7 +6,7 @@
  * Description : This the first page in Q-sys
  * WebSite : Www.Q-ShareWe.Com
  ***************** Q-SYS *******************/
- 
+
 #include "User.h"
 #include "MusicHandler.h"
 #include "MainPage.h"
@@ -26,7 +26,7 @@ typedef enum
 	ExtiKey2,
 
 	//后面的硬件版本将支持更多外部中断按键或者无线键盘，
-	//所以触摸键值从0x40开始，将前面的键值都留下来	
+	//所以触摸键值从0x40开始，将前面的键值都留下来
 	MusicKV=USER_KEY_VALUE_START,
 	EBookKV,
 	PictureKV,
@@ -35,7 +35,7 @@ typedef enum
 	CalculatorKV,
 	PrevKV,
 	NextKV,
-	
+
 	HomeKV,
 	MailKV,
 	RingKV,
@@ -51,7 +51,7 @@ static const IMG_BUTTON_OBJ ImgButtonCon[]={
 	{"Picture",	PictureKV,	RelMsk,120,33,50,70,0,0,"Picture",FatColor(0xff0000)},
 	{"AppList",	AppListKV,	RelMsk,171,33,50,70,0,0,"AppList",FatColor(0xff0000)},
 	{">",				NextKV,	RelMsk,222,33,18,70,0,25,"Right",FatColor(NO_TRANS)},
-	
+
 	//液晶屏下面非显示区域的四个键
 	{"",HomeKV,RelMsk,0,320,60,30,0,0,"",FatColor(NO_TRANS)},
 	{"",MailKV,RelMsk,60,320,60,30,0,0,"",FatColor(NO_TRANS)},
@@ -73,11 +73,11 @@ const PAGE_ATTRIBUTE MainPage={
 		0,0,
 		1,3,2
 	},
-	
+
 	ImgButtonCon, //touch region array
 	NULL,//CharButtonCon,
-	
-	SystemEventHandler, //init page or app function  
+
+	SystemEventHandler, //init page or app function
 	PeripheralsHandler,
 	Bit(Perip_RtcMin)|Bit(Perip_LcdOff)|Bit(Perip_LcdOn)|Bit(Perip_UartInput)|
 	Bit(Perip_Timer)|Bit(Perip_RtcAlarm)|Bit(Perip_KeyPress)|Bit(Perip_KeyRelease),
@@ -96,7 +96,7 @@ static void DispTime(void)
 
 	if(Gui_GetBgLightVal()==0) return;//背光没亮，无需更新
 
-	RTC_GetTime(&Time);
+	RTC_GetRealTime(&Time);
 	sprintf(TimeMsg,"%02d月%02d日 周%s",Time.mon,Time.day,Week[Time.week]);
 
 	DrawRegion.x=0;
@@ -105,7 +105,7 @@ static void DispTime(void)
 	DrawRegion.h=18;
 	DrawRegion.Color=FatColor(NO_TRANS);
 	Gui_Draw24Bmp("Theme/F/MainPage/Bg/A01.Bmp",&DrawRegion);
-	
+
 	DrawRegion.x=4;
 	DrawRegion.y=4;
 	DrawRegion.w=120;
@@ -140,35 +140,35 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent,int IntParam,void *pSysParam)
 			Time=OS_GetCurrentTick();
 			DrawRegion.x=DrawRegion.y=0;
 			DrawRegion.w=240;
-			DrawRegion.h=320;	
+			DrawRegion.h=320;
 			DrawRegion.Color=FatColor(0xffffff);
-      		Gui_FillBlock(&DrawRegion);	
+      		Gui_FillBlock(&DrawRegion);
 			DrawRegion.Color=FatColor(NO_TRANS);
-			Gui_DrawImgBin("Theme/F/MainPage/Bg/BG2.bin",&DrawRegion);		
+			Gui_DrawImgBin("Theme/F/MainPage/Bg/BG2.bin",&DrawRegion);
 
 			DrawRegion.x=25;
 			DrawRegion.y=119+5;
 			DrawRegion.w=189;
-			DrawRegion.h=105;			
+			DrawRegion.h=105;
 			DrawRegion.Space=0x19;
 			Gui_DrawFont(GBK12_FONT,"酷系统 V2.0\n这是一个用于酷学玩开发板的系统框架，可以自由添加应用，代码开源，更多信息，请浏览官方网站!",&DrawRegion);
-			
+
 			Debug("Display Bmp Time:%d\n\r",(OS_GetCurrentTick()-Time)<<1);
 			DispTime();
 			break;
 		case Sys_TouchSetOk:
 			break;
-		case Sys_TouchSetOk_SR:		
+		case Sys_TouchSetOk_SR:
 			DispTime();
 			break;
 		default:
 			Debug("You should not here! %d\n\r",SysEvent);
 			//while(1);
 	}
-	
+
 	return 0;
 }
-		
+
 static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pParam)
 {
 	switch(PeripEvent)
@@ -186,7 +186,7 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 				case ExtiKey2:
 					Debug("Key%d,%d\n\r",ExtiKey2,Perip_KeyPress);
 
-					break; 
+					break;
 			}break;
 		case Perip_KeyRelease:
 			switch(IntParam){
@@ -201,14 +201,14 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 				case ExtiKey2:
 					Debug("Key%d,%d\n\r",ExtiKey2,Perip_KeyRelease);
 					Q_GotoPage(GotoNewPage,"AppListPage",0,NULL);
-					break; 
+					break;
 			}break;
-		case Perip_Timer:			
+		case Perip_Timer:
 			break;
-		case Perip_RtcMin:		
+		case Perip_RtcMin:
 			DispTime();
 			break;
-		case Perip_RtcAlarm:	
+		case Perip_RtcAlarm:
 			Debug("Alarm!!!\n\r");
 			break;
 		case Perip_LcdOff:
@@ -249,14 +249,14 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 	MUSIC_EVENT MusicEvent;
 
 	//GUI_REGION DrawRegion;
-	
+
 	//u32 cpu_sr;
 	//u8 buf[]="12345\n\r";
 	//FILELIST_SET FileListPageParam;
 
 	switch(Key)
 	{
-		case NextKV:		
+		case NextKV:
 			break;
 		case PrevKV:
 			break;
@@ -354,7 +354,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 	Key=0;
 	Q_SpiFlashSync(FlashRead,0,4,(void *)&Key);
 	Debug("buf %d\n\r",Key);
-#endif	
+#endif
 			break;
 		case CallKV:
 		#if 1//debug by karlno
@@ -364,13 +364,13 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 	//MusicEvent.pParam=NULL;
 	Q_MusicSync(&MusicEvent);
 	OS_TaskDelayMs(100);
-#endif	
+#endif
 			break;
 		default:
 			Debug("You should not here!Key:%d\n\r",Key);
 			//while(1);
 	}
-	
+
 	return 0;
 }
 

@@ -5,7 +5,7 @@
 #ifndef QSYS_QWEB_H
 #define QSYS_QWEB_H
 
-#include "stm32f10x.h"
+#include "stm32f2xx.h"
 #include "PublicFunc.h"
 #include "Debug.h"
 #include "QWebApi.h"
@@ -35,7 +35,7 @@
 #define QW_N3	3//设备重发地址请求次数
 //4次数定义结束
 
- 
+
 //4 Q网时间定义，单位均为ms
 #define QW_T1	1000//设备启动时重发Query的时间
 #define QW_T2	50//数据包Data重发间隔
@@ -66,7 +66,7 @@ typedef enum{
 
 	//Settings
 	QWC_SET_SEND_TIME=0x21,//定时发送
-	
+
 }QW_CMD;//最高位表示方向
 
 //全局变量声明

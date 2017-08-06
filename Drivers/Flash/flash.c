@@ -1,4 +1,4 @@
-#include "stm32f10x.h"
+#include "stm32f2xx.h"
 
 //下面三个宏根据具体MCU的FLASH地址进行配置
 #define  FLASH_START     0x08000000
@@ -26,9 +26,9 @@ unsigned int FLASH_WriteBuf(void *Buf,unsigned int Num,unsigned int Address)
 		return 0;
 	for(i=0;i<Num/4;i++)
 	{
-		if( FLASH_ProgramWord(Address+4*i, ((unsigned int *)Buf)[i] ) != FLASH_COMPLETE) 
+		if( FLASH_ProgramWord(Address+4*i, ((unsigned int *)Buf)[i] ) != FLASH_COMPLETE)
 			return 0;
 	}
 	FLASH_Lock();   //开启写保护
-	return 1; 
+	return 1;
 }

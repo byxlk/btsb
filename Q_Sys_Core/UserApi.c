@@ -52,14 +52,14 @@ extern void *KeysHandler_Task_Handle;
 //开启触摸屏输入，外部按键输入
 void Q_EnableInput(void)
 {
-	Enable_Touch_Inperrupt();
+	//Enable_Touch_Inperrupt();
 	OS_TaskResume(KeysHandler_Task_Handle);//恢复按键监控线程
 }
 
 //关闭触摸屏输入，外部按键输入
 void Q_DisableInput(void)
 {
-	Disable_Touch_Inperrupt();
+	//Disable_Touch_Inperrupt();
 	OS_TaskSuspend(KeysHandler_Task_Handle);//挂起按键监控线程
 }
 

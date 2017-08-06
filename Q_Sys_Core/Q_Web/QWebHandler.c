@@ -141,10 +141,10 @@ u8 QW_WaitRecvSem(u16 WaitMs)
 {
 	u8 Error;
 
-	CC2500_InterruptEnable(TRUE);//开启中断
-	CC2500_SetRxd();
+	//CC2500_InterruptEnable(TRUE);//开启中断
+	//CC2500_SetRxd();
 	Error=OS_SemaphoreTake(gRfRecvHandler_Sem,OS_Ms2Tick(WaitMs));
-	CC2500_InterruptEnable(FALSE);//关闭中断
+	//CC2500_InterruptEnable(FALSE);//关闭中断
 	return Error;
 }
 

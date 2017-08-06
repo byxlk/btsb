@@ -12,7 +12,7 @@
 
 #else			/* Embedded platform */
 
-#include "stm32f10x.h"
+#include "stm32f2xx.h"
 
 /* These types must be 16-bit, 32-bit or larger integer */
 typedef int				INT;

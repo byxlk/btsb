@@ -14,7 +14,7 @@
 *******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f10x_it.h"
+#include <stm32f2xx_it.h>
 #include "usb_lib.h"
 #include "usb_prop.h"
 #include "usb_desc.h"
@@ -49,19 +49,19 @@ void USB_SetHw(void)
 	NVIC_InitTypeDef NVIC_InitStructure;
 
 	/* Select USBCLK source */
-	RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
+	//RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);
 
 	/* Enable the USB clock */
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
+	//RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);
 
 	//配置usb-m
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);	
 	//GPIO_SetBits(GPIOB,GPIO_Pin_1);		//低电平会使usb D+上拉
 
-	NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
+	//NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = USB_LP_CAN1_RX0_IRQn_Priority;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;

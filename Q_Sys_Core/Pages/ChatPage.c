@@ -1,12 +1,12 @@
 /**************** Q-SYS *******************
  * PageName : ChatPage
  * Author : YourName
- * Version : 
+ * Version :
  * Base Q-Sys Version :
  * Description :
  * WebSite : Www.Q-ShareWe.Com
  ***************** Q-SYS *******************/
- 
+
 #include "User.h"
 #include "Theme.h"
 #include "QWebPage.h"
@@ -24,7 +24,7 @@ typedef enum
 	ExtiKeyDown=EXTI_KEY_VALUE_START,//系统默认将外部中断按键发送到第一个键值
 	ExtiKeyUp,
 	ExtiKeyEnter,
-	
+
 	//后面的硬件版本将支持更多外部中断按键或者无线键盘，
 	//所以触摸键值从USER_KEY_VALUE_START开始，将前面的键值都留下来
 	BackKV=USER_KEY_VALUE_START,
@@ -67,10 +67,10 @@ typedef enum
 //支持的最大触摸区域个数为MAX_TOUCH_REGION_NUM
 //系统显示和触摸的所有坐标系均以屏幕左上角为原点(x 0,y 0)，右下角为(x 320,y 240)
 static const IMG_BUTTON_OBJ ImgButtonCon[]={
-	//KeyName,ObjID,OptionMask,Tch_x,Tch_y,Tch_w,Tch_h,Img_x,Img_y,BmpPathPrefix,NormalSuf,PressSuf,ReleaseSuf,TransColor},	
+	//KeyName,ObjID,OptionMask,Tch_x,Tch_y,Tch_w,Tch_h,Img_x,Img_y,BmpPathPrefix,NormalSuf,PressSuf,ReleaseSuf,TransColor},
 	{"", ChatKV,RelMsk,CHAT_FRAME_X,CHAT_FRAME_Y,CHAT_FRAME_W,CHAT_FRAME_H,0,0,"",FatColor(NO_TRANS)},
 	{"", SendKV,RelMsk,SEND_FRAME_X,SEND_FRAME_Y,SEND_FRAME_W,SEND_FRAME_H,0,0,"",FatColor(NO_TRANS)},
-	
+
 	//液晶屏下面非显示区域的四个键
 	{"",HomeKV,RelMsk,0,320,60,30,0,0,"",FatColor(NO_TRANS)},
 	{"",MessageKV,RelMsk,60,320,60,30,0,0,"",FatColor(NO_TRANS)},
@@ -92,7 +92,7 @@ const PAGE_ATTRIBUTE ChatPage={
 	},
 	ImgButtonCon, //touch region array
 	NULL,
-	
+
 	SystemEventHandler,
 	PeripheralsHandler,
 	Bit(Perip_KeyPress)|Bit(Perip_KeyRelease)|
@@ -153,7 +153,7 @@ static void DispChatList(void)//显示聊天记录
 {
 	u8 i;
 	u16 StartY=CHAT_FRAME_Y;
-	
+
 	for(i=gpCpVars->ChatListDispIdx;i<CHAT_LIST_COL_NUM;i++)
 	{
 		StartY=DispOneRecord(StartY,i);
@@ -174,15 +174,15 @@ static void InsertOneRecord(u8 *pStr,u8 SrcAddr)
 	if(gpCpVars->LastRecordRole!=SrcAddr)//如果上一条和这一条是同一个人发的，无需显示名字信息
 	{
 		//插入名字
-		RTC_GetTime(&NowTime);
+		RTC_GetRealTime(&NowTime);
 		if(QWA_GetMyAddr()==SrcAddr)//is my
 		{
-			sprintf((void *)gpCpVars->ChatList[gpCpVars->ChatListDispIdx],"%s (%02d:%02d:%02d)",QWA_MyQWebName(NULL),NowTime.hour,NowTime.min,NowTime.sec);		
+			sprintf((void *)gpCpVars->ChatList[gpCpVars->ChatListDispIdx],"%s (%02d:%02d:%02d)",QWA_MyQWebName(NULL),NowTime.hour,NowTime.min,NowTime.sec);
 			gpCpVars->ChatListColor[gpCpVars->ChatListDispIdx]=CHAT_MY_NAME_COLOR;
 		}
 		else
 		{
-			sprintf((void *)gpCpVars->ChatList[gpCpVars->ChatListDispIdx],"%s (%02d:%02d:%02d)",QWP_GetNameByAddr(SrcAddr),NowTime.hour,NowTime.min,NowTime.sec);		
+			sprintf((void *)gpCpVars->ChatList[gpCpVars->ChatListDispIdx],"%s (%02d:%02d:%02d)",QWP_GetNameByAddr(SrcAddr),NowTime.hour,NowTime.min,NowTime.sec);
 			gpCpVars->ChatListColor[gpCpVars->ChatListDispIdx]=CHAT_SHE_NAME_COLOR;
 		}
 		gpCpVars->ChatListDispIdx++;
@@ -196,12 +196,12 @@ static void InsertOneRecord(u8 *pStr,u8 SrcAddr)
 	while(1)
 	{
 		CopyLen=Len;
-		
+
 		if(CopyLen>CHAT_LIST_ROW_BYTE)
 		{
 			CopyLen=CalculateRowByteNums(pStr,CHAT_LIST_ROW_BYTE);
 		}
-		
+
 		MemCpy(gpCpVars->ChatList[gpCpVars->ChatListDispIdx],pStr,CopyLen);
 		gpCpVars->ChatList[gpCpVars->ChatListDispIdx][CopyLen]=0;
 		if(QWA_GetMyAddr()==SrcAddr) gpCpVars->ChatListColor[gpCpVars->ChatListDispIdx]=CHAT_MY_TXT_COLOR;
@@ -230,12 +230,12 @@ static SYS_MSG RecvQwebData(PERIP_EVT PeripEvent,int IntParam, void *pParam)
 static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysParam)
 {
 	GUI_REGION DrawRegion;
-	
+
 	switch(SysEvent)
 	{
 		case Sys_PreGotoPage:
 			break;
-		case Sys_PageInit:		//系统每次打开这个页面，会处理这个事件				
+		case Sys_PageInit:		//系统每次打开这个页面，会处理这个事件
 			gpCpVars=Q_PageMallco(sizeof(CHAT_PAGE_VARS));
 			MemSet(gpCpVars,0,sizeof(CHAT_PAGE_VARS));
 			//QWA_MyQWebName("我不怕");
@@ -245,9 +245,9 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 			DrawRegion.w=240;
 			DrawRegion.h=21;
 			DrawRegion.Color=FatColor(NO_TRANS);
-			Gui_FillImgArray((u8 *)gImage_StatusBar1,1,21,&DrawRegion);	
+			Gui_FillImgArray((u8 *)gImage_StatusBar1,1,21,&DrawRegion);
 			DrawTitle1(ASC14B_FONT,"ChatPage",(240-strlen("ChatPage")*GUI_ASC14B_ASCII_WIDTH)>>1,strlen("ChatPage"),FatColor(0xe0e0e0));//写标题
-			
+
 			//画背景
 			DrawRegion.x=0;
 			DrawRegion.y=21;
@@ -255,14 +255,14 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 			DrawRegion.h=320-21;
 			DrawRegion.Color=FatColor(0x8b8a8a);
 			Gui_FillBlock(&DrawRegion);
-			
+
 			{//draw info
 				u8 Buf[32];
 				if(SysEvent==Sys_PageInit)//复制地址和名字
 				{
 					gpCpVars->DstAddr=IntParam;
 					MemCpy(gpCpVars->DstName,pSysParam,16);
-				}				
+				}
 				DrawRegion.x=8;
 				DrawRegion.y=26;
 				DrawRegion.w=200;
@@ -272,7 +272,7 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 				sprintf((void *)Buf,"Chat With [%d]%s\n\r",gpCpVars->DstAddr,(u8 *)gpCpVars->DstName);
 				Gui_DrawFont(GBK12_FONT,Buf,&DrawRegion);
 			}
-			
+
 			//画框
 			DrawFrame1(CHAT_FRAME_Y-6,CHAT_FRAME_H+12);
 			DrawFrame1(SEND_FRAME_Y-6,SEND_FRAME_H+12);
@@ -285,12 +285,12 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 				DrawRegion.Space=0x02;
 				DrawRegion.Color=HELP_TXT_COLOR;
 				Gui_DrawFont(GBK16_FONT,"点击下部框体可通过输入法输入字符串，点击上部框体发送。点小房子图标退出。",&DrawRegion);
-			}		  
+			}
 
 			if(strcmp((void *)Q_GetPageByTrack(1)->Name,"KeyBoardPage")==0)//从输入法页面返回
 			{
 				Q_DisableGobalPeripEvent(Perip_QWebRecv,RecvQwebData);//关掉全局事件
-			
+
 				if(IntParam)
 				{//send frame
 					DrawRegion.x=SEND_FRAME_X;
@@ -323,7 +323,7 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 			Debug("%s SystemEventHandler:This System Event Handler case unfinish! SysEvent:%d\n\r",Q_GetCurrPageName(),SysEvent);
 			//while(1);
 	}
-	
+
 	return 0;
 }
 
@@ -340,7 +340,7 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 					break;
 				case ExtiKeyDown:
 					Q_PresentTch(RightArrowKV,Tch_Press);
-					break; 
+					break;
 			}break;
 		case Perip_KeyRelease:
 			switch(IntParam){
@@ -358,7 +358,7 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 					break;
 				case ExtiKeyDown:
 					Q_PresentTch(RightArrowKV,Tch_Release);
-					break; 
+					break;
 			}break;
 
 		case Perip_QWebRecv:
@@ -395,7 +395,7 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 				}
 			}
 			break;
-			
+
 		case Perip_UartInput:
 			if((IntParam>>16)==1)//串口1
 			{
@@ -403,7 +403,7 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 				if(IntParam!=0)
 				{//send frame
 					GUI_REGION DrawRegion;
-					
+
 					DrawRegion.x=SEND_FRAME_X;
 					DrawRegion.y=SEND_FRAME_Y;
 					DrawRegion.w=SEND_FRAME_W;
@@ -417,7 +417,7 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 					if(IntParam>CHAT_BUF_MAX_BYTES) IntParam=CHAT_BUF_MAX_BYTES;
 					MemCpy(gpCpVars->SendBuf,pParam,IntParam);
 					gpCpVars->SendBuf[IntParam]=0;
-				}			
+				}
 				else if((IntParam==0)&&((((u16 *)pParam)[0]==0x445b)||(((u16 *)pParam)[0]==0x435b))&&strlen((void *)gpCpVars->SendBuf))//前后键发送
 				{
 					Debug("Send to Addr%d %s\n\r",strlen((void *)gpCpVars->SendBuf),gpCpVars->SendBuf);
@@ -433,7 +433,7 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 
 //当使用者按下本页TouchRegionSet里定义的按键时，会触发这个函数里的对应事件
 static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
-{		
+{
 	switch(Key)
 	{
 		case BackKV:
@@ -441,7 +441,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 			break;
 		case DoneKV:
 			Q_GotoPage(SubPageReturn,"",0,NULL);//返回前一个页面
-			break;	
+			break;
 		case LeftArrowKV:
 			break;
 		case DotKV:
@@ -459,7 +459,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 			break;
 		case SendKV:
 			Q_GotoPage(GotoSubPage,"KeyBoardPage",CHAT_BUF_MAX_BYTES,gpCpVars->SendBuf);
-			break;		
+			break;
 		case HomeKV:
 			Q_GotoPage(SubPageReturn,"",0,NULL);//返回前一个页面
 			break;
@@ -472,7 +472,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 			Debug("%s ButtonHandler:This Touch Event Handler case unfinish! Key:%d\n\r",Q_GetCurrPageName(),Key);
 			///while(1);
 	}
-	
+
 	return 0;
 }
 

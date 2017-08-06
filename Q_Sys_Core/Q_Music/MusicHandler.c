@@ -145,10 +145,10 @@ u32 Q_MusicGetPlayMs(void)
 
 void SetMusicParam(MUSIC_PARAM *pMP)
 {
-	VsWriteReg(REG_CLOCKF, pMP->ClockF);//设置vs1003的时钟,3倍频
-	VsWriteReg (REG_AUDATA, pMP->AuData); //采样率48k，立体声
-	VsWriteReg(REG_BASS, pMP->Bass);//设置重音
-	VsWriteReg(REG_VOL,pMP->Vol);
+	//VsWriteReg(REG_CLOCKF, pMP->ClockF);//设置vs1003的时钟,3倍频
+	//VsWriteReg (REG_AUDATA, pMP->AuData); //采样率48k，立体声
+	//VsWriteReg(REG_BASS, pMP->Bass);//设置重音
+	//VsWriteReg(REG_VOL,pMP->Vol);
 }
 
 #if 1 //mp3解析
@@ -786,9 +786,9 @@ HandleEvent:
 				if(gNowState==MusicPlay)//从播放单曲到持续播放
 				{
 					gNowState=MusicContinue;
-					VsStart();
+					//VsStart();
 					SetMusicParam(&gMusicParam);
-					VsResetDecodeTime();
+					//VsResetDecodeTime();
 					SendByte=ReadByte=0;
 					ME.Cmd=MusicContinue;
 					goto HandleEvent;
@@ -943,7 +943,7 @@ HandleEvent:
 							OS_SemaphoreTake(gVsDreq_Sem,OS_MAX_DELAY);
 						}
 	      			} 
-	      			VsStop();
+	      			//VsStop();
 	      			
 					if(Q_InspectPeripEvt(PRID_Current,Perip_MscStop))//发送停止事件
 					{
@@ -962,7 +962,7 @@ HandleEvent:
 				ME.Cmd=gNowState;//储存当前状态
 				gNowState=MusicChangeVol;//改变当前状态
 				gMusicParam.Vol=(u16)ME.ParamU16;
-				VsWriteReg(REG_VOL,gMusicParam.Vol);
+				//VsWriteReg(REG_VOL,gMusicParam.Vol);
 
 				//从持续播放到修改音量
 				if(ME.Cmd==MusicContinue)	goto HandleEvent;
@@ -972,13 +972,13 @@ HandleEvent:
 				ME.Cmd=gNowState;//储存当前状态
 				gNowState=MusicSetIo;//改变当前状态
 
-				VsLedSet((ME.ParamU16&0x0f)?TRUE:FALSE,(ME.ParamU16>>4)?TRUE:FALSE);
+				//VsLedSet((ME.ParamU16&0x0f)?TRUE:FALSE,(ME.ParamU16>>4)?TRUE:FALSE);
 
 				if(ME.Cmd==MusicContinue)	goto HandleEvent;
 				else if(ME.Cmd==MusicPause)	goto HandleEvent;
 				break;
 			case MusicGetFFT:
-				VsGetSpec(ME.pParam);
+				//VsGetSpec(ME.pParam);
 				break;
 			default:
 				Debug("No Finish State! State:%d -> %d\n\r",gNowState,ME.Cmd);

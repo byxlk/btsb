@@ -37,15 +37,13 @@ void GPIO_Config(void)
 
 	//使能按键GPIO端口
 	//同时也要使能AFIO时钟，使用引脚的重映射功能和外部中断时需要使能AFIO的时钟。
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA |
-												  RCC_APB2Periph_GPIOE | 
-												  RCC_APB2Periph_AFIO, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOE, ENABLE);
 
 #if 1//initailize pc13 for rtc hardware bug
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC,ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC,ENABLE);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
 	GPIO_InitStructure.GPIO_Speed=GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 #endif
 }
@@ -140,9 +138,9 @@ while(1);
 	DisplayBuf(buf,20,8);
 	Debug("\n\r");
 	
-	SPI_Touch_Init();//触摸屏
+	//SPI_Touch_Init();//触摸屏
 
-	VsInit();//Vs1003的配置
+	//VsInit();//Vs1003的配置
 
 	//sd卡文件系统初始化
 	if(disk_initialize(0))

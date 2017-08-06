@@ -12,7 +12,7 @@ qÍø´«Êä
 
 bool QW_HwSetup(void)
 {
-	return CC2500_Init();
+	return 0;//CC2500_Init();
 }
 
 u8 QW_SendPacket(QW_PACKET_HEADER *pPacket)
@@ -29,7 +29,7 @@ u8 QW_SendPacket(QW_PACKET_HEADER *pPacket)
 	pPacket->DstAddr=((u8 *)pPacket)[0];
 	((u8 *)pPacket)[0]=DA;
 
-	Cnt=CC2500_SendPacket((void *)pPacket,sizeof(QW_PACKET_DATA));
+	Cnt=0; //CC2500_SendPacket((void *)pPacket,sizeof(QW_PACKET_DATA));
 	
 	//»Ö¸´½»»»
 	DA=pPacket->DstAddr;
@@ -43,7 +43,7 @@ u8 QW_SendPacket(QW_PACKET_HEADER *pPacket)
 u8 QW_RecvPacket(QW_PACKET_HEADER *pPacket)
 {
 	u8 Len,DA;
-	Len=CC2500_ReceivePacket((void *)pPacket);
+	Len= 0; //CC2500_ReceivePacket((void *)pPacket);
 
 	if(Len==0)
 	{
@@ -129,12 +129,12 @@ u8 QW_RecvPacket(QW_PACKET_HEADER *pPacket)
 
 void QWeb_SetAddrMode(u8 MyAddr,bool RecvBroadcost)
 {
-	if(RecvBroadcost) CC2500_SetRecvAddr(CRA_FIXED_00,MyAddr);
-	else CC2500_SetRecvAddr(CRA_FIXED,MyAddr);
+	//if(RecvBroadcost) CC2500_SetRecvAddr(CRA_FIXED_00,MyAddr);
+	//else CC2500_SetRecvAddr(CRA_FIXED,MyAddr);
 
-#ifdef QW_IN_DEBUG //for debug
-	CC2500_SetRecvAddr(CRA_ALL,MyAddr);
-#endif
+//#ifdef QW_IN_DEBUG //for debug
+//	CC2500_SetRecvAddr(CRA_ALL,MyAddr);
+//#endif
 }
 
 

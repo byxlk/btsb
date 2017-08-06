@@ -1,10 +1,10 @@
 /**************** Q-OS *******************
- * PageName : 
+ * PageName :
  * Author : YuanYin
- * Version : 
+ * Version :
  * Description :
  * WebSite : Www.Q-ShareWe.Com
- ***************** Q-OS *******************/ 
+ ***************** Q-OS *******************/
 
 #include "User.h"
 #include "Theme.h"
@@ -65,14 +65,14 @@ const PAGE_ATTRIBUTE MusicPage={
 	"Music page",
 	NORMAL_PAGE,
 	0,
-	
+
 	{
 		sizeof(ImgButtonCon)/sizeof(IMG_BUTTON_OBJ), //size of touch region array
 		0,//sizeof(CharButtonCon)/sizeof(CHAR_BUTTON_OBJ), //size of touch region array,
 	},
 	ImgButtonCon,
 	NULL,
-	
+
 	SystemEventHandler,
 	PeripheralsHandler,
 	Bit(Perip_KeyPress)|Bit(Perip_KeyRelease)|Bit(Perip_RtcMin)|Bit(Perip_MscPlay)|Bit(Perip_MscPause)|
@@ -112,8 +112,8 @@ static void DispTime(void)
 {
 	RTC_TIME Time;
 	char TimeMsg[64];
-		
-	RTC_GetTime(&Time);
+
+	RTC_GetRealTime(&Time);
 	sprintf(TimeMsg,"%02d:%02d",Time.hour,Time.min);
 	//Debug("%04d年%02d月%02d日 星期%d %02d:%02d\n\r",Time.year,Time.mon,Time.day,Time.week+1,Time.hour,Time.min,Time.sec);
 
@@ -142,7 +142,7 @@ static void UpdataPlayTime(u16 PlayTime,u16 TotalTime,bool DispTotalTime)
 		DrawRegion.Color=FatColor(PRO_BAR_COLOR);
 		Gui_DrawFont(GBK12_FONT,TimeStr,&DrawRegion);
 	}
-	
+
 	if((TotalTime<6000)&&(DispTotalTime))//更新总时间
 	{
 		sprintf((void *)TimeStr,"%02d:%02d",TotalTime/60,TotalTime%60);
@@ -175,7 +175,7 @@ static u8 DispProgressBar(u8 Cmd,u16 TotalTime,u16 NewPixelX,u32 NewPlayTime)
 			DrawRegion.h=PRO_BAR_DOT_HIGHT;
 			DrawRegion.Color=FatColor(MUSIC_PAGE_BG_COLOR);
 			Gui_FillBlock(&DrawRegion);
-			
+
 			//初始化进度条
 			DrawRegion.y=PRO_BAR_START_Y;
 			DrawRegion.h=PRO_BAR_HIGHT;
@@ -208,11 +208,11 @@ static u8 DispProgressBar(u8 Cmd,u16 TotalTime,u16 NewPixelX,u32 NewPlayTime)
 			UpdataPlayTime(PlayTime,TotalTime,FALSE);//更新播放时间
 			break;
 	}
-	
+
 	//设置步进尺度
  	if(((Cmd==PROGBAR_USER_IN)&&(NewPixelX>OldPixelX-2)&&(NewPixelX<OldPixelX+2))||(NewPixelX==OldPixelX))
  		return (NewPixelX-PRO_BAR_START_X)*99/PRO_BAR_WIDTH;
-	
+
 	//去掉旧进度点
 	DrawRegion.x=OldPixelX;
 	DrawRegion.y=PRO_BAR_DOT_START_Y;
@@ -220,7 +220,7 @@ static u8 DispProgressBar(u8 Cmd,u16 TotalTime,u16 NewPixelX,u32 NewPlayTime)
 	DrawRegion.h=PRO_BAR_DOT_HIGHT;
 	DrawRegion.Color=FatColor(MUSIC_PAGE_BG_COLOR);
 	Gui_FillBlock(&DrawRegion);
-	
+
 	if(OldPixelX<NewPixelX) //画高亮部分
 	{
 		DrawRegion.x=OldPixelX;
@@ -247,16 +247,16 @@ static u8 DispProgressBar(u8 Cmd,u16 TotalTime,u16 NewPixelX,u32 NewPlayTime)
 	DrawRegion.h=PRO_BAR_DOT_HIGHT;
 	DrawRegion.Color=FatColor(PRO_BAR_DOT_COLOR);
 	Gui_PixelFill(ProgBarDot,&DrawRegion);
-	
+
 	OldPixelX=NewPixelX;
-	
+
 	return (NewPixelX-PRO_BAR_START_X)*99/PRO_BAR_WIDTH;
 }
 
 static void DispPlayBtn(void)
 {
 	if(Q_MusicGetState()==MusicPause)
-	{					
+	{
 		Q_ChangeImgTchImg(MpPlayKV,0);
 		Q_PresentTch(MpPlayKV,Tch_Release);
 	}
@@ -277,7 +277,7 @@ static void DispVolume(u8 Vol)
 {
 	GUI_REGION DrawRegion;
 	u8 Str[16];
-	
+
 	//写音量和模式
 	DrawRegion.x=125+60;
 	DrawRegion.y=52+90;
@@ -297,14 +297,14 @@ static void DispPlayInfo(const u8 *Name)
 	u8 str[40];
 	u8 *pstr;
 	u8 DispLines;
-	
+
 	//写标题
 	if(Q_MusicGetInfo()->Title[0]) Name=&Q_MusicGetInfo()->Title[0];
 
 	strcpy((void *)str,(void *)Name);
-	pstr=(void *)strstr((void *)str,".mp3"); 
+	pstr=(void *)strstr((void *)str,".mp3");
 	if(pstr!=NULL) *pstr='\0';
-	
+
 	DrawRegion.x=PLAY_NAME_X-1;
 	DrawRegion.y=PLAY_NAME_Y-1;
 	DrawRegion.w=224;
@@ -329,7 +329,7 @@ static void DispPlayInfo(const u8 *Name)
 	DrawRegion.x=PLAY_NAME_X;
 	DrawRegion.y=PLAY_NAME_Y+1;
 	Gui_DrawFont(GBK12_FONT,(void *)str,&DrawRegion);
-	
+
 	DrawRegion.x=PLAY_NAME_X;
 	DrawRegion.y=PLAY_NAME_Y;
     DrawRegion.Color=FatColor(0x000000);
@@ -353,7 +353,7 @@ static void DispPlayInfo(const u8 *Name)
 	DrawRegion.h=108-INFO_LINES_HIGHT;
 	DrawRegion.Space=INFO_LINES_SPACE;
     DrawRegion.Color=FatColor(0xffffff);
-    
+
     if(Q_MusicGetInfo()->Performer[0])
     {
     	sprintf((void *)str,"演唱者:%s",Q_MusicGetInfo()->Performer);
@@ -361,7 +361,7 @@ static void DispPlayInfo(const u8 *Name)
 		DrawRegion.y+=INFO_LINES_HIGHT*DispLines;
 		DrawRegion.h-=INFO_LINES_HIGHT*DispLines;
 	}
-	
+
     if(Q_MusicGetInfo()->Album[0])
     {
     	sprintf((void *)str,"专辑:%s",Q_MusicGetInfo()->Album);
@@ -406,10 +406,10 @@ static void DispPlayInfo(const u8 *Name)
 #define MAX_LRCPATH_LEN (MAX_LEN_FILENAME+7)
 
 //歌词对象属性
-typedef struct{		
+typedef struct{
 	char LrcPath[MAX_LRCPATH_LEN];//LRC文件路径
 	u32 TimeToText[MAX_LABEL][2]; //第一维为时间标签对应的时间（单位：毫秒），第二维为该时间对应的歌词偏移量或歌词字符串指针
-	u16 TimeLabels;				  //当前歌词文件所含的时间标签数 
+	u16 TimeLabels;				  //当前歌词文件所含的时间标签数
 	u8  ReadBuf[READBUF_SIZE];    //解析lrc用到的读缓存
 	u8  LyricBuf[LRCBUF_SIZE];    //歌词字符串缓存
 	GUI_REGION LrcRegion;         //当前句歌词显示区域
@@ -448,7 +448,7 @@ static u32 MU_CalTimMs(u32 BeginOrEnd,const char *FunctionName){
 	return 0;
 }
 void Lrc_Priv_GetLrcFile(void){//获得当前播放mp3对应的lrc文件路径
-	u8 i=0;	
+	u8 i=0;
 	if(gpMusicPath[0]==0)
 		return;
 	while(gpMusicPath[i]!='.'){
@@ -469,7 +469,7 @@ bool Lrc_Priv_LrcParse(void){//解析lrc文件
 	FS_FILE* Fp_Lrc;
 	u32      CutPos=0,ReadByte,TempTime,index=0,repeat=0,TempOffset=0,i=0,j,k=0;
 	bool     ON=FALSE,IfTimeLabel=FALSE;
-	if (( Fp_Lrc = FS_FOpen((void *)_TEXT(gpMpVar->LRC.LrcPath), FA_OPEN_EXISTING | FA_READ) )== 0 ){ 
+	if (( Fp_Lrc = FS_FOpen((void *)_TEXT(gpMpVar->LRC.LrcPath), FA_OPEN_EXISTING | FA_READ) )== 0 ){
 		Debug("打开歌词文件%s失败\n\r",gpMpVar->LRC.LrcPath);
 		Gui_DrawFont(GBK12_FONT,"当前歌曲无对应歌词文件\r\n",&gpMpVar->LRC.LrcRegion);
 		return FALSE;
@@ -478,8 +478,8 @@ bool Lrc_Priv_LrcParse(void){//解析lrc文件
 		FS_FSeek(Fp_Lrc,CutPos,FS_SEEK_SET);
 		if((ReadByte=FS_FRead(gpMpVar->LRC.ReadBuf, 512, 1,Fp_Lrc))==0)
 			break;//读完文件退出循环
-		index=0;  //读缓存索引 
-		
+		index=0;  //读缓存索引
+
 		while(index<ReadByte){//通过这个while循环把时间和其对应的偏移量信息存入TimeToText二维表中
 			if(gpMpVar->LRC.ReadBuf[index]=='[')
 				ON=TRUE;
@@ -496,8 +496,8 @@ bool Lrc_Priv_LrcParse(void){//解析lrc文件
 							TempTime = TempTime + (gpMpVar->LRC.ReadBuf[index+4]-'0')*10 + (gpMpVar->LRC.ReadBuf[index+5]-'0');
 						gpMpVar->LRC.TimeToText[gpMpVar->LRC.TimeLabels][0]=TempTime;
 						gpMpVar->LRC.TimeLabels++;
-						repeat++;							
-					}			
+						repeat++;
+					}
 				}
 			}
 			if( gpMpVar->LRC.ReadBuf[index]=='\n'){
@@ -513,17 +513,17 @@ bool Lrc_Priv_LrcParse(void){//解析lrc文件
 					CutPos+=index+1;
 					break;
 				}
-			}			
+			}
 			index++;
 			if(index==ReadByte)
 				CutPos+=(index+1);
-		}		
+		}
 	}
 	while( i < gpMpVar->LRC.TimeLabels ){//这个while循环将根据TimeToText二维表中的第二维从lrc读出歌词放入LyricBuf中并将TimeToText二维表中的第二维更新为LyricBuf中每句歌词字符串的首地址
 		FS_FSeek(Fp_Lrc,gpMpVar->LRC.TimeToText[i][1],FS_SEEK_SET);
 		FS_FRead(&gpMpVar->LRC.LyricBuf[k], 100, 1,Fp_Lrc);
 		j=0;
-		while(gpMpVar->LRC.LyricBuf[k+j]!='\r')		
+		while(gpMpVar->LRC.LyricBuf[k+j]!='\r')
 			j++;
 		gpMpVar->LRC.LyricBuf[k+j]=0;
 		gpMpVar->LRC.TimeToText[i][1]=(u32)&gpMpVar->LRC.LyricBuf[k];
@@ -560,7 +560,7 @@ static void RtoY(u32 x,u32 y,u32 w,u32 h){//将一区域内的红色变为黄色
 	u32 y1;
 	u16 Color;
 	x1=x+w;
-	y1=y+h;	
+	y1=y+h;
 	for(y0=y;y0<y1;y0++){
 		for(x0=x;x0<x1;x0++){
 			Color=Gui_ReadPixel16Bit(x0,y0);
@@ -585,15 +585,15 @@ bool Lrc_Intf_Show(u32 time){//显示所给时间对应的歌词
 			k++;
 			return FALSE;
 		}
-		i++;	
-	}	
+		i++;
+	}
 	DrawRegion.x=LRC_BOX_X;
 	DrawRegion.y=LRC_BOX_Y;
 	DrawRegion.w=LRC_BOX_W;
 	DrawRegion.h=LRC_BOX_H;
 	DrawRegion.Color=FatColor(MUSIC_PAGE_BG_COLOR);
-	Gui_FillBlock(&DrawRegion);		
-		
+	Gui_FillBlock(&DrawRegion);
+
 	k=0;
 	if(*(u8 *)(gpMpVar->LRC.TimeToText[i][1])==0)
 		Gui_DrawFont(GBK12_FONT,"......",&gpMpVar->LRC.LrcRegion);
@@ -677,15 +677,15 @@ bool Lrc_Intf_ObscShow(u32 time){//模糊匹配并显示所给时间对应的歌词
 			TempTime = time/10 - gpMpVar->LRC.TimeToText[j][0];
 			i=j;
 		}
-	}	
-	
+	}
+
 	DrawRegion.x=LRC_BOX_X;
 	DrawRegion.y=LRC_BOX_Y;
 	DrawRegion.w=LRC_BOX_W;
 	DrawRegion.h=LRC_BOX_H;
 	DrawRegion.Color=FatColor(MUSIC_PAGE_BG_COLOR);
-	Gui_FillBlock(&DrawRegion);		
-	
+	Gui_FillBlock(&DrawRegion);
+
 	if(*(u8 *)(gpMpVar->LRC.TimeToText[i][1])==0)
 		Gui_DrawFont(GBK12_FONT,"......",&gpMpVar->LRC.LrcRegion);
 	else
@@ -769,11 +769,11 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 	{
 		case Sys_PreGotoPage:
 			break;
-		case Sys_PageInit:	
-			gpMpVar=(MUSIC_PAGE_VARS *)Q_PageMallco(sizeof(MUSIC_PAGE_VARS));//申请空间	
+		case Sys_PageInit:
+			gpMpVar=(MUSIC_PAGE_VARS *)Q_PageMallco(sizeof(MUSIC_PAGE_VARS));//申请空间
 			if(gpMpVar==0){
 				Q_ErrorStopScreen("gpMpVar malloc fail !\n\r");
-			}	
+			}
 		case Sys_SubPageReturn:
 			if(Q_GetPageEntries()==1)  //页面首次创建时需要做的事情
 			{
@@ -793,9 +793,9 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 			DrawRegion.w=240;
 			DrawRegion.h=21;
 			DrawRegion.Color=FatColor(NO_TRANS);
-			Gui_FillImgArray((u8 *)gImage_StatusBar1,1,21,&DrawRegion);	
-			DrawTitle1(ASC14B_FONT,"Q-Player",4,strlen("Q-Player"),FatColor(0xe0e0e0));		//写标题	
-			
+			Gui_FillImgArray((u8 *)gImage_StatusBar1,1,21,&DrawRegion);
+			DrawTitle1(ASC14B_FONT,"Q-Player",4,strlen("Q-Player"),FatColor(0xe0e0e0));		//写标题
+
 			//画背景
 			DrawRegion.x=0;
 			DrawRegion.y=21;
@@ -805,7 +805,7 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 			Gui_FillBlock(&DrawRegion);
 
 			DispTime();
-			break;	
+			break;
 		case Sys_TouchSetOk:
 		case Sys_TouchSetOk_SR:
 			DrawRegion.x=0;
@@ -817,11 +817,11 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 
 			DrawRegion.x=120;
 			Gui_Draw24Bmp("Theme/F/MusicPage/Bg/InfoBg.bmp",&DrawRegion);//音乐信息
-			
+
 			if((SysEvent==Sys_TouchSetOk_SR)&&(IntParam==TRUE))//从子页面返回
 			{
 				Debug("Select %s\n\r",gpMusicPath);
-				
+
 				for(i=strlen((void *)gpMusicPath);i;i--) if(gpMusicPath[i]=='/')break;
 
 				if(CheckMultiSuffix(&gpMusicPath[++i],".mp3"))
@@ -844,7 +844,7 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 				for(i=strlen((void *)gpMusicPath);i;i--) if(gpMusicPath[i]=='/')break;
 				DispPlayInfo(&gpMusicPath[++i]);
 				DispPlayBtn();
-				if(Q_MusicGetState()!=MusicNothing) 
+				if(Q_MusicGetState()!=MusicNothing)
 				{
 					DispProgressBar(PROGBAR_INIT,Q_MusicGetInfo()->Duration,0,Q_MusicGetPlayMs()/1000);
 				}
@@ -858,12 +858,12 @@ static SYS_MSG SystemEventHandler(SYS_EVT SysEvent ,int IntParam, void *pSysPara
 		case Sys_PreSubPage:
 			Q_TimSet(Q_TIM1,0,0,(bool)1);
 			break;
-		
+
 		default:
 			Debug("You should not here! %d\n\r",SysEvent);
 			//while(1);
 	}
-	
+
 	return 0;
 }
 static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pParam)
@@ -882,7 +882,7 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 					break;
 				case MpExtiKeyDown:
 					Q_PresentTch(MpVolumeDownKV,Tch_Press);
-					break; 
+					break;
 			}break;
 		case Perip_KeyRelease:
 			switch(IntParam){
@@ -893,26 +893,26 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 				    Q_PresentTch(MpVolumeUpKV,Tch_Release);
 					if(gVolStep<MAX_VOL_STEP-1)
 					{
-						gVolStep++;			
-						//WaitMusicHandlerIdle(100);
-						MusicEvent.Cmd=MusicChangeVol;
-						MusicEvent.ParamU16=(VolumeTable[gVolStep]<<8)|VolumeTable[gVolStep];
-						Q_MusicSync(&MusicEvent);		
-						DispVolume(gVolStep);
-					}	
-					break;
-				case MpExtiKeyDown:
-					Q_PresentTch(MpVolumeDownKV,Tch_Release);
-					if(gVolStep>0)
-					{
-						gVolStep--;			
+						gVolStep++;
 						//WaitMusicHandlerIdle(100);
 						MusicEvent.Cmd=MusicChangeVol;
 						MusicEvent.ParamU16=(VolumeTable[gVolStep]<<8)|VolumeTable[gVolStep];
 						Q_MusicSync(&MusicEvent);
 						DispVolume(gVolStep);
 					}
-					break; 
+					break;
+				case MpExtiKeyDown:
+					Q_PresentTch(MpVolumeDownKV,Tch_Release);
+					if(gVolStep>0)
+					{
+						gVolStep--;
+						//WaitMusicHandlerIdle(100);
+						MusicEvent.Cmd=MusicChangeVol;
+						MusicEvent.ParamU16=(VolumeTable[gVolStep]<<8)|VolumeTable[gVolStep];
+						Q_MusicSync(&MusicEvent);
+						DispVolume(gVolStep);
+					}
+					break;
 			}break;
 
 
@@ -928,8 +928,8 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 			DrawRegion.w=LRC_BOX_W;
 			DrawRegion.h=LRC_BOX_H;
 			DrawRegion.Color=FatColor(MUSIC_PAGE_BG_COLOR);
-			Gui_FillBlock(&DrawRegion);		
-			
+			Gui_FillBlock(&DrawRegion);
+
 			Lrc_Intf_Init();
 			PauseTime=0;
 			DispProgressBar(PROGBAR_INIT,Q_MusicGetInfo()->Duration,0,0);
@@ -956,7 +956,7 @@ static SYS_MSG PeripheralsHandler(PERIP_EVT PeripEvent, int IntParam, void *pPar
 			//MU_CalTimMs(MU_CAL_TIME_BEGIN,"Lrc_Intf_Show()");
 			Lrc_Intf_Show(Q_MusicGetPlayMs()-PauseTime);
 			//MU_CalTimMs(MU_CAL_TIME_END,"Lrc_Intf_Show()");
-			break;	
+			break;
 		case Perip_RtcAlarm:
 			Debug("Alarm\n\r");
 			break;
@@ -968,7 +968,7 @@ static SYS_MSG GobalMusicStopHandler(PERIP_EVT PeripEvent,int intParam, void *pP
 {
 	MUSIC_EVENT MusicEvent;
 	FILELIST_SET FLPS;
-	
+
 	Debug("Perip_MscStop\n\r");//break;
 	if(Q_MusicGetPlayMs()>1000)
 	{
@@ -1009,7 +1009,7 @@ static SYS_MSG GobalMusicStopHandler(PERIP_EVT PeripEvent,int intParam, void *pP
 					Q_MusicSync(&MusicEvent);
 				}
 			}
-		}			
+		}
 	}
 
 	return 0;
@@ -1020,14 +1020,14 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 	MUSIC_EVENT MusicEvent;
 	FILELIST_SET FLPS;
 	//u16 i;
-	
+
 	switch(Key)
 	{
-		case MpVolumeDownKV:		
+		case MpVolumeDownKV:
 			if(InEvent!=Tch_Release) return CO_State_OK;
 			if(gVolStep>0)
 			{
-				gVolStep--;			
+				gVolStep--;
 				//WaitMusicHandlerIdle(100);
 				MusicEvent.Cmd=MusicChangeVol;
 				MusicEvent.ParamU16=(VolumeTable[gVolStep]<<8)|VolumeTable[gVolStep];
@@ -1039,13 +1039,13 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 			if(InEvent!=Tch_Release) return CO_State_OK;
 			if(gVolStep<MAX_VOL_STEP-1)
 			{
-				gVolStep++;			
+				gVolStep++;
 				//WaitMusicHandlerIdle(100);
 				MusicEvent.Cmd=MusicChangeVol;
 				MusicEvent.ParamU16=(VolumeTable[gVolStep]<<8)|VolumeTable[gVolStep];
-				Q_MusicSync(&MusicEvent);		
+				Q_MusicSync(&MusicEvent);
 				DispVolume(gVolStep);
-			}	
+			}
 			break;
 		case MpPrevOneKV:
 			if(InEvent!=Tch_Release) return CO_State_OK;
@@ -1092,7 +1092,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 			break;
 		case MpNextOneKV:
 			if(InEvent!=Tch_Release) return CO_State_OK;
-			{			
+			{
 				Q_DisableGobalPeripEvent(Perip_MscStop,GobalMusicStopHandler);
 				Debug("Now:%s\n\r",gpMusicPath);
 				FLPS.CallBackRid=Q_FindRidByPageName(NULL);
@@ -1124,7 +1124,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 							MusicEvent.pFilePath=(u8 *)gpMusicPath;
 							MusicEvent.ParamU16=0;
 							Q_MusicSync(&MusicEvent);
-							
+
 							//OS_TaskDelayMs(100);
 							MusicEvent.Cmd=MusicSetIo;
 							MusicEvent.ParamU16=0x01;
@@ -1134,7 +1134,7 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 				}
 				Q_EnableGobalPeripEvent(Perip_MscStop,GobalMusicStopHandler);
 			}
-			break;		
+			break;
 		case MpListKV:
 			if(InEvent!=Tch_Release) return 0;
 			{
@@ -1144,12 +1144,12 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 				FLPS.pSuffixStr=".mp3";
 				Q_GotoPage(GotoSubPage,"FileListPage",FL_SelectOne|FL_NoListBuf,&FLPS);
 			}
-			break;	
+			break;
 		case MpPlayKV:
 			if(InEvent==Tch_Release)
 			{
 				if(Q_MusicGetState()==MusicPause)
-				{					
+				{
 				    MusicEvent.Cmd=MusicContinue;
 					MusicEvent.pFilePath=(u8 *)gpMusicPath;
 					MusicEvent.ParamU16=0;
@@ -1186,17 +1186,17 @@ static CO_MSG ButtonHandler(u8 Key,TCH_EVT InEvent , TOUCH_INFO *pTouchInfo)
 				MusicEvent.Cmd=MusicJump;
 				MusicEvent.ParamU16=DispProgressBar(PROGBAR_USER_IN,Q_MusicGetInfo()->Duration,pTouchInfo->x,0);
 				Q_MusicSync(&MusicEvent);
-				
+
 			}
 			else DispProgressBar(PROGBAR_USER_IN,Q_MusicGetInfo()->Duration,pTouchInfo->x,0);
 			OS_TaskDelayMs(100);
 			Lrc_Intf_ObscShow(Q_MusicGetPlayMs()-PauseTime-100);
 			break;
 		//default:
-			
+
 			//while(1);
 	}
-	
+
 	return 0;
 }
 

@@ -1,6 +1,8 @@
 #ifndef QSYS_Q_HEAP_H
 #define QSYS_Q_HEAP_H
 
+#include <usb_type.h>
+
 #define Q_HEAP_TRACK_DEBUG 0//置1会打开记录mallco申请者的功能，但会增加额外内存开销
 
 void DebugHeap(void);

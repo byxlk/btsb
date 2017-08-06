@@ -28,7 +28,7 @@ DSTATUS disk_initialize (
 
 	if(drv==0)
 	{
-    	Status = SD_Init();
+    	//Status = SD_Init();
     	
     	if(Status != SD_OK)
     	{
@@ -36,14 +36,14 @@ DSTATUS disk_initialize (
     	}
     	else
     	{
-	  		Status = SD_GetCardInfo(&SDCardInfo); //读sd卡信息
+	  		//Status = SD_GetCardInfo(&SDCardInfo); //读sd卡信息
 
 	   		if (Status != SD_OK)
 	    	{
 	     		return  STA_NOINIT;//RES_NOTRDY;  //报NOT READY错误
 	        }
 	              // Select Card 
-	     	Status = SD_SelectDeselect((u32) (SDCardInfo.RCA << 16));
+	     	//Status = SD_SelectDeselect((u32) (SDCardInfo.RCA << 16));
 
 	     	if (Status != SD_OK)
 	     	{
@@ -53,13 +53,13 @@ DSTATUS disk_initialize (
 	   		switch(SD_Mode)
 	   		{
 	    		case 0:  //dma方式
-		    		Status = SD_EnableWideBusOperation(SDIO_BusWide_1b);
+		    		//Status = SD_EnableWideBusOperation(SDIO_BusWide_1b);
 		       		if (Status != SD_OK)
 		        	{  
 		         		return RES_NOTRDY;  //报NOT READY错误
 		        	}
 
-		       		Status = SD_SetDeviceMode(SD_DMA_MODE);
+		       		//Status = SD_SetDeviceMode(SD_DMA_MODE);
 		      		if (Status != SD_OK)
 		      		{
 		         		return RES_NOTRDY;  //报NOT READY错误
@@ -67,13 +67,13 @@ DSTATUS disk_initialize (
 		      		break;
 
 	    		case 1:  //中断方式
-		       		Status = SD_EnableWideBusOperation(SDIO_BusWide_1b);
+		       		//Status = SD_EnableWideBusOperation(SDIO_BusWide_1b);
 		       		if (Status != SD_OK)
 		        	{  
 		         		return RES_NOTRDY;  //报NOT READY错误
 		        	}
 		        	
-		       		Status = SD_SetDeviceMode(SD_INTERRUPT_MODE);  
+		       		//Status = SD_SetDeviceMode(SD_INTERRUPT_MODE);  
 		      		if (Status != SD_OK)
 		      		{
 		         		return RES_NOTRDY;  //报NOT READY错误
@@ -131,22 +131,22 @@ DRESULT disk_read (
 	   		case 0:  //dma方式
 	      		if(count==1)// 1个sector的读操作      
 	      		{      
-	    			Status = SD_ReadBlock(sector << 9,(u32 *)(&buff[0]),BlockSize);//sector<<9 扇区地址转为字节地址 一个扇区512字节                                    
+	    			//Status = SD_ReadBlock(sector << 9,(u32 *)(&buff[0]),BlockSize);//sector<<9 扇区地址转为字节地址 一个扇区512字节                                    
 	      		}                                                
 	      		else                    //多个sector的读操作     
 	      		{    
-	       			Status = SD_ReadMultiBlocks(sector << 9,(u32 *)(&buff[0]),BlockSize,count);                                      
+	       			//Status = SD_ReadMultiBlocks(sector << 9,(u32 *)(&buff[0]),BlockSize,count);                                      
 	      		}
 	     		break;
 	     		
 	  		case 1:  //中断方式
 	      		if(count==1)            // 1个sector的读操作      
 	      		{      
-	    			Status = SD_ReadBlock(sector<<9,(u32 *)(&buff[0]),BlockSize);                                              
+	    			//Status = SD_ReadBlock(sector<<9,(u32 *)(&buff[0]),BlockSize);                                              
 	      		}                                                
 	      		else                    //多个sector的读操作     
 	      		{    
-	       			Status = SD_ReadMultiBlocks(sector<<9 ,(u32 *)(&buff[0]),BlockSize,count);                                     
+	       			//Status = SD_ReadMultiBlocks(sector<<9 ,(u32 *)(&buff[0]),BlockSize,count);                                     
 	      		}  	  
 	      		break;
 	      		
@@ -187,22 +187,22 @@ DRESULT disk_write (
    			case 0:  //dma方式
 	      		if(count==1)            // 1个sector的写操作      
 	      		{      
-	          		Status = SD_WriteBlock(sector << 9,(u32 *)(&buff[0]),BlockSize);//sector<<9 扇区地址转为字节地址 一个扇区512字节                                             
+	          		//Status = SD_WriteBlock(sector << 9,(u32 *)(&buff[0]),BlockSize);//sector<<9 扇区地址转为字节地址 一个扇区512字节                                             
 	      		}                                                
 	     	 	else                    //多个sector的写操作     
 	      		{    
-	          		Status =SD_WriteMultiBlocks(sector << 9,(u32 *)(&buff[0]),BlockSize,count);                                          
+	          		//Status =SD_WriteMultiBlocks(sector << 9,(u32 *)(&buff[0]),BlockSize,count);                                          
 	      		}  	  
 				break;
 
    			case 1:  //中断方式
 				if(count==1)           // 1个sector的写操作      
       			{      
-    				Status = SD_WriteBlock(sector << 9 ,(u32 *)(&buff[0]),BlockSize);                                            
+    				//Status = SD_WriteBlock(sector << 9 ,(u32 *)(&buff[0]),BlockSize);                                            
       			}                                                
       			else                    //多个sector的写操作     
       			{    
-       				Status = SD_WriteMultiBlocks(sector << 9 ,(u32 *)(&buff[0]),BlockSize,count);                                     
+       				//Status = SD_WriteMultiBlocks(sector << 9 ,(u32 *)(&buff[0]),BlockSize,count);                                     
       			}  
 				break;
 
@@ -240,7 +240,7 @@ DRESULT disk_ioctl (
     	switch(ctrl)
     	{
      		case CTRL_SYNC:
-				if(SD_GetTransferState()==SD_NO_TRANSFER)
+				if(1/*SD_GetTransferState()==SD_NO_TRANSFER*/)
          		{
              		res = RES_OK;
          		}
@@ -268,7 +268,7 @@ DRESULT disk_ioctl (
 		        //               READ_BL_LEN
 		        // BLOCK_LEN = 2
 		    	//////////////////////////////////////////
-     			if (SD_GetCardInfo(&SDCardInfo)==SD_OK)//读sd卡信息
+     			if (0/*SD_GetCardInfo(&SDCardInfo)==SD_OK*/)//读sd卡信息
          		{
           			x=SDCardInfo.SD_csd.DeviceSize+1; //C_SIZE + 1
     				y=SDCardInfo.SD_csd.DeviceSizeMul+2; //C_SIZE_MULT+2

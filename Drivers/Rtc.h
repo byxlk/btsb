@@ -19,7 +19,7 @@ typedef enum {
 
 
 void RTC_SetUp(void);
-void RTC_GetTime(RTC_TIME *pTime);
+void RTC_GetRealTime(RTC_TIME *pTime);
 bool RTC_Adjust(RTC_TIME *pTime,RTC_OPERATE Op);
 
 

@@ -44,7 +44,7 @@ static int Get_Touch_Coordinate(u16 *x,u16 *y)
 		
 	if(HasTouch())
 	{
-		GetTouchX();GetTouchY();		//先读一次数据，去掉干扰
+		//GetTouchX();GetTouchY();		//先读一次数据，去掉干扰
 		
 		x_min=y_min=0xffff;
 		x_max=y_max=x_sum=y_sum=0;
@@ -52,8 +52,8 @@ static int Get_Touch_Coordinate(u16 *x,u16 *y)
 		for(num=0;num<TOUCH_SAMPLE_NUM;)
 		{
 			OS_TaskDelayMs(2);
-			local_x[num]=GetTouchX();
-			local_y[num]=GetTouchY();
+			//local_x[num]=GetTouchX();
+			//local_y[num]=GetTouchY();
 
 			if((local_x[num]==0)||(local_y[num]==4095)) return FALSE;
 			
