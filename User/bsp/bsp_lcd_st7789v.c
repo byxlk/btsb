@@ -127,37 +127,37 @@ void ST7789V_SetDirection(uint8_t _ucDir)
 
 static void ST7789V_SetGammaCtrl(void)
 {
-            ST7789V_WriteCmd(0xe0);  //PVGAMCTRL (E0h): Positive Voltage Gamma Control
-            ST7789V_WriteParam(0xf0);
-            ST7789V_WriteParam(0x00);
-            ST7789V_WriteParam(0x0a);
-            ST7789V_WriteParam(0x10);
-            ST7789V_WriteParam(0x12);
-            ST7789V_WriteParam(0x1b);
-            ST7789V_WriteParam(0x39);
-            ST7789V_WriteParam(0x44);
-            ST7789V_WriteParam(0x47);
-            ST7789V_WriteParam(0x28);
-            ST7789V_WriteParam(0x12);
-            ST7789V_WriteParam(0x10);
-            ST7789V_WriteParam(0x16);
-            ST7789V_WriteParam(0x1b);
-    
-            ST7789V_WriteCmd(0xe1);  //NVGAMCTRL (E1h): Negative Voltage Gamma Control
-            ST7789V_WriteParam(0xf0);
-            ST7789V_WriteParam(0x00);
-            ST7789V_WriteParam(0x0a);
-            ST7789V_WriteParam(0x10);
-            ST7789V_WriteParam(0x11);
-            ST7789V_WriteParam(0x1a);
-            ST7789V_WriteParam(0x3b);
-            ST7789V_WriteParam(0x34);
-            ST7789V_WriteParam(0x4e);
-            ST7789V_WriteParam(0x3a);
-            ST7789V_WriteParam(0x17);
-            ST7789V_WriteParam(0x16);
-            ST7789V_WriteParam(0x21);
-            ST7789V_WriteParam(0x22);
+	ST7789V_WriteCmd(0xe0);  //PVGAMCTRL (E0h): Positive Voltage Gamma Control
+	ST7789V_WriteParam(0xf0);
+	ST7789V_WriteParam(0x00);
+	ST7789V_WriteParam(0x0a);
+	ST7789V_WriteParam(0x10);
+	ST7789V_WriteParam(0x12);
+	ST7789V_WriteParam(0x1b);
+	ST7789V_WriteParam(0x39);
+	ST7789V_WriteParam(0x44);
+	ST7789V_WriteParam(0x47);
+	ST7789V_WriteParam(0x28);
+	ST7789V_WriteParam(0x12);
+	ST7789V_WriteParam(0x10);
+	ST7789V_WriteParam(0x16);
+	ST7789V_WriteParam(0x1b);
+
+	ST7789V_WriteCmd(0xe1);  //NVGAMCTRL (E1h): Negative Voltage Gamma Control
+	ST7789V_WriteParam(0xf0);
+	ST7789V_WriteParam(0x00);
+	ST7789V_WriteParam(0x0a);
+	ST7789V_WriteParam(0x10);
+	ST7789V_WriteParam(0x11);
+	ST7789V_WriteParam(0x1a);
+	ST7789V_WriteParam(0x3b);
+	ST7789V_WriteParam(0x34);
+	ST7789V_WriteParam(0x4e);
+	ST7789V_WriteParam(0x3a);
+	ST7789V_WriteParam(0x17);
+	ST7789V_WriteParam(0x16);
+	ST7789V_WriteParam(0x21);
+	ST7789V_WriteParam(0x22);
 
 }
 

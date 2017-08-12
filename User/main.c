@@ -78,8 +78,9 @@ static TaskHandle_t xHandleTaskStart = NULL;
 static TaskHandle_t xHandleTaskAdcProc = NULL;
 
 static SemaphoreHandle_t  xMutex = NULL;
+static SemaphoreHandle_t  xSemaphore_key_interupt = NULL;
 
-SLEEP_DATA_T gSleep_Data;
+SLEEP_DATA_T gSleep_Data = {2017,1,1,7,12,0,0,0,0,0};
 
 /*
 *********************************************************************************************************
@@ -98,6 +99,10 @@ static void vTaskGUI(void *pvParameters)
 		MainTask();
 		vTaskDelay(1000);
 	}
+    /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
+    传入NULL参数表示删除 的是当前任务 */
+    vTaskDelete( NULL );
+
 }
 
 /*
@@ -124,6 +129,10 @@ static void vTaskAdcProc(void *pvParameters)
         //ufVoltage_PC0 = ADC_ConvertedValue[3] * 3.3 / 4095;
        // GetTemp(ADC_ConvertedValue[0]);
     }
+
+    /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
+    传入NULL参数表示删除 的是当前任务 */
+    vTaskDelete( NULL );
 }
 
 /*
@@ -139,11 +148,19 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 {
 	uint8_t ucKeyCode;
 	uint8_t pcWriteBuffer[500];
+    BaseType_t xResult;
+    const TickType_t xMaxBlockTime = pdMS_TO_TICKS(1000); /* 设置最大等待时间为 300ms */
 
     printf("User Key Process Thread start.\r\n");
 
     while(1)
     {
+        xResult = xSemaphoreTake(xSemaphore_key_interupt, (TickType_t)xMaxBlockTime);
+        if(xResult == pdFALSE)
+            continue;
+
+        bsp_TouchKeyCodeValueProcess();   /* 中断到来后读取按键的KeyCode值*/
+
         /* 按键滤波和检测由后台systick中断服务程序实现，我们只需要调用bsp_GetKey读取键值即可。 */
 		ucKeyCode = bsp_GetKey();  /* bsp_GetKey()读取键值, 无键按下时返回 KEY_NONE = 0 */
 
@@ -242,6 +259,11 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 
 		vTaskDelay(20);
 	}
+
+    /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
+    传入NULL参数表示删除 的是当前任务 */
+    vTaskDelete( NULL );
+
 }
 
 /*
@@ -270,16 +292,33 @@ static void vTaskStart(void *pvParameters)
 		if(tick_current - tick_backup >= 10)
 		{
 		    tick_backup = tick_current;
+
+            //gSleep_Data.TempVal += getCurent_IntTempValue();
+            gSleep_Data.TempVal = getCurent_ExtTempValue();
+            gSleep_Data.LightVal = getLightVLuxValue();
+            gSleep_Data.NoisVal = getMicAmp_dBValue();
 		}
 
         if(tick_current - td_tick_backup >= 250)
 		{
 		    td_tick_backup = tick_current;
+
 			bsp_RTC_GetClock();
+            gSleep_Data.Year = g_tRTC.Year;
+            gSleep_Data.Mon = g_tRTC.Mon;
+            gSleep_Data.Day = g_tRTC.Day;
+            gSleep_Data.Week = g_tRTC.Week;
+            gSleep_Data.Hour = g_tRTC.Hour;
+            gSleep_Data.Min = g_tRTC.Min;
+            gSleep_Data.Sec = g_tRTC.Sec;
 		}
 
 		vTaskDelay(50);
 	}
+
+    /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
+    传入NULL参数表示删除 的是当前任务 */
+    vTaskDelete( NULL );
 }
 
 /*
@@ -296,6 +335,10 @@ static void vTaskFsDebug(void *pvParameters)
     printf("vTaskFsDebug Thread start.\r\n");
 
     DemoFatFS();
+
+    /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
+    传入NULL参数表示删除 的是当前任务 */
+    vTaskDelete( NULL );
 }
 
 /*
@@ -321,6 +364,10 @@ static void vTaskTest(void *pvParameters)
   #endif
         //GuiTaskTest();
     }
+
+    /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
+    传入NULL参数表示删除 的是当前任务 */
+    vTaskDelete( NULL );
 }
 /*
 *********************************************************************************************************
@@ -332,60 +379,53 @@ static void vTaskTest(void *pvParameters)
 */
 static void AppTaskCreate (void)
 {
-        /* GUI 界面绘制 */
-	xTaskCreate(  vTaskGUI,             /* 任务函数  */
-                  "vTaskGUI",           /* 任务名    */
-                  2048,                 /* 任务栈大小，单位word，也就是4字节 */
-                  NULL,                 /* 任务参数  */
-                  1,                    /* 任务优先级*/
-                  NULL );               /* 任务句柄  */
+    /* GUI 界面绘制 */
+	xTaskCreate((TaskFunction_t )vTaskGUI,             /* 任务函数  */
+                (const char*    )"vTaskGUI",           /* 任务名    */
+                (uint16_t       )1024,                 /* 任务栈大小，单位word，也就是4字节 */
+                (void*          )NULL,                 /* 任务参数  */
+                (UBaseType_t    )3,                    /* 任务优先级*/
+                (TaskHandle_t*  )NULL );               /* 任务句柄  */
 
     /* 按键事件处理 */
-    xTaskCreate( vTaskTaskUserKeyIF,   	/* 任务函数  */
-                 "vTaskUserKeyIF",     	/* 任务名    */
-                 512,               	/* 任务栈大小，单位word，也就是4字节 */
-                 NULL,              	/* 任务参数  */
-                 2,                 	/* 任务优先级*/
-                 &xHandleTaskUserKeyIF );  /* 任务句柄  */
+    xTaskCreate((TaskFunction_t )vTaskTaskUserKeyIF,   	/* 任务函数  */
+                (const char*    )"vTaskUserKeyIF",     	/* 任务名    */
+                (uint16_t       )512,               	/* 任务栈大小，单位word，也就是4字节 */
+                (void*          )NULL,              	/* 任务参数  */
+                (UBaseType_t    )4,                 	/* 任务优先级*/
+                (TaskHandle_t*  )&xHandleTaskUserKeyIF );  /* 任务句柄  */
 
 
-	xTaskCreate( vTaskFsDebug,    		/* 任务函数  */
-                 "vTaskFsDebug",  		/* 任务名    */
-                 4096,         		/* stack大小，单位word，也就是4字节 */
-                 NULL,        		/* 任务参数  */
-                 3,           		/* 任务优先级*/
-                 &xHandleTaskFsDebug ); /* 任务句柄  */
-
-        /* 截图功能 */
-	//xTaskCreate( vTaskMsgPro,     		/* 任务函数  */
-        //         "vTaskMsgPro",   		/* 任务名    */
-        //         512,             		/* 任务栈大小，单位word，也就是4字节 */
-        //         NULL,           		/* 任务参数  */
-        //         4,               		/* 任务优先级*/
-        //         &xHandleTaskMsgPro );  /* 任务句柄  */
+	xTaskCreate((TaskFunction_t )vTaskFsDebug,    		/* 任务函数  */
+                (const char*    )"vTaskFsDebug",  		/* 任务名    */
+                (uint16_t       )1024,         		/* stack大小，单位word，也就是4字节 */
+                (void*          )NULL,        		/* 任务参数  */
+                (UBaseType_t    )2,           		/* 任务优先级*/
+                (TaskHandle_t*  )&xHandleTaskFsDebug ); /* 任务句柄  */
 
 	/* 触摸和按键检测 */
-	xTaskCreate( vTaskStart,     		/* 任务函数  */
-                 "vTaskStart",   		/* 任务名    */
-                 512,            		/* 任务栈大小，单位word，也就是4字节 */
-                 NULL,           		/* 任务参数  */
-                 4,              		/* 任务优先级*/
-                 &xHandleTaskStart );   /* 任务句柄  */
+	xTaskCreate((TaskFunction_t )vTaskStart,     		/* 任务函数  */
+                (const char*    )"vTaskStart",   		/* 任务名    */
+                (uint16_t       )512,            		/* 任务栈大小，单位word，也就是4字节 */
+                (void*          )NULL,           		/* 任务参数  */
+                (UBaseType_t    )3,              		/* 任务优先级*/
+                (TaskHandle_t*  )&xHandleTaskStart );   /* 任务句柄  */
 
     /* ADC 处理函数 */
-	xTaskCreate( vTaskAdcProc,     		/* 任务函数  */
-                 "vTaskAdcProc",   		/* 任务名    */
-                 512,            		/* 任务栈大小，单位word，也就是4字节 */
-                 NULL,           		/* 任务参数  */
-                 4,              		/* 任务优先级*/
-                 &xHandleTaskAdcProc );   /* 任务句柄  */
+	//xTaskCreate((TaskFunction_t )vTaskAdcProc,     		/* 任务函数  */
+    //            (const char*    )"vTaskAdcProc",   		/* 任务名    */
+    //            (uint16_t       )512,            		/* 任务栈大小，单位word，也就是4字节 */
+    //            (void*          )NULL,           		/* 任务参数  */
+    //            (UBaseType_t    )4,              		/* 任务优先级*/
+    //            (TaskHandle_t*  )&xHandleTaskAdcProc );   /* 任务句柄  */
+
     /* vTaskTest */
-    xTaskCreate( vTaskTest,     		/* 任务函数  */
-                 "vTaskTest",   		/* 任务名    */
-                 512,            		/* 任务栈大小，单位word，也就是4字节 */
-                 NULL,           		/* 任务参数  */
-                 4,              		/* 任务优先级*/
-                 NULL );   /* 任务句柄  */
+    xTaskCreate((TaskFunction_t )vTaskTest,     		/* 任务函数  */
+                (const char*    )"vTaskTest",   		/* 任务名    */
+                (uint16_t       )512,            		/* 任务栈大小，单位word，也就是4字节 */
+                (void*          )NULL,           		/* 任务参数  */
+                (UBaseType_t    )1,              		/* 任务优先级*/
+                (TaskHandle_t*  )NULL );   /* 任务句柄  */
 }
 
 /*
@@ -400,10 +440,17 @@ static void AppObjCreate (void)
 {
 	/* 创建互斥信号量 */
     xMutex = xSemaphoreCreateMutex();
-
+    //configASSERT( xMutex );
 	if(xMutex == NULL)
     {
         /* 没有创建成功，用户可以在这里加入创建失败的处理机制 */
+    }
+
+    xSemaphore_key_interupt = xSemaphoreCreateBinary();
+    //configASSERT( xSemaphore_key_interupt );
+    if(xSemaphore_key_interupt == NULL)
+    {
+         /* 没有创建成功，用户可以在这里加入创建失败的处理机制 */
     }
 }
 
@@ -426,7 +473,10 @@ int main(void)
 	  在移植文件port.c中的函数prvStartFirstTask中会重新开启全局中断。通过指令cpsie i开启，__set_PRIMASK(1)
 	  和cpsie i是等效的。
      */
-	__set_PRIMASK(1);
+    __set_PRIMASK(1);
+
+    vUARTCommandConsoleStart(1024, 1);
+    vRegisterSampleCLICommands();
 
 	/* 硬件初始化 */
 	bsp_Init();
@@ -437,11 +487,11 @@ int main(void)
 	*/
 	//vSetupSysInfoTest();
 
+    /* 创建任务通信机制 */
+    AppObjCreate();
+
 	/* 创建任务 */
 	AppTaskCreate();
-
-	/* 创建任务通信机制 */
-	AppObjCreate();
 
     /* 启动调度，开始执行任务 */
     vTaskStartScheduler();
@@ -452,6 +502,33 @@ int main(void)
 	  #define configTOTAL_HEAP_SIZE	      ( ( size_t ) ( 17 * 1024 ) )
 	*/
 	while(1);
+}
+
+/*
+*********************************************************************************************************
+*	函 数 名: EXTI2_IRQHandler
+*	功能说明: 外部中断服务程序
+*	形    参：无
+*	返 回 值: 无
+*********************************************************************************************************
+*/
+void EXTI1_IRQHandler(void)
+{
+
+	if(EXTI_GetITStatus(EXTI_Line1) != RESET)
+	{
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+        /* 发送同步信号 */
+        xSemaphoreGiveFromISR(xSemaphore_key_interupt, &xHigherPriorityTaskWoken);
+
+        /* 如果 xHigherPriorityTaskWoken = pdTRUE，那么退出中断后切到当前最高优先级任务执行 */
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+		//EXTI->IMR&=~(1<<1);	                /* 关闭中断       */
+		EXTI_ClearITPendingBit(EXTI_Line1); /* 清除中断标志位 */
+	}
+
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

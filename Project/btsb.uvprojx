@@ -335,7 +335,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Libraries\CMSIS\Include;..\Libraries\CMSIS\RTOS\Template;..\Libraries\STM32F2xx_StdPeriph_Driver\inc;..\Libraries\CMSIS\Device\ST\STM32F2xx\Include;..\FatFS\src;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM3;..\User;..\User\bsp;..\User\emWinTask;..\STemWin\Config;..\STemWin\DisplayDriver;..\STemWin\inc;..\STemWin\OS</IncludePath>
+              <IncludePath>..\Libraries\CMSIS\Include;..\Libraries\CMSIS\RTOS\Template;..\Libraries\STM32F2xx_StdPeriph_Driver\inc;..\Libraries\CMSIS\Device\ST\STM32F2xx\Include;..\FatFS\src;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM3;..\User;..\User\bsp;..\User\emWinTask;..\STemWin\Config;..\STemWin\Include;..\STemWin\inc;..\STemWin\OS;..\STemWin\Config;..\STemWin\DisplayDriver;..\STemWin\GUI_X;..\STemWin\LCDConf;..\CLI</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -612,6 +612,31 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>FreeRTOS/CLI</GroupName>
+          <Files>
+            <File>
+              <FileName>FreeRTOS_CLI.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CLI\FreeRTOS_CLI.c</FilePath>
+            </File>
+            <File>
+              <FileName>Sample-CLI-commands.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CLI\Sample-CLI-commands.c</FilePath>
+            </File>
+            <File>
+              <FileName>UARTCommandConsole.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CLI\UARTCommandConsole.c</FilePath>
+            </File>
+            <File>
+              <FileName>debug_serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\CLI\debug_serial.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>FatFS</GroupName>
           <Files>
             <File>
@@ -647,7 +672,7 @@
             <File>
               <FileName>GUI_X_FreeRTOS.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\STemWin\OS\GUI_X_FreeRTOS.c</FilePath>
+              <FilePath>..\STemWin\GUI_X\GUI_X_FreeRTOS.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -680,9 +705,9 @@
           <GroupName>STemWin/Lib</GroupName>
           <Files>
             <File>
-              <FileName>STemWin532_CM3_OS_Keil.lib</FileName>
+              <FileName>STemWin528_CM3_OS_Keil.lib</FileName>
               <FileType>4</FileType>
-              <FilePath>..\STemWin\Lib\STemWin532_CM3_OS_Keil.lib</FilePath>
+              <FilePath>..\STemWin\GUILib\STemWin528_CM3_OS_Keil.lib</FilePath>
             </File>
           </Files>
         </Group>
@@ -713,6 +738,11 @@
               <FileName>spi_flash_fatfs.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\spi_flash_fatfs.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f2xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f2xx_it.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -838,6 +868,11 @@
               <FileName>Image_Resource.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\emWinTask\Image_Resource.c</FilePath>
+            </File>
+            <File>
+              <FileName>App_IconMenu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\emWinTask\App_IconMenu.c</FilePath>
             </File>
           </Files>
         </Group>

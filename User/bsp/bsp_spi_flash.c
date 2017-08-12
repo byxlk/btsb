@@ -690,7 +690,7 @@ void sf_ReadBuffer(uint8_t * _pBuf, uint32_t _uiReadAddr, uint32_t _uiSize)
 	/* 擦除扇区操作 */
 	SF_CS_LOW();									/* 使能片选 */
 	sf_SendByte(CMD_READ);							/* 发送读命令 */
-    if(g_tSF.ChipID == MX25L25645G_ID)
+    //if(g_tSF.ChipID == MX25L25645G_ID)
         sf_SendByte((_uiReadAddr & 0xFF000000) >> 24);
 	sf_SendByte((_uiReadAddr & 0xFF0000) >> 16);	/* 发送扇区地址的高8bit */
 	sf_SendByte((_uiReadAddr & 0xFF00) >> 8);		/* 发送扇区地址中间8bit */

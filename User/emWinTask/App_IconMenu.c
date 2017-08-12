@@ -29,9 +29,13 @@
 *				                      宏定义
 *********************************************************************************************************
 */
-#define ID_FRAMEWIN_0  (GUI_ID_USER + 0x04)
-#define ID_ICONVIEW_0  (GUI_ID_USER + 0x06)
-#define ID_TEXT_0  (GUI_ID_USER + 0x07)
+#define ID_FRAMEWIN_0    (GUI_ID_USER + 0x01)
+#define ID_ICONVIEW_0    (GUI_ID_USER + 0x02)
+#define ID_TEXT_0    (GUI_ID_USER + 0x03)
+
+static WM_CALLBACK * _pcbClient;
+uint8_t	s_ucSelIconIndex = 0;	/* 选择的ICON，默认不选择任何 */
+
 
 extern GUI_CONST_STORAGE GUI_BITMAP bma;
 extern GUI_CONST_STORAGE GUI_BITMAP bmb;
@@ -48,13 +52,13 @@ extern WM_HWIN  hWin_DateTime;
 extern WM_HWIN  hWin_About;
 extern WM_HWIN  hWin_HomePage;
 
-extern void App_Bluetooth(WM_HWIN hWin);
-extern void App_Music(WM_HWIN hWin);
-extern void App_Sleep(WM_HWIN hWin);
-extern void App_Language(WM_HWIN hWin);
-extern void App_DateTime(WM_HWIN hWin);
-extern void App_About(WM_HWIN hWin);
-extern void App_HomePage(WM_HWIN hWin);
+extern WM_HWIN App_Bluetooth(WM_HWIN hWin);
+extern WM_HWIN App_Music(WM_HWIN hWin);
+extern WM_HWIN App_Sleep(WM_HWIN hWin);
+extern WM_HWIN App_Language(WM_HWIN hWin);
+extern WM_HWIN App_DateTime(WM_HWIN hWin);
+extern WM_HWIN App_About(WM_HWIN hWin);
+extern WM_HWIN App_HomePage(WM_HWIN hWin);
 
 
 /* 用于桌面ICONVIEW图标的创建 */
@@ -64,9 +68,8 @@ typedef struct
 	const char       * pText;
 } BITMAP_ITEM;
 
-#if 0
 /* 用于桌面ICONVIEW图标的创建 */
-static const BITMAP_ITEM _aBitmapItem[] =
+static const BITMAP_ITEM _aIconBmp[] =
 {
 	{&bma,    "BT"},
 	{&bmb,    "Music"},
@@ -81,7 +84,7 @@ static const BITMAP_ITEM _aBitmapItem[] =
 *                                  应用程序入口函数
 *******************************************************************************
 */
-static void (* _appModules[])( WM_HWIN hWin) =
+static WM_HWIN (* _appModules[])( WM_HWIN hWin) =
 {
 	App_Bluetooth,
 	App_Music,
@@ -90,12 +93,17 @@ static void (* _appModules[])( WM_HWIN hWin) =
 	App_DateTime,
 	App_About,
 };
-#endif
 
+/*********************************************************************
+*
+*       _aDialogCreate
+*/
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate_IconMenu[] = {
-	{ FRAMEWIN_CreateIndirect, "Framewin", ID_FRAMEWIN_0, 0, 0, 320, 240, 0, 0x64, 0 },
-	{ ICONVIEW_CreateIndirect, "Iconview", ID_ICONVIEW_0, 15, 50, 280, 140, 0,0x00400040/*xSizeItem-ySizeItem*/, 0 },
-	{ TEXT_CreateIndirect, "Text", ID_TEXT_0, 15, 10, 280, 20, 0, 0x64, 0 },
+  { FRAMEWIN_CreateIndirect, "App Menu", ID_FRAMEWIN_0, 0, 0, 240, 320, FRAMEWIN_CF_MOVEABLE, 0x0, 0 },
+  { ICONVIEW_CreateIndirect, "Iconview", ID_ICONVIEW_0, 38, 76, 164, 220, 0, 0x00400040/*xSizeItem-ySizeItem*/, 0 },
+  { TEXT_CreateIndirect, "App Menu", ID_TEXT_0, 80, 36, 80, 20, 0, 0x0, 0 },
+  // USER START (Optionally insert additional widgets)
+  // USER END
 };
 #if 0
 /*
@@ -426,59 +434,71 @@ static void _cbDesktopDisplayProc(WM_MESSAGE * pMsg)
 			WM_DefaultProc(pMsg);
 	}
 }
-
 #endif
 
-static void _cbWinCallBack_IconMenu(WM_MESSAGE * pMsg) {
-	WM_HWIN hItem;
-	int     NCode;
+static void _cbWinCallBack_IconMenu(WM_MESSAGE * pMsg)
+{
+    int     i;
 	int     Id;
+	int     NCode;
+	WM_HWIN hItem;
 
 	switch (pMsg->MsgId) {
 	case WM_INIT_DIALOG://初始化消息,创建窗口/控件时有效,比如在这里设置一些控件的初始参数
-		hItem = pMsg->hWin;
-		FRAMEWIN_SetText(hItem, "neqee.com");
-		FRAMEWIN_SetFont(hItem, GUI_FONT_20_1);
-		FRAMEWIN_SetTextColor(hItem, (0x00FF0000));
-
+        _LOGD("WM_INIT_DIALOG(%d)\r\n",pMsg->MsgId);
+#if 1
+		// Initialization of 'App Menu'
 		hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_0);
 		TEXT_SetTextAlign(hItem, GUI_TA_HCENTER | GUI_TA_VCENTER);
 		TEXT_SetTextColor(hItem, (0x008000FF));
 		TEXT_SetFont(hItem, GUI_FONT_20_1);
-		TEXT_SetText(hItem, "neqee");
+		TEXT_SetText(hItem, "App Menu");
 
 		hItem = WM_GetDialogItem(pMsg->hWin, ID_ICONVIEW_0);
-		ICONVIEW_SetIconAlign(hItem, ICONVIEW_IA_TOP);
+        /* 设置小工具的背景色 32 位颜色值的前8 位可用于alpha混合处理效果*/
+		//ICONVIEW_SetBkColor(hIcon, ICONVIEW_CI_SEL, GUI_DARKBLUE | 0x80000000);
+		//ICONVIEW_SetIconAlign(hItem, ICONVIEW_IA_TOP);
+        ICONVIEW_SetIconAlign(hItem, ICONVIEW_IA_HCENTER | ICONVIEW_IA_TOP);
 		ICONVIEW_SetTextColor(hItem, ICONVIEW_CI_UNSEL, GUI_BLUE);
 		ICONVIEW_SetTextColor(hItem, ICONVIEW_CI_SEL, GUI_GREEN);
 		ICONVIEW_SetFrame(hItem, GUI_COORD_X, 0);//设置图标到IconView边框的间距
 		ICONVIEW_SetFrame(hItem, GUI_COORD_Y, 0);
-		ICONVIEW_SetSpace(hItem, GUI_COORD_X, (280-64*4)/3);//设置图标和图标之间的间距
-		ICONVIEW_SetSpace(hItem, GUI_COORD_Y, (140-64*2)/1);
+		ICONVIEW_SetSpace(hItem, GUI_COORD_X, (164-64*2)/1);//设置图标和图标之间的间距
+		ICONVIEW_SetSpace(hItem, GUI_COORD_Y, (220-64*3)/2);
+        /* 设置字体 */
+		//ICONVIEW_SetFont(hIcon, &GUI_FontYahei);
 		ICONVIEW_SetFont(hItem, GUI_FONT_16_1);
-		ICONVIEW_AddBitmapItem(hItem, &bma, "neqee");//添加图标项
-		ICONVIEW_AddBitmapItem(hItem, &bmb, "SOS");
-		ICONVIEW_AddBitmapItem(hItem, &bmc, "Phone");
-		ICONVIEW_AddBitmapItem(hItem, &bmd, "Camera");
-		ICONVIEW_AddBitmapItem(hItem, &bme, "Email");
-		ICONVIEW_AddBitmapItem(hItem, &bmf, "NoteBook");
+
+        /* 向ICONVIEW 小工具添加新图标 */
+		for (i = 0; i < GUI_COUNTOF(_aIconBmp); i++)
+		{
+			ICONVIEW_AddBitmapItem(hItem, _aIconBmp[i].pBitmap, _aIconBmp[i].pText);
+		}
+#endif
 		break;
+    //case WM_PRE_PAINT:
+    //    GUI_MULTIBUF_Begin();
+    //    break;
+
+    //case WM_POST_PAINT:
+    //    GUI_MULTIBUF_End();
+    //    break;
+
+    case WM_PAINT:
+        //_LOGD("WM_PAINT(%d)\r\n",pMsg->MsgId);
+		GUI_SetAlpha(0xFF);
+        GUI_Clear();
+        return;
 	case WM_NOTIFY_PARENT://操作触发消息处理(操作屏幕程序会跑到这里),比如点击按键、点击编辑框(任何的操作)等等......
 		Id    = WM_GetId(pMsg->hWinSrc);
 		NCode = pMsg->Data.v;
+        _LOGD("WM_NOTIFY_PARENT(%d)\r\n",pMsg->MsgId);
 		switch(Id) {
 		case ID_ICONVIEW_0:
 			switch(NCode) {
 			case WM_NOTIFICATION_CLICKED://点击图标
-				switch(ICONVIEW_GetSel(WM_GetDialogItem(pMsg->hWin, ID_ICONVIEW_0)))
-				{
-				case 0: TEXT_SetText(WM_GetDialogItem(pMsg->hWin, ID_TEXT_0), "neqee"); break;
-				case 1: TEXT_SetText(WM_GetDialogItem(pMsg->hWin, ID_TEXT_0), "SOS"); break;
-				case 2: TEXT_SetText(WM_GetDialogItem(pMsg->hWin, ID_TEXT_0), "Phone"); break;
-				case 3: TEXT_SetText(WM_GetDialogItem(pMsg->hWin, ID_TEXT_0), "Camera"); break;
-				case 4: TEXT_SetText(WM_GetDialogItem(pMsg->hWin, ID_TEXT_0), "Email"); break;
-				case 5: TEXT_SetText(WM_GetDialogItem(pMsg->hWin, ID_TEXT_0), "NoteBook"); break;
-				}
+			    s_ucSelIconIndex = ICONVIEW_GetSel(WM_GetDialogItem(pMsg->hWin, ID_ICONVIEW_0));
+                TEXT_SetText(WM_GetDialogItem(pMsg->hWin, ID_TEXT_0), _aIconBmp[s_ucSelIconIndex].pText);
 				break;
 			case WM_NOTIFICATION_RELEASED:
 				break;
@@ -496,8 +516,18 @@ static void _cbWinCallBack_IconMenu(WM_MESSAGE * pMsg) {
 		WM_DefaultProc(pMsg);
 		break;
 	}
+	if (_pcbClient) _pcbClient(pMsg);
 }
 
+static void _cbFrame(WM_MESSAGE * pMsg) {
+  switch (pMsg->MsgId) {
+  case WM_PAINT:
+    GUI_SetAlpha(0xFF);
+    break;
+  }
+  FRAMEWIN_Callback(pMsg);
+  GUI_SetAlpha(0);
+}
 
 /*
 *********************************************************************************************************
@@ -509,15 +539,23 @@ static void _cbWinCallBack_IconMenu(WM_MESSAGE * pMsg) {
 */
 WM_HWIN CreateWindow_IconMenu(WM_HWIN hParent)
 {
-    WM_HWIN hWin;
+	WM_MESSAGE Msg = {0};
+    WM_HWIN    hFrame;
+    WM_HWIN    hClient;
 
-    hParent = GUI_CreateDialogBox(_aDialogCreate_IconMenu,
-                                        GUI_COUNTOF(_aDialogCreate_IconMenu),
-                                        _cbWinCallBack_IconMenu,
-                                        hParent,
-                                        0,
-                                        0);
-    return hWin;
+    hFrame = GUI_CreateDialogBox(_aDialogCreate_IconMenu,
+                                 GUI_COUNTOF(_aDialogCreate_IconMenu),
+                                 0, hParent, 0, 0);
+    WM_SetHasTrans(hFrame);           // Set transparency
+    WM_SetCallback(hFrame, _cbFrame); // Overwrite callback
+
+    hClient    = WM_GetClientWindow(hFrame);         // Get handle of client window
+    WM_SetHasTrans(hClient);                         // Set transparency
+    _pcbClient = WM_SetCallback(hClient, _cbWinCallBack_IconMenu); // Overwrite callback
+    Msg.MsgId = WM_INIT_DIALOG;                      // Send WM_INIT_DIALOG
+    WM_SendMessage(hClient, &Msg);
+
+    return hFrame;
 }
 
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

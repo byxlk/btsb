@@ -308,40 +308,6 @@ static const void * _GetImageById(U32 Id, U32 * pSize) {
 
 /*
 *********************************************************************************************************
-*	函 数 名: Caculate_RTC
-*	功能说明: 显示RTC时间
-*	形    参：pMsg 指针参数
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-static void Caculate_RTC(WM_MESSAGE * pMsg)
-{
-	  char buf[30];
-	  WM_HWIN hWin = pMsg->hWin;
-      RTC_TimeTypeDef  RTC_TimeStructure;
-      //RTC_InitTypeDef  RTC_InitStructure;
-      //RTC_AlarmTypeDef RTC_AlarmStructure;
-      RTC_DateTypeDef  RTC_DateStructure;
-
-	  RTC_GetTime(RTC_Format_BIN, &RTC_TimeStructure);
-	  RTC_GetDate(RTC_Format_BIN, &RTC_DateStructure);
-
-	  sprintf(buf,
-	          "%0.2d:%0.2d",
-			  RTC_TimeStructure.RTC_Hours,
-			  RTC_TimeStructure.RTC_Seconds);
-	 TEXT_SetText(WM_GetDialogItem(hWin,ID_TEXT_0), buf);
-
-	  sprintf(buf,
-	          "20%0.2d/%0.2d/%0.2d",
-			  RTC_DateStructure.RTC_Year,
-			  RTC_DateStructure.RTC_Month,
-			  RTC_DateStructure.RTC_Date);
-	  TEXT_SetText(WM_GetDialogItem(hWin,ID_TEXT_7), buf);
-}
-
-/*
-*********************************************************************************************************
 *	函 数 名: _cbDialogMusic
 *	功能说明: 音乐播放对话框回调消息
 *	形    参: pMsg  消息指针
@@ -357,7 +323,7 @@ static void _cbWinCallBack_HomePage(WM_MESSAGE * pMsg)
     WM_HWIN      hItem;
     //WM_MESSAGE   pMsgInfo;
 
-    _LOGD("MsgId = %d\r\n",pMsg->MsgId);
+    //_LOGD("MsgId = %d\r\n",pMsg->MsgId);
 
     switch (pMsg->MsgId)
     {
@@ -456,13 +422,13 @@ static void _cbWinCallBack_HomePage(WM_MESSAGE * pMsg)
             //WM_SetFocus(pMsg->hWin);
             break;
         case WM_TIMER:
-            Caculate_RTC(pMsg);
+            //Caculate_RTC(pMsg);
             WM_InvalidateWindow(pMsg->hWin);
             WM_RestartTimer(pMsg->Data.v, 300);
             break;
 
 		case WM_PAINT:
-            _LOGD("WM_PAINT(%d)\r\n",pMsg->MsgId);
+            //_LOGD("WM_PAINT(%d)\r\n",pMsg->MsgId);
             GUI_SetAlpha(0xFF);   // Set alpha value for drawing operations
             GUI_SetBkColor(0xAAAAAA); // Draw gray background...
             GUI_Clear();              // ...with alpha blending

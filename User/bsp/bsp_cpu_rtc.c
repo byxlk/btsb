@@ -21,7 +21,7 @@
 
 /* 选择RTC的时钟源 */
 #define RTC_CLOCK_SOURCE_LSE       /* LSE */
-//#define RTC_CLOCK_SOURCE_LSI     /* LSI */ 
+//#define RTC_CLOCK_SOURCE_LSI     /* LSI */
 
 RTC_T g_tRTC;
 
@@ -41,10 +41,10 @@ void bsp_InitRTC(void)
      uint16_t u16_WaitForOscSource = 0;
      RTC_InitTypeDef   RTC_InitStructure;
 
-     /* Enable the PWR clock */ /* PWR时钟（电源控制）与BKP时钟（RTC后备寄存器）使能 */  
+     /* Enable the PWR clock */ /* PWR时钟（电源控制）与BKP时钟（RTC后备寄存器）使能 */
      RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_AHB1Periph_BKPSRAM, ENABLE);
 
-     /* Allow access to BKP Domain */ /*使能RTC和后备寄存器访问 */  
+     /* Allow access to BKP Domain */ /*使能RTC和后备寄存器访问 */
      PWR_BackupAccessCmd(ENABLE);
 
      /*
@@ -54,20 +54,20 @@ void bsp_InitRTC(void)
     if (RTC_ReadBackupRegister(RTC_BKP_DR1) != 0xA5A5)
     {
         //重新配置RTC
-	/* Calendar Configuration */
-	RTC_InitStructure.RTC_AsynchPrediv = 0x7F;
-	RTC_InitStructure.RTC_SynchPrediv =  0xFF;
-	RTC_InitStructure.RTC_HourFormat = RTC_HourFormat_24;
-	RTC_Init(&RTC_InitStructure);
-    
-        /* Enable LSE */		
+        /* Calendar Configuration */
+        RTC_InitStructure.RTC_AsynchPrediv = 0x7F;
+        RTC_InitStructure.RTC_SynchPrediv =  0xFF;
+        RTC_InitStructure.RTC_HourFormat = RTC_HourFormat_24;
+        RTC_Init(&RTC_InitStructure);
+
+        /* Enable LSE */
         RCC_LSEConfig(RCC_LSE_ON);
         //while ((u16_WaitForOscSource++) < 5000) ;
 
-        /* Wait till LSE is ready */ /* 等待外部晶振震荡稳定输出 */  
+        /* Wait till LSE is ready */ /* 等待外部晶振震荡稳定输出 */
         while (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET);
 
-        /* Select LSE as RTC Clock Source */ /*使用外部32.768KHz晶振作为RTC时钟 */ 
+        /* Select LSE as RTC Clock Source */ /*使用外部32.768KHz晶振作为RTC时钟 */
         RCC_RTCCLKConfig(RCC_RTCCLKSource_LSE);
         /* Enable RTC Clock */
         RCC_RTCCLKCmd(ENABLE);
@@ -86,21 +86,21 @@ void bsp_InitRTC(void)
 
         /* Enable the Wakeup Interrupt */
         RTC_ITConfig(RTC_IT_WUT, ENABLE);
- 
+
         /* Enable Wakeup Counter */
         RTC_WakeUpCmd(ENABLE);
-		
+
         /* 配置完成后，向后备寄存器中写特殊字符0xA5A5 */
         RTC_WriteBackupRegister(RTC_BKP_DR1, 0xA5A5);
     }
     else
     {
         while ((u16_WaitForOscSource++) < 5000) ;
-        
+
         /* Wait for RTC APB registers synchronisation */
         RTC_WaitForSynchro();
         RTC_ClearITPendingBit(RTC_IT_WUT);
-        
+
         if (RCC_GetFlagStatus(RCC_FLAG_PORRST) != RESET)
         {
 			/* 上电复位 */
@@ -111,13 +111,13 @@ void bsp_InitRTC(void)
         }
         /* 清除RCC中复位标志 */
         RCC_ClearFlag();
-        
+
         //虽然RTC模块不需要重新配置，且掉电后依靠后备电池依然运行
         //但是每次上电后，还是要使能RTCCLK???????
         //RCC_RTCCLKCmd(ENABLE);
         //等待RTC时钟与APB1时钟同步
         RTC_WaitForSynchro();
-        
+
         //使能秒中断
         //RTC_ITConfig(RTC_IT_SEC, ENABLE);
         }
@@ -133,31 +133,31 @@ void bsp_InitRTC(void)
 *********************************************************************************************************
 */
 uint8_t IS_RTC_LeapYear(uint16_t _year)
-{                     
+{
 	if (_year % 4 == 0) /* 必须能被4整除 */
-	{ 
-		if (_year % 100 == 0) 
-		{ 
+	{
+		if (_year % 100 == 0)
+		{
 			if (_year % 400 == 0)
 			{
 				return 1;	/* 如果以00结尾,还要能被400整除 */
 			}
-			else 
+			else
 			{
-				return 0;   
+				return 0;
 			}
 
 		}
-		else 
+		else
 		{
-			return 1;   
+			return 1;
 		}
 	}
-	else 
+	else
 	{
-		return 0; 
+		return 0;
 	}
-}      
+}
 
 void bsp_RTC_SetTime(uint8_t _hour, uint8_t _min, uint8_t _sec)
 {
@@ -167,9 +167,9 @@ void bsp_RTC_SetTime(uint8_t _hour, uint8_t _min, uint8_t _sec)
 	RTC_TimeStructure.RTC_Hours   = IS_RTC_HOUR24(_hour)? _hour : 0x08;
 	RTC_TimeStructure.RTC_Minutes = IS_RTC_MINUTES(_min)? _min : 0x00;
 	RTC_TimeStructure.RTC_Seconds = IS_RTC_SECONDS(_sec)? _sec : 0x00;
-    
+
 	/* Set Current Time and Date */
-	RTC_SetTime(RTC_Format_BIN, &RTC_TimeStructure);  
+	RTC_SetTime(RTC_Format_BIN, &RTC_TimeStructure);
 }
 
 void bsp_RTC_SetDate(uint16_t _year, uint8_t _mon, uint8_t _day)
@@ -177,13 +177,13 @@ void bsp_RTC_SetDate(uint16_t _year, uint8_t _mon, uint8_t _day)
 	RTC_DateTypeDef   RTC_DateStructure;
 
 	/* Set the Date */
-	RTC_DateStructure.RTC_Year = IS_RTC_YEAR(_year - 2000)? (_year - 2000) : 16; 
+	RTC_DateStructure.RTC_Year = IS_RTC_YEAR(_year - 2000)? (_year - 2000) : 16;
 	RTC_DateStructure.RTC_Month = IS_RTC_MONTH(_mon)? _mon : RTC_Month_January;
-	RTC_DateStructure.RTC_Date = IS_RTC_DATE(_day)? _day : 0x01;  
+	RTC_DateStructure.RTC_Date = IS_RTC_DATE(_day)? _day : 0x01;
 	RTC_DateStructure.RTC_WeekDay = bsp_RTC_CalcWeek(RTC_DateStructure.RTC_Year,
                                                                                                   RTC_DateStructure.RTC_Month,
-                                                                                                  RTC_DateStructure.RTC_Date); 
-    
+                                                                                                  RTC_DateStructure.RTC_Date);
+
 	/* Set Current Time and Date */
 	RTC_SetDate(RTC_Format_BIN, &RTC_DateStructure);
 }
@@ -204,9 +204,9 @@ uint32_t bsp_RTC_GetSecond(uint16_t _year, uint8_t _mon, uint8_t _day, uint8_t _
 
 	if (_year < 2000 || _year > 2099)
 	{
-		return 0;	/* _year范围1970-2099，此处设置范围为2000-2099 */   
-	}		
-	
+		return 0;	/* _year范围1970-2099，此处设置范围为2000-2099 */
+	}
+
 	for (t = 1970; t < _year; t++) 	/* 把所有年份的秒钟相加 */
 	{
 		if (IS_RTC_LeapYear(t))		/* 判断是否为闰年 */
@@ -228,7 +228,7 @@ uint32_t bsp_RTC_GetSecond(uint16_t _year, uint8_t _mon, uint8_t _day, uint8_t _
 		if (IS_RTC_LeapYear(_year) && t == 1)
 		{
 			seccount += 86400;	/* 闰年2月份增加一天的秒钟数 */
-		}			
+		}
 	}
 
 	seccount += (uint32_t)(_day - 1) * 86400;	/* 把前面日期的秒钟数相加 */
@@ -238,8 +238,8 @@ uint32_t bsp_RTC_GetSecond(uint16_t _year, uint8_t _mon, uint8_t _day, uint8_t _
 	seccount += (uint32_t)_min * 60;	/* 分钟秒钟数 */
 
 	seccount += _sec;	/* 最后的秒钟加上去 */
-       
-	return seccount;      
+
+	return seccount;
 }
 
 /*
@@ -258,11 +258,11 @@ void bsp_RTC_ReadClock(RTC_DateTypeDef *pDate, RTC_TimeTypeDef   *pTime)
 
     if(! pTime)
         RTC_GetTime(RTC_Format_BIN, pTime);
-}   
+}
 
 void bsp_RTC_GetClock(void)
 {
-    RTC_DateTypeDef   RTC_DateStructure; 
+    RTC_DateTypeDef   RTC_DateStructure;
     RTC_TimeTypeDef   RTC_TimeStructure;
 
     RTC_GetDate(RTC_Format_BIN, &RTC_DateStructure);

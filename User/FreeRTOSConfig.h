@@ -78,8 +78,11 @@
  *
  * THESE PARAMETERS ARE DESCRIBED WITHIN THE 'CONFIGURATION' SECTION OF THE
  * FreeRTOS API DOCUMENTATION AVAILABLE ON THE FreeRTOS.org WEB SITE.
+ * http://www.freertos.org/a00110.html
  *
- * See http://www.freertos.org/a00110.html.
+ * The bottom of this file contains some constants specific to running the UDP
+ * stack in this demo.  Constants specific to FreeRTOS+UDP itself (rather than
+ * the demo) are contained in FreeRTOSIPConfig.h.
  *----------------------------------------------------------*/
 
  /* Ensure stdint is only used by the compiler, and not the assembler. */
@@ -94,8 +97,8 @@
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 120000000 )
 #define configTICK_RATE_HZ			( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES		( 5 )
-#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 128 )
-#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 24 * 1024 ) )
+#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 1024 )
+#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 32 * 1024 ) )
 #define configMAX_TASK_NAME_LEN		( 16 )
 #define configUSE_TRACE_FACILITY	1
 #define configUSE_16_BIT_TICKS		0
@@ -109,6 +112,7 @@
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()     (ulHighFrequencyTimerTicks = 0ul)
 #define portGET_RUN_TIME_COUNTER_VALUE()             ulHighFrequencyTimerTicks
 //#define portALT_GET_RUN_TIME_COUNTER_VALUE           1
+#define configCOMMAND_INT_MAX_OUTPUT_SIZE 1000
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0

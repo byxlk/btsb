@@ -39,23 +39,23 @@ void bsp_Init(void)
 
 	/* 使能CRC校验, 用于开启STemWin的使用 */
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_CRC, ENABLE);
-	
+
 	/* 优先级分组设置为4，可配置0-15级抢占式优先级，0级子优先级，即不存在子优先级。*/
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
-	bsp_InitDWT();                       /* 初始DWT */    
+	bsp_InitDWT();                       /* 初始DWT */
 	bsp_SetLedLight(LIGHT_HIGH); 		 /* 初始LED指示灯端口 */
 	bsp_InitKey();		                 /* 初始化按键 */
 	bsp_InitUart(); 	                 /* 初始化串口 */
 	bsp_InitRTC();                       /* 初始化RTC模块，配置默认时间:2016-01-01 08:00:00 */
-	bsp_InitADC();                       /* 初始化ADC模块，ADC1 - CH0 CH1 CH3 CH_Temp */	
-	//bsp_InitTimCounter();              /* 初始化外部计数器模块*/	
-	//bsp_InitI2C();                     /* 配置I2C总线 */	
-	//bsp_InitSPIBus();	                 /* 配置SPI总线 */	
+	bsp_InitADC();                       /* 初始化ADC模块，ADC1 - CH0 CH1 CH3 CH_Temp */
+	//bsp_InitTimCounter();              /* 初始化外部计数器模块*/
+	//bsp_InitI2C();                     /* 配置I2C总线 */
+	//bsp_InitSPIBus();	                 /* 配置SPI总线 */
 	//bsp_InitExtSRAM();                 /* 初始DWT */
 	LCD_InitHard();	                     /* 初始化显示器硬件(配置GPIO和FSMC,给LCD发送初始化指令) */
 	//TOUCH_InitHard();                  /* 初始化触摸 */
- 
+
     //result = MountFS(&fs, 0);          /* 挂载文件系统 */
 	//result = f_mount(&fs, "0:/", 0);   /* 挂载文件系统 */
 }
@@ -83,26 +83,6 @@ void bsp_Idle(void)
 
 /*
 *********************************************************************************************************
-*	函 数 名: EXTI2_IRQHandler
-*	功能说明: 外部中断服务程序
-*	形    参：无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void EXTI1_IRQHandler(void)
-{
-
-	if(EXTI_GetITStatus(EXTI_Line1) != RESET)
-	{
-		bsp_TouchKeyCodeValueProcess();             /* 中断到来后读取按键的KeyCode值*/
-		//EXTI->IMR&=~(1<<1);	                /* 关闭中断       */
-		EXTI_ClearITPendingBit(EXTI_Line1); /* 清除中断标志位 */
-	}
-
-}
-
-/*
-*********************************************************************************************************
 *	函 数 名: EXTI3_IRQHandler
 *	功能说明: 外部中断服务程序
 *	形    参：无
@@ -113,7 +93,7 @@ void EXTI3_IRQHandler(void)
 {
 
 	if(EXTI_GetITStatus(EXTI_Line3) != RESET)
-	{	
+	{
 		EXTI->IMR&=~(1<<3);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line3); /* 清除中断标志位 */
 	}
@@ -131,17 +111,17 @@ void EXTI9_5_IRQHandler(void)
 {
 
 	if(EXTI_GetITStatus(EXTI_Line7) != RESET)
-	{	
+	{
 		EXTI->IMR&=~(1<<7);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line7); /* 清除中断标志位 */
 	}
-	
+
 	if(EXTI_GetITStatus(EXTI_Line8) != RESET)
-	{	
+	{
 		EXTI->IMR&=~(1<<8);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line8); /* 清除中断标志位 */
 	}
-			   
+
 }
 
 /*
@@ -156,21 +136,21 @@ void EXTI15_10_IRQHandler(void)
 {
 
 	if(EXTI_GetITStatus(EXTI_Line11) != RESET)
-	{	
+	{
 		EXTI->IMR&=~(1<<11);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line11); /* 清除中断标志位 */
 	}
-	
+
 	if(EXTI_GetITStatus(EXTI_Line13) != RESET)
-	{	
+	{
 		EXTI->IMR&=~(1<<13);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line13); /* 清除中断标志位 */
 	}
-	
+
 	if(EXTI_GetITStatus(EXTI_Line15) != RESET)
-	{	
+	{
 		EXTI->IMR&=~(1<<15);	             /* 关闭中断       */
 		EXTI_ClearITPendingBit(EXTI_Line15); /* 清除中断标志位 */
 	}
-			   
+
 }
