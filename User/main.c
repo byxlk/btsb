@@ -101,7 +101,7 @@ static void vTaskGUI(void *pvParameters)
 	}
     /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
     传入NULL参数表示删除 的是当前任务 */
-    vTaskDelete( NULL );
+    //vTaskDelete( NULL );
 
 }
 
@@ -132,7 +132,7 @@ static void vTaskAdcProc(void *pvParameters)
 
     /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
     传入NULL参数表示删除 的是当前任务 */
-    vTaskDelete( NULL );
+    //vTaskDelete( NULL );
 }
 
 /*
@@ -262,7 +262,7 @@ static void vTaskTaskUserKeyIF(void *pvParameters)
 
     /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
     传入NULL参数表示删除 的是当前任务 */
-    vTaskDelete( NULL );
+    //vTaskDelete( NULL );
 
 }
 
@@ -318,7 +318,7 @@ static void vTaskStart(void *pvParameters)
 
     /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
     传入NULL参数表示删除 的是当前任务 */
-    vTaskDelete( NULL );
+    //vTaskDelete( NULL );
 }
 
 /*
@@ -367,7 +367,7 @@ static void vTaskTest(void *pvParameters)
 
     /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
     传入NULL参数表示删除 的是当前任务 */
-    vTaskDelete( NULL );
+    //vTaskDelete( NULL );
 }
 /*
 *********************************************************************************************************

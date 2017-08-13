@@ -17,6 +17,7 @@
 */
 
 #include "bsp.h"
+#include "FreeRTOS.h"
 #include "ff.h"			/* FatFS文件系统模块*/
 #include "spi_flash_fatfs.h"
 
