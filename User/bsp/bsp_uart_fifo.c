@@ -460,124 +460,6 @@ void bsp_SetUart2Baud(uint32_t _baud)
 	USART_Init(USART2, &USART_InitStructure);
 }
 
-#if USING_RS485_EN == 1
-/* 如果是RS485通信，请按如下格式编写函数， 我们仅举了 USART3作为RS485的例子 */
-
-/*
-*********************************************************************************************************
-*	函 数 名: RS485_InitTXE
-*	功能说明: 配置RS485发送使能口线 TXE
-*	形    参: 无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void RS485_InitTXE(void)
-{
-	GPIO_InitTypeDef GPIO_InitStructure;
-
-	RCC_APB2PeriphClockCmd(RCC_RS485_TXEN, ENABLE);	/* 打开GPIO时钟 */
-
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;/* 推挽输出模式 */
-	GPIO_InitStructure.GPIO_Pin = PIN_RS485_TXEN;
-	GPIO_Init(PORT_RS485_TXEN, &GPIO_InitStructure);
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: bsp_Set485Baud
-*	功能说明: 修改UART3波特率
-*	形    参: 无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void bsp_Set485Baud(uint32_t _baud)
-{
-	USART_InitTypeDef USART_InitStructure;
-
-	/* 第2步： 配置串口硬件参数 */
-	USART_InitStructure.USART_BaudRate = _baud;	/* 波特率 */
-	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-	USART_InitStructure.USART_StopBits = USART_StopBits_1;
-	USART_InitStructure.USART_Parity = USART_Parity_No ;
-	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-	USART_Init(USART3, &USART_InitStructure);
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: RS485_SendBefor
-*	功能说明: 发送数据前的准备工作。对于RS485通信，请设置RS485芯片为发送状态，
-*			  并修改 UartVarInit()中的函数指针等于本函数名，比如 g_tUart2.SendBefor = RS485_SendBefor
-*	形    参: 无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void RS485_SendBefor(void)
-{
-	RS485_TX_EN();	/* 切换RS485收发芯片为发送模式 */
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: RS485_SendOver
-*	功能说明: 发送一串数据结束后的善后处理。对于RS485通信，请设置RS485芯片为接收状态，
-*			  并修改 UartVarInit()中的函数指针等于本函数名，比如 g_tUart2.SendOver = RS485_SendOver
-*	形    参: 无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void RS485_SendOver(void)
-{
-	RS485_RX_EN();	/* 切换RS485收发芯片为接收模式 */
-}
-
-
-/*
-*********************************************************************************************************
-*	函 数 名: RS485_SendBuf
-*	功能说明: 通过RS485芯片发送一串数据。注意，本函数不等待发送完毕。
-*	形    参: 无
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void RS485_SendBuf(uint8_t *_ucaBuf, uint16_t _usLen)
-{
-	comSendBuf(COM3, _ucaBuf, _usLen);
-}
-
-
-/*
-*********************************************************************************************************
-*	函 数 名: RS485_SendStr
-*	功能说明: 向485总线发送一个字符串
-*	形    参: _pBuf 数据缓冲区
-*			 _ucLen 数据长度
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-void RS485_SendStr(char *_pBuf)
-{
-	RS485_SendBuf((uint8_t *)_pBuf, strlen(_pBuf));
-}
-
-/*
-*********************************************************************************************************
-*	函 数 名: RS485_ReciveNew
-*	功能说明: 接收到新的数据
-*	形    参: _byte 接收到的新数据
-*	返 回 值: 无
-*********************************************************************************************************
-*/
-//extern void MODBUS_ReciveNew(uint8_t _byte);
-void RS485_ReciveNew(uint8_t _byte)
-{
-//	MODBUS_ReciveNew(_byte);
-}
-#endif
-
 /*
 *********************************************************************************************************
 *	函 数 名: UartVarInit
@@ -1269,8 +1151,11 @@ static void UartIRQ(UART_T *_pUart)
 *********************************************************************************************************
 */
 #if UART1_FIFO_EN == 1
+extern void Debug_Uart_Cli_Handle(void);
+
 void USART1_IRQHandler(void)
 {
+    Debug_Uart_Cli_Handle();
 	UartIRQ(&g_tUart1);
 }
 #endif
@@ -1309,7 +1194,7 @@ void USART6_IRQHandler(void)
 	UartIRQ(&g_tUart6);
 }
 #endif
-
+#if 1
 /*
 *********************************************************************************************************
 *	函 数 名: fputc
@@ -1325,10 +1210,10 @@ int fputc(int ch, FILE *f)
 
 	return ch;
 #else	/* 采用阻塞方式发送每个字符,等待数据发送完毕 */
-	
+
 	/* 等待发送结束 */
 	while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)	{}
-		
+
 	/* 写一个字节到USART1 */
 	USART_SendData(USART1, (uint8_t) ch);
 
@@ -1363,7 +1248,7 @@ int fgetc(FILE *f)
 	return (int)USART_ReceiveData(USART1);
 #endif
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 /**
   * @brief  Print a character on the HyperTerminal

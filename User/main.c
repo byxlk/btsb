@@ -57,8 +57,28 @@
 *********************************************************************************************************
 */
 #include <includes.h>
+#include "FreeRTOS_CLI.h"
 #include "MainTask.h"
 #include "spi_flash_fatfs.h"
+
+/* Dimentions a buffer to be used by the UART driver, if the UART driver uses a
+buffer at all. */
+#define cmdQUEUE_LENGTH			1024
+
+/* DEL acts as a backspace. */
+#define cmdASCII_DEL		    ( 0x7F )
+
+/* The maximum time to wait for the mutex that guards the UART to become
+available. */
+#define cmdMAX_MUTEX_WAIT		pdMS_TO_TICKS( 300 )
+
+/* Dimensions the buffer into which input characters are placed. */
+#define cmdMAX_INPUT_SIZE		50
+
+/* Misc defines. */
+#define serINVALID_QUEUE		( ( QueueHandle_t ) 0 )
+#define serNO_BLOCK				( ( TickType_t ) 0 )
+#define serTX_BLOCK_TIME		( 40 / portTICK_PERIOD_MS )
 /*
 **********************************************************************************************************
 											函数声明
@@ -72,13 +92,27 @@
 **********************************************************************************************************
 */
 static TaskHandle_t xHandleTaskUserKeyIF = NULL;
-static TaskHandle_t xHandleTaskFsDebug = NULL;
+//static TaskHandle_t xHandleTaskFsDebug = NULL;
 //static TaskHandle_t xHandleTaskMsgPro = NULL;
 static TaskHandle_t xHandleTaskStart = NULL;
-static TaskHandle_t xHandleTaskAdcProc = NULL;
+//static TaskHandle_t xHandleTaskAdcProc = NULL;
 
 static SemaphoreHandle_t  xMutex = NULL;
 static SemaphoreHandle_t  xSemaphore_key_interupt = NULL;
+
+/* The queue used to hold received characters. */
+static QueueHandle_t xRxedChars;
+static QueueHandle_t xCharsForTx;
+
+/* Used to guard access to the UART in case messages are sent to the UART from
+more than one task. */
+static SemaphoreHandle_t xTxMutex = NULL;
+
+/* Const messages output by the command console. */
+static const char * const pcWelcomeMessage1 = "FreeRTOS command server.\r\nType Help to view a list of registered commands.\r\n";
+static const char * const pcWelcomeMessage2 = "[Press ENTER to execute the previous command again]\r\n\r\n";
+static const char * const pcEndOfOutputMessage = "cli@FreeRTOS->";
+static const char * const pcNewLine = "\r\n";
 
 SLEEP_DATA_T gSleep_Data = {2017,1,1,7,12,0,0,0,0,0};
 
@@ -114,26 +148,26 @@ static void vTaskGUI(void *pvParameters)
 *   优 先 级: 2
 *********************************************************************************************************
 */
-static void vTaskAdcProc(void *pvParameters)
-{
+//static void vTaskAdcProc(void *pvParameters)
+//{
 
     //float uwVBATVoltage;    /* 板载电子电压 */
     //float ufVoltage_PA0;    /* PA0引脚电压  */
     //float ufVoltage_PC0;    /* PC0引脚电压  */
-    printf("ADC capture Thread start.\r\n");
-    while(1)
-    {
-        vTaskDelay(1000);
+    //printf("ADC capture Thread start.\r\n");
+    //while(1)
+    //{
+    //    vTaskDelay(1000);
         //uwVBATVoltage = ADC_ConvertedValue[1] * 3.3 / 4095;
         //ufVoltage_PA0 = ADC_ConvertedValue[2] * 3.3 / 4095;
         //ufVoltage_PC0 = ADC_ConvertedValue[3] * 3.3 / 4095;
        // GetTemp(ADC_ConvertedValue[0]);
-    }
+    //}
 
     /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
     传入NULL参数表示删除 的是当前任务 */
     //vTaskDelete( NULL );
-}
+//}
 
 /*
 *********************************************************************************************************
@@ -144,7 +178,7 @@ static void vTaskAdcProc(void *pvParameters)
 *   优 先 级: 2
 *********************************************************************************************************
 */
-static void vTaskTaskUserKeyIF(void *pvParameters)
+static void vTaskUserKeyIF(void *pvParameters)
 {
 	uint8_t ucKeyCode;
 	uint8_t pcWriteBuffer[500];
@@ -330,16 +364,16 @@ static void vTaskStart(void *pvParameters)
 *   优 先 级: 2
 *********************************************************************************************************
 */
-static void vTaskFsDebug(void *pvParameters)
-{
-    printf("vTaskFsDebug Thread start.\r\n");
+//static void vTaskFsDebug(void *pvParameters)
+//{
+//    printf("vTaskFsDebug Thread start.\r\n");
 
-    DemoFatFS();
+//    DemoFatFS();
 
     /* 如果任务的具体实现会跳出上面的死循环，则此任务必须在函数运行完之前删除。
     传入NULL参数表示删除 的是当前任务 */
-    vTaskDelete( NULL );
-}
+//    vTaskDelete( NULL );
+//}
 
 /*
 *********************************************************************************************************
@@ -350,6 +384,7 @@ static void vTaskFsDebug(void *pvParameters)
 *   优 先 级: 2
 *********************************************************************************************************
 */
+#if 0
 static void vTaskTest(void *pvParameters)
 {
     printf("vTaskTest Thread start.\r\n");
@@ -369,6 +404,187 @@ static void vTaskTest(void *pvParameters)
     传入NULL参数表示删除 的是当前任务 */
     //vTaskDelete( NULL );
 }
+#endif
+
+static signed portBASE_TYPE xSerialGetChar( signed char *pcRxedChar, TickType_t xBlockTime )
+{
+    /* Get the next character from the buffer.  Return false if no characters
+	are available, or arrive before xBlockTime expires. */
+	if( xQueueReceive( xRxedChars, pcRxedChar, xBlockTime ) )
+	{
+		return pdTRUE;
+	}
+	else
+	{
+		return pdFALSE;
+	}
+}
+/*-----------------------------------------------------------*/
+
+static signed portBASE_TYPE xSerialPutChar( signed char cOutChar, TickType_t xBlockTime )
+{
+    signed portBASE_TYPE xReturn;
+
+	if( xQueueSend( xCharsForTx, &cOutChar, xBlockTime ) == pdPASS )
+	{
+		xReturn = pdPASS;
+		USART_ITConfig( USART1, USART_IT_TXE, ENABLE );
+	}
+	else
+	{
+		xReturn = pdFAIL;
+	}
+
+	return xReturn;
+}
+/*-----------------------------------------------------------*/
+
+static void vSerialPutString( const signed char * const pcString, unsigned short usStringLength )
+{
+    signed char *pxNext;
+
+	/* A couple of parameters that this port does not use. */
+	( void ) usStringLength;
+
+	/* NOTE: This implementation does not handle the queue being full as no
+	block time is used! */
+
+    /* Send each character in the string, one at a time. */
+	pxNext = ( signed char * ) pcString;
+	while( *pxNext )
+	{
+		xSerialPutChar( *pxNext, serNO_BLOCK );
+		pxNext++;
+	}
+}
+/*-----------------------------------------------------------*/
+
+
+
+/*
+*********************************************************************************************************
+*	函 数 名: vTaskCmdLineConsole
+*	功能说明: Command Line Interface Thread
+*	形    参: pvParameters 是在创建该任务时传递的形参
+*	返 回 值: 无
+*   优 先 级: 1
+*********************************************************************************************************
+*/
+
+static void vTaskCmdLineConsole( void *pvParameters )
+{
+    signed char cRxedChar;
+    uint8_t ucInputIndex = 0;
+    char *pcOutputString;
+    static char cInputString[cmdMAX_INPUT_SIZE], cLastInputString[cmdMAX_INPUT_SIZE];
+    BaseType_t xReturned;
+
+	( void ) pvParameters;
+
+    vRegisterSampleCLICommands();
+
+	/* Obtain the address of the output buffer.  Note there is no mutual
+	exclusion on this buffer as it is assumed only one command console interface
+	will be used at any one time. */
+	pcOutputString = FreeRTOS_CLIGetOutputBuffer();
+
+	/* Initialise the UART. */
+	//xPort = xSerialPortInitMinimal( configCLI_BAUD_RATE, cmdQUEUE_LENGTH );
+
+	/* Send the welcome message. */
+	vSerialPutString( ( signed char * ) pcWelcomeMessage1, ( unsigned short ) strlen( pcWelcomeMessage1 ) );
+	vSerialPutString( ( signed char * ) pcWelcomeMessage2, ( unsigned short ) strlen( pcWelcomeMessage2 ) );
+
+	for( ;; )
+	{
+		/* Wait for the next character.  The while loop is used in case
+		INCLUDE_vTaskSuspend is not set to 1 - in which case portMAX_DELAY will
+		be a genuine block time rather than an infinite block time. */
+		while( xSerialGetChar( &cRxedChar, portMAX_DELAY ) != pdPASS );
+
+		/* Ensure exclusive access to the UART Tx. */
+		if( xSemaphoreTake( xTxMutex, cmdMAX_MUTEX_WAIT ) == pdPASS )
+		{
+			/* Echo the character back. */
+			xSerialPutChar( cRxedChar, portMAX_DELAY );
+
+			/* Was it the end of the line? */
+			if( cRxedChar == '\n' || cRxedChar == '\r' )
+			{
+				/* Just to space the output from the input. */
+				vSerialPutString( ( signed char * ) pcNewLine, ( unsigned short ) strlen( pcNewLine ) );
+
+				/* See if the command is empty, indicating that the last command
+				is to be executed again. */
+				if( ucInputIndex == 0 )
+				{
+					/* Copy the last command back into the input string. */
+					strcpy( cInputString, cLastInputString );
+				}
+
+				/* Pass the received command to the command interpreter.  The
+				command interpreter is called repeatedly until it returns
+				pdFALSE	(indicating there is no more output) as it might
+				generate more than one string. */
+				do
+				{
+					/* Get the next output string from the command interpreter. */
+					xReturned = FreeRTOS_CLIProcessCommand( cInputString, pcOutputString, configCOMMAND_INT_MAX_OUTPUT_SIZE );
+
+					/* Write the generated string to the UART. */
+					vSerialPutString( ( signed char * ) pcOutputString, ( unsigned short ) strlen( pcOutputString ) );
+
+				} while( xReturned != pdFALSE );
+
+				/* All the strings generated by the input command have been
+				sent.  Clear the input string ready to receive the next command.
+				Remember the command that was just processed first in case it is
+				to be processed again. */
+				strcpy( cLastInputString, cInputString );
+				ucInputIndex = 0;
+				memset( cInputString, 0x00, cmdMAX_INPUT_SIZE );
+
+				vSerialPutString( ( signed char * ) pcEndOfOutputMessage, ( unsigned short ) strlen( pcEndOfOutputMessage ) );
+			}
+			else
+			{
+				if( cRxedChar == '\r' )
+				{
+					/* Ignore the character. */
+				}
+				else if( ( cRxedChar == '\b' ) || ( cRxedChar == cmdASCII_DEL ) )
+				{
+					/* Backspace was pressed.  Erase the last character in the
+					string - if any. */
+					if( ucInputIndex > 0 )
+					{
+						ucInputIndex--;
+						cInputString[ ucInputIndex ] = '\0';
+					}
+				}
+				else
+				{
+					/* A character was entered.  Add it to the string entered so
+					far.  When a \n is entered the complete	string will be
+					passed to the command interpreter. */
+					if( ( cRxedChar >= ' ' ) && ( cRxedChar <= '~' ) )
+					{
+						if( ucInputIndex < cmdMAX_INPUT_SIZE )
+						{
+							cInputString[ ucInputIndex ] = cRxedChar;
+							ucInputIndex++;
+						}
+					}
+				}
+			}
+
+			/* Must ensure to give the mutex back. */
+			xSemaphoreGive( xTxMutex );
+		}
+	}
+}
+/*-----------------------------------------------------------*/
+
 /*
 *********************************************************************************************************
 *	函 数 名: AppTaskCreate
@@ -379,6 +595,22 @@ static void vTaskTest(void *pvParameters)
 */
 static void AppTaskCreate (void)
 {
+    /* Create that task that handles the console itself. */
+	xTaskCreate((TaskFunction_t )vTaskCmdLineConsole,	/* The task that implements the command console. */
+				 (const char*    )"CLI",						/* Text name assigned to the task.  This is just to assist debugging.  The kernel does not use this name itself. */
+				 (uint16_t       )1024,				/* The size of the stack allocated to the task. */
+				 (void*          )NULL,						/* The parameter is not used, so NULL is passed. */
+				 (UBaseType_t    )3,					/* The priority allocated to the task. */
+				 (TaskHandle_t*  )NULL );						/* A handle is not required, so just pass NULL. */
+
+    /* 按键事件处理 */
+    xTaskCreate((TaskFunction_t )vTaskUserKeyIF,    /* 任务函数  */
+                (const char*    )"vTaskUserKeyIF",      /* 任务名    */
+                (uint16_t       )512,                   /* 任务栈大小，单位word，也就是4字节 */
+                (void*          )NULL,                  /* 任务参数  */
+                (UBaseType_t    )4,                     /* 任务优先级*/
+                (TaskHandle_t*  )&xHandleTaskUserKeyIF );  /* 任务句柄  */
+
     /* GUI 界面绘制 */
 	xTaskCreate((TaskFunction_t )vTaskGUI,             /* 任务函数  */
                 (const char*    )"vTaskGUI",           /* 任务名    */
@@ -386,24 +618,15 @@ static void AppTaskCreate (void)
                 (void*          )NULL,                 /* 任务参数  */
                 (UBaseType_t    )3,                    /* 任务优先级*/
                 (TaskHandle_t*  )NULL );               /* 任务句柄  */
-
-    /* 按键事件处理 */
-    xTaskCreate((TaskFunction_t )vTaskTaskUserKeyIF,   	/* 任务函数  */
-                (const char*    )"vTaskUserKeyIF",     	/* 任务名    */
-                (uint16_t       )512,               	/* 任务栈大小，单位word，也就是4字节 */
-                (void*          )NULL,              	/* 任务参数  */
-                (UBaseType_t    )4,                 	/* 任务优先级*/
-                (TaskHandle_t*  )&xHandleTaskUserKeyIF );  /* 任务句柄  */
-
-
+#if 0
 	xTaskCreate((TaskFunction_t )vTaskFsDebug,    		/* 任务函数  */
                 (const char*    )"vTaskFsDebug",  		/* 任务名    */
                 (uint16_t       )1024,         		/* stack大小，单位word，也就是4字节 */
                 (void*          )NULL,        		/* 任务参数  */
-                (UBaseType_t    )2,           		/* 任务优先级*/
+                (UBaseType_t    )3,           		/* 任务优先级*/
                 (TaskHandle_t*  )&xHandleTaskFsDebug ); /* 任务句柄  */
-
-	/* 触摸和按键检测 */
+#endif
+	/* 定时任务 */
 	xTaskCreate((TaskFunction_t )vTaskStart,     		/* 任务函数  */
                 (const char*    )"vTaskStart",   		/* 任务名    */
                 (uint16_t       )512,            		/* 任务栈大小，单位word，也就是4字节 */
@@ -418,14 +641,15 @@ static void AppTaskCreate (void)
     //            (void*          )NULL,           		/* 任务参数  */
     //            (UBaseType_t    )4,              		/* 任务优先级*/
     //            (TaskHandle_t*  )&xHandleTaskAdcProc );   /* 任务句柄  */
-
+#if 0
     /* vTaskTest */
     xTaskCreate((TaskFunction_t )vTaskTest,     		/* 任务函数  */
                 (const char*    )"vTaskTest",   		/* 任务名    */
                 (uint16_t       )512,            		/* 任务栈大小，单位word，也就是4字节 */
                 (void*          )NULL,           		/* 任务参数  */
                 (UBaseType_t    )1,              		/* 任务优先级*/
-                (TaskHandle_t*  )NULL );   /* 任务句柄  */
+                (TaskHandle_t*  )NULL );                /* 任务句柄  */
+#endif
 }
 
 /*
@@ -452,6 +676,14 @@ static void AppObjCreate (void)
     {
          /* 没有创建成功，用户可以在这里加入创建失败的处理机制 */
     }
+
+    /* Create the queues used to hold Rx/Tx characters. */
+	xRxedChars = xQueueCreate( 512, ( unsigned portBASE_TYPE ) sizeof( signed char ) );
+	xCharsForTx = xQueueCreate( 512 + 1, ( unsigned portBASE_TYPE ) sizeof( signed char ) );
+
+    /* Create the semaphore used to access the UART Tx. */
+	xTxMutex = xSemaphoreCreateMutex();
+	//configASSERT( xTxMutex );
 }
 
 /*
@@ -475,10 +707,7 @@ int main(void)
      */
     __set_PRIMASK(1);
 
-    vUARTCommandConsoleStart(1024, 1);
-    vRegisterSampleCLICommands();
-
-	/* 硬件初始化 */
+    /* 硬件初始化 */
 	bsp_Init();
 
 	/* 1. 初始化一个定时器中断，精度高于滴答定时器中断，这样才可以获得准确的系统信息 仅供调试目的，实际项
@@ -531,4 +760,29 @@ void EXTI1_IRQHandler(void)
 
 }
 
+void Debug_Uart_Cli_Handle(void)
+{
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    char cChar;
+
+    if( USART_GetITStatus( USART1, USART_IT_TXE ) == SET )
+    {
+        /* The interrupt was caused by the THR becoming empty.  Are there any
+        more characters to transmit? */
+        if( xQueueReceiveFromISR( xCharsForTx, &cChar, &xHigherPriorityTaskWoken ) == pdTRUE )
+        {
+            /* A character was retrieved from the queue so can be sent to the THR now. */
+            USART_SendData( USART1, cChar );
+        }
+    }
+
+    if( USART_GetITStatus( USART1, USART_IT_RXNE ) == SET )
+    {
+        cChar = USART_ReceiveData( USART1 );
+        xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
+    }
+
+    portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
+
+}
 /***************************** 安富莱电子 www.armfly.com (END OF FILE) *********************************/

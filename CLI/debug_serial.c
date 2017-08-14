@@ -91,8 +91,8 @@
 /*-----------------------------------------------------------*/
 
 /* The queue used to hold received characters. */
-static QueueHandle_t xRxedChars;
-static QueueHandle_t xCharsForTx;
+//static QueueHandle_t xRxedChars;
+//static QueueHandle_t xCharsForTx;
 
 /*-----------------------------------------------------------*/
 
@@ -106,21 +106,22 @@ void vUARTInterruptHandler( void );
  */
 xComPortHandle xSerialPortInitMinimal( unsigned long ulWantedBaud, unsigned portBASE_TYPE uxQueueLength )
 {
-xComPortHandle xReturn;
-USART_InitTypeDef USART_InitStructure;
-NVIC_InitTypeDef NVIC_InitStructure;
-GPIO_InitTypeDef GPIO_InitStructure;
+    xComPortHandle xReturn;
 
 	/* Create the queues used to hold Rx/Tx characters. */
-	xRxedChars = xQueueCreate( uxQueueLength, ( unsigned portBASE_TYPE ) sizeof( signed char ) );
-	xCharsForTx = xQueueCreate( uxQueueLength + 1, ( unsigned portBASE_TYPE ) sizeof( signed char ) );
+	//xRxedChars = xQueueCreate( uxQueueLength, ( unsigned portBASE_TYPE ) sizeof( signed char ) );
+	//xCharsForTx = xQueueCreate( uxQueueLength + 1, ( unsigned portBASE_TYPE ) sizeof( signed char ) );
 
 	/* If the queue/semaphore was created correctly then setup the serial port
 	hardware. */
-	if( ( xRxedChars != serINVALID_QUEUE ) && ( xCharsForTx != serINVALID_QUEUE ) )
-	{
+	//if( ( xRxedChars != serINVALID_QUEUE ) && ( xCharsForTx != serINVALID_QUEUE ) )
+	//{
 #if 0
-		/* æ‰“å¼€ GPIO æ—¶é’Ÿ */
+        USART_InitTypeDef USART_InitStructure;
+        NVIC_InitTypeDef NVIC_InitStructure;
+        GPIO_InitTypeDef GPIO_InitStructure;
+
+        /* æ‰“å¼€ GPIO æ—¶é’Ÿ */
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
 		/* æ‰“å¼€ UART æ—¶é’Ÿ */
@@ -175,11 +176,11 @@ GPIO_InitTypeDef GPIO_InitStructure;
 		å¦‚ä¸‹è¯­å¥è§£å†³ç¬¬1ä¸ªå­—èŠ‚æ— æ³•æ­£ç¡®å‘é€å‡ºå»çš„é—®é¢˜ */
 		USART_ClearFlag(USART1, USART_FLAG_TC);     /* æ¸…å‘é€å®Œæˆæ ‡å¿—ï¼ŒTransmission Complete flag */
 #endif
-	}
-	else
-	{
+	//}
+	//else
+	//{
 		xReturn = ( xComPortHandle ) 0;
-	}
+	//}
 
 	/* This demo file only supports a single port but we have to return
 	something to comply with the standard demo header file. */
@@ -254,6 +255,7 @@ void vSerialClose( xComPortHandle xPort )
 /*-----------------------------------------------------------*/
 #if 0
 void vUARTInterruptHandler( void )
+//void USART1_IRQHandler(void)
 {
 portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 char cChar;
@@ -281,6 +283,60 @@ char cChar;
 	}
 
 	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
+}
+
+/*
+*********************************************************************************************************
+*	º¯ Êı Ãû: fputc
+*	¹¦ÄÜËµÃ÷: ÖØ¶¨Òåputcº¯Êı£¬ÕâÑù¿ÉÒÔÊ¹ÓÃprintfº¯Êı´Ó´®¿Ú1´òÓ¡Êä³ö
+*	ĞÎ    ²Î: ÎŞ
+*	·µ »Ø Öµ: ÎŞ
+*********************************************************************************************************
+*/
+int fputc(int ch, FILE *f)
+{
+#if USING_FIFO_EN == 1	/* ½«ĞèÒªprintfµÄ×Ö·ûÍ¨¹ı´®¿ÚÖĞ¶ÏFIFO·¢ËÍ³öÈ¥£¬printfº¯Êı»áÁ¢¼´·µ»Ø */
+	comSendChar(COM1, ch);
+
+	return ch;
+#else	/* ²ÉÓÃ×èÈû·½Ê½·¢ËÍÃ¿¸ö×Ö·û,µÈ´ıÊı¾İ·¢ËÍÍê±Ï */
+
+	/* µÈ´ı·¢ËÍ½áÊø */
+	while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)	{}
+
+	/* Ğ´Ò»¸ö×Ö½Úµ½USART1 */
+	USART_SendData(USART1, (uint8_t) ch);
+
+	/* µÈ´ı·¢ËÍ½áÊø */
+	while(USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) {}
+
+	return ch;
+#endif
+}
+
+/*
+*********************************************************************************************************
+*	º¯ Êı Ãû: fgetc
+*	¹¦ÄÜËµÃ÷: ÖØ¶¨Òågetcº¯Êı£¬ÕâÑù¿ÉÒÔÊ¹ÓÃgetcharº¯Êı´Ó´®¿Ú1ÊäÈëÊı¾İ
+*	ĞÎ    ²Î: ÎŞ
+*	·µ »Ø Öµ: ÎŞ
+*********************************************************************************************************
+*/
+int fgetc(FILE *f)
+{
+
+#if USING_FIFO_EN == 1	/* ´Ó´®¿Ú½ÓÊÕFIFOÖĞÈ¡1¸öÊı¾İ, Ö»ÓĞÈ¡µ½Êı¾İ²Å·µ»Ø */
+	uint8_t ucData;
+
+	while(comGetChar(COM1, &ucData) == 0);
+
+	return ucData;
+#else
+	/* µÈ´ı´®¿Ú1ÊäÈëÊı¾İ */
+	while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);
+
+	return (int)USART_ReceiveData(USART1);
+#endif
 }
 #endif
 

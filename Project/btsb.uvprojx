@@ -620,19 +620,9 @@
               <FilePath>..\CLI\FreeRTOS_CLI.c</FilePath>
             </File>
             <File>
-              <FileName>Sample-CLI-commands.c</FileName>
+              <FileName>CLI-commands.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\CLI\Sample-CLI-commands.c</FilePath>
-            </File>
-            <File>
-              <FileName>UARTCommandConsole.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CLI\UARTCommandConsole.c</FilePath>
-            </File>
-            <File>
-              <FileName>debug_serial.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CLI\debug_serial.c</FilePath>
+              <FilePath>..\CLI\CLI-commands.c</FilePath>
             </File>
           </Files>
         </Group>

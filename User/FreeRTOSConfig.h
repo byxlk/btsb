@@ -99,8 +99,8 @@
 #define configCPU_CLOCK_HZ                           ( ( unsigned long ) 120000000 )
 #define configTICK_RATE_HZ                           ( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES                         ( 5 )
-#define configMINIMAL_STACK_SIZE                     ( ( unsigned short ) 1024 )
-#define configTOTAL_HEAP_SIZE	                     ( ( size_t ) ( 32 * 1024 ) )
+#define configMINIMAL_STACK_SIZE                     ( ( unsigned short ) 128 )
+#define configTOTAL_HEAP_SIZE	                     ( ( size_t ) ( 24 * 1024 ) )
 #define configMAX_TASK_NAME_LEN	                     ( 16 )
 #define configUSE_TRACE_FACILITY                     1
 #define configUSE_16_BIT_TICKS	                     0
@@ -130,7 +130,7 @@
 #define configUSE_DAEMON_TASK_STARTUP_HOOK           0
 
 /* Run time and task stats gathering related definitions. */
-#define configUSE_TRACE_FACILITY 1
+#define configUSE_TRACE_FACILITY                     1
 #define configGENERATE_RUN_TIME_STATS                1
 #define configUSE_STATS_FORMATTING_FUNCTIONS         1
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()     (ulHighFrequencyTimerTicks = 0ul)
@@ -143,12 +143,14 @@
 
 /* Software timer related definitions. */
 #define configUSE_TIMERS                             1
-#define configTIMER_TASK_PRIORITY                    3
+#define configTIMER_TASK_PRIORITY                    (configMAX_PRIORITIES-1)
 #define configTIMER_QUEUE_LENGTH                     10
-#define configTIMER_TASK_STACK_DEPTH                 configMINIMAL_STACK_SIZE
+#define configTIMER_TASK_STACK_DEPTH                 (configMINIMAL_STACK_SIZE * 2)
 
 /* FreeRTOS MPU specific definitions. */
 #define configINCLUDE_APPLICATION_DEFINED_PRIVILEGED_FUNCTIONS 0
+#define configINCLUDE_QUERY_HEAP_COMMAND             1
+#define configINCLUDE_TRACE_RELATED_CLI_COMMANDS     0
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
@@ -202,11 +204,14 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
 #define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+//#define vAssertCalled(char,int) printf("Error:%s,%d\r\n",char,int)
+//#define configASSERT(x) if((x)==0) vAssertCalled(__FILE__,__LINE__)
+
 /* This is the value being used as per the ST library which permits 16
 priority values, 0 to 15.  This must correspond to the
 configKERNEL_INTERRUPT_PRIORITY setting.  Here 15 corresponds to the lowest
 NVIC value of 255. */
-#define configLIBRARY_KERNEL_INTERRUPT_PRIORITY	15
+#define configLIBRARY_KERNEL_INTERRUPT_PRIORITY	13
 
 #define vPortSVCHandler SVC_Handler
 #define xPortPendSVHandler PendSV_Handler

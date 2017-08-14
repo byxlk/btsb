@@ -104,6 +104,8 @@ char *FreeRTOS_CLIGetOutputBuffer( void );
  */
 const char *FreeRTOS_CLIGetParameter( const char *pcCommandString, UBaseType_t uxWantedParameter, BaseType_t *pxParameterStringLength );
 
+void vRegisterSampleCLICommands( void );
+
 #endif /* COMMAND_INTERPRETER_H */
 
 

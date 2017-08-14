@@ -48,16 +48,6 @@
 #define	UART5_FIFO_EN	0
 #define	UART6_FIFO_EN	1
 
-/* RS485芯片发送使能GPIO, PB2 */
-#if USING_RS485_EN == 1
-#define RCC_RS485_TXEN 	 RCC_AHB1Periph_GPIOC
-#define PORT_RS485_TXEN   GPIOC
-#define PIN_RS485_TXEN	 GPIO_Pin_5
-
-#define RS485_RX_EN()	PORT_RS485_TXEN->BSRRL = PIN_RS485_TXEN
-#define RS485_TX_EN()	PORT_RS485_TXEN->BSRRH = PIN_RS485_TXEN
-#endif
-
 /* 定义端口号 */
 typedef enum
 {
@@ -136,19 +126,12 @@ uint8_t comGetChar(COM_PORT_E _ucPort, uint8_t *_pByte);
 void comClearTxFifo(COM_PORT_E _ucPort);
 void comClearRxFifo(COM_PORT_E _ucPort);
 
-void RS485_SendBuf(uint8_t *_ucaBuf, uint16_t _usLen);
-void RS485_SendStr(char *_pBuf);
-
-void bsp_Set485Baud(uint32_t _baud);
-
 void bsp_SetUart1Baud(uint32_t _baud);
 void bsp_SetUart2Baud(uint32_t _baud);
 
 void SerialPutChar(COM_PORT_E _ucPort, uint8_t c);
 uint32_t SerialKeyPressed(COM_PORT_E _ucPort, uint8_t *key);
 void Serial_PutString(COM_PORT_E _ucPort, int8_t *s);
-
-
 
 #endif
 

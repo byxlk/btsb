@@ -111,7 +111,7 @@ available. */
  * The task that implements the command console processing.
  */
 static void prvUARTCommandConsoleTask( void *pvParameters );
-void vUARTCommandConsoleStart( uint16_t usStackSize, UBaseType_t uxPriority );
+//void vUARTCommandConsoleStart( uint16_t usStackSize, UBaseType_t uxPriority );
 
 /*-----------------------------------------------------------*/
 
@@ -162,11 +162,11 @@ static void prvUARTCommandConsoleTask( void *pvParameters )
 	pcOutputString = FreeRTOS_CLIGetOutputBuffer();
 
 	/* Initialise the UART. */
-	xPort = xSerialPortInitMinimal( configCLI_BAUD_RATE, cmdQUEUE_LENGTH );
+	//xPort = xSerialPortInitMinimal( configCLI_BAUD_RATE, cmdQUEUE_LENGTH );
 
 	/* Send the welcome message. */
 	vSerialPutString( xPort, ( signed char * ) pcWelcomeMessage, ( unsigned short ) strlen( pcWelcomeMessage ) );
-
+    Serial_PutString(USART1, pcWelcomeMessage);
 	for( ;; )
 	{
 		/* Wait for the next character.  The while loop is used in case
